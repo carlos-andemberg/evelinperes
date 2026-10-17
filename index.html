@@ -138,6 +138,63 @@
   .cromas i.sem::after { content: ''; position: absolute; left: 50%; top: 1px; bottom: 1px; width: 2px; background: #e58bb0; transform: translateX(-50%) rotate(45deg); }
   .cromas i.sim { box-shadow: 0 0 0 2px var(--rosa); transform: scale(1.15); }
 
+  /* câmera: mini tela pra arrastar e redimensionar */
+  .pilha { display: flex; flex-direction: column; gap: 22px; min-width: 0; }
+  .opcional { letter-spacing: 0.04em; text-transform: none; font-weight: 700; color: var(--rosa2); }
+  .tela {
+    position: relative; aspect-ratio: 16 / 9; border-radius: 18px; margin: 20px 0 8px;
+    background:
+      linear-gradient(rgba(20, 30, 45, 0.45), rgba(20, 30, 45, 0.65)),
+      url("https://ddragon.leagueoflegends.com/cdn/img/champion/splash/Nami_0.jpg") center / cover, #1b2a3a;
+    box-shadow: inset 0 0 0 6px #fff, inset 0 0 0 10px var(--rosa3), 0 0 0 2px var(--rosa3), 0 10px 26px rgba(255, 92, 158, 0.18);
+    touch-action: none; user-select: none; -webkit-user-select: none;
+  }
+  .tela-cam {
+    position: absolute; border-radius: 10px; cursor: grab; display: grid; place-items: center; text-align: center; color: #fff;
+    background: repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.24) 0 8px, rgba(255, 255, 255, 0.12) 8px 16px);
+    border: 2.5px dashed #fff; box-shadow: 0 0 0 3px rgba(255, 92, 158, 0.6), 0 6px 18px rgba(0, 0, 0, 0.3);
+    transition: box-shadow 0.2s;
+  }
+  .tela-cam:hover { box-shadow: 0 0 0 4px var(--rosa), 0 6px 18px rgba(0, 0, 0, 0.3); }
+  .tela-cam.arrastando { cursor: grabbing; }
+  .tela-cam b { font: 700 clamp(11px, 1.6vw, 15px)/1.2 var(--titulo); text-shadow: 0 1px 4px rgba(0, 0, 0, 0.55); pointer-events: none; }
+  .tela-cam b small { display: block; font: 800 11px 'Nunito', sans-serif; opacity: 0.92; margin-top: 2px; }
+  .tela-cam i {
+    position: absolute; width: 18px; height: 18px; border-radius: 50%; background: var(--rosa); border: 3px solid #fff;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35); transition: transform 0.15s;
+  }
+  .tela-cam i:hover { transform: scale(1.25); }
+  .tela-cam i[data-c="nw"] { left: -10px; top: -10px; cursor: nwse-resize; }
+  .tela-cam i[data-c="ne"] { right: -10px; top: -10px; cursor: nesw-resize; }
+  .tela-cam i[data-c="sw"] { left: -10px; bottom: -10px; cursor: nesw-resize; }
+  .tela-cam i[data-c="se"] { right: -10px; bottom: -10px; cursor: nwse-resize; }
+  .tela-nome {
+    position: absolute; left: 50%; bottom: 100%; transform: translate(-50%, 35%); white-space: nowrap; pointer-events: none;
+    font-family: var(--titulo); font-weight: 700; color: var(--rosa); background: #fff; border: 2px solid var(--rosa2);
+    border-radius: 999px; box-shadow: 0 3px 10px rgba(255, 92, 158, 0.45); line-height: 1.35;
+  }
+  .tela-nome:empty { display: none; }
+  .dica-tela { margin: 0 0 4px; text-align: center; font-size: 13px; font-weight: 700; color: var(--suave); }
+  .formatos { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin: 12px 0 16px; }
+  .formatos button {
+    font: 800 13px 'Nunito', sans-serif; color: var(--rosa); background: #fff; border: 2px solid var(--rosa3);
+    border-radius: 999px; padding: 6px 13px; cursor: pointer; transition: border-color 0.15s, transform 0.15s;
+  }
+  .formatos button:hover { border-color: var(--rosa2); transform: translateY(-1px); }
+  .formatos button.sim { background: var(--rosa); color: #fff; border-color: var(--rosa); }
+  .numeros { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin-bottom: 16px; }
+  .numero { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+  .numero > span { font-size: 12px; font-weight: 800; letter-spacing: 0.14em; text-transform: uppercase; color: var(--suave); text-align: center; }
+  .passo { display: flex; align-items: stretch; background: var(--clarinho); border: 2px solid var(--rosa3); border-radius: 14px; overflow: hidden; }
+  .passo:focus-within { border-color: var(--rosa2); background: #fff; }
+  .passo button { flex: none; width: 30px; border: 0; background: transparent; color: var(--rosa); font: 800 19px 'Nunito', sans-serif; cursor: pointer; }
+  .passo button:hover { background: var(--rosa3); }
+  .passo input {
+    width: 100%; min-width: 0; border: 0; background: transparent; text-align: center; padding: 8px 0; outline: none;
+    font: 800 15px 'Nunito', sans-serif; color: var(--texto); -moz-appearance: textfield; appearance: textfield;
+  }
+  .passo input::-webkit-inner-spin-button, .passo input::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+
   footer { text-align: center; margin-top: 34px; color: var(--suave); font-weight: 700; font-size: 14px; line-height: 1.6; }
   footer a { color: var(--rosa); }
 
@@ -148,6 +205,7 @@
   }
   @media (max-width: 520px) {
     .campos, .chaves { grid-template-columns: 1fr; }
+    .numeros { grid-template-columns: 1fr 1fr; }
     .card { padding: 18px 16px; }
     .skins { grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); }
   }
@@ -170,6 +228,7 @@
 
   <!-- ===================================================== BORDA -->
   <section class="painel ativo" id="painel-borda" role="tabpanel">
+    <div class="pilha">
     <div class="card">
       <h2>Borda de ondas</h2>
       <p>Fica por cima de qualquer cena (jogo, conversa, fila). O fundo é transparente e ela se ajusta sozinha a qualquer tamanho de tela.</p>
@@ -195,6 +254,44 @@
           </div>
         </div>
       </div>
+    </div>
+
+    <div class="card">
+      <h2>📷 Nome em cima da câmera</h2>
+      <p>A plaquinha com o nome fica sentadinha em cima da câmera, com peixinhos dando a volta nela e bolhinhas subindo. Já vem no lugar e no formato da câmera da live; se mudar a câmera no OBS, é só ajustar aqui.</p>
+      <div class="campos">
+        <label class="campo"><span>Nome <small class="opcional">vazio esconde</small></span><input type="text" id="nome" maxlength="24"></label>
+        <label class="campo"><span>Tamanho do nome <output id="o-nometam"></output></span><input type="range" id="nometam" min="0.6" max="1.8" step="0.1"></label>
+        <label class="campo cheio"><span>Peixinhos <output id="o-peixes"></output></span><input type="range" id="peixes" min="0" max="8" step="1"></label>
+      </div>
+
+      <div class="tela" id="tela">
+        <div class="tela-cam" id="telaCam">
+          <span class="tela-nome" id="telaNome"></span>
+          <b>📷 câmera<small id="telaMedida"></small></b>
+          <i data-c="nw"></i><i data-c="ne"></i><i data-c="sw"></i><i data-c="se"></i>
+        </div>
+      </div>
+      <p class="dica-tela">Arraste a câmera pra mudar de lugar e puxe as bolinhas dos cantos pra mudar o tamanho.</p>
+
+      <div class="formatos" id="formatos"></div>
+      <div class="numeros">
+        <div class="numero"><span>X</span><div class="passo"><button type="button" data-k="camx" data-d="-1" aria-label="Menos">−</button><input type="number" id="camx" aria-label="Posição X"><button type="button" data-k="camx" data-d="1" aria-label="Mais">+</button></div></div>
+        <div class="numero"><span>Y</span><div class="passo"><button type="button" data-k="camy" data-d="-1" aria-label="Menos">−</button><input type="number" id="camy" aria-label="Posição Y"><button type="button" data-k="camy" data-d="1" aria-label="Mais">+</button></div></div>
+        <div class="numero"><span>Largura</span><div class="passo"><button type="button" data-k="camlargura" data-d="-1" aria-label="Menos">−</button><input type="number" id="camlargura" aria-label="Largura"><button type="button" data-k="camlargura" data-d="1" aria-label="Mais">+</button></div></div>
+        <div class="numero"><span>Altura</span><div class="passo"><button type="button" data-k="camaltura" data-d="-1" aria-label="Menos">−</button><input type="number" id="camaltura" aria-label="Altura"><button type="button" data-k="camaltura" data-d="1" aria-label="Mais">+</button></div></div>
+      </div>
+      <div class="campos">
+        <label class="campo"><span>Tela do OBS</span>
+          <select id="resolucao">
+            <option value="1920x1080">1920 × 1080</option>
+            <option value="1280x720">1280 × 720</option>
+            <option value="2560x1440">2560 × 1440</option>
+          </select>
+        </label>
+        <p class="aviso" style="font-size:13px">No OBS: botão direito na câmera → <b>Transformar → Editar transformação</b>. <b>Posição</b> é o X e Y, <b>Tamanho</b> é a largura e a altura.</p>
+      </div>
+    </div>
     </div>
     <div class="lado">
       <div class="previa" id="previa-borda"><small>prévia · clique pra Nami pular</small></div>
@@ -269,11 +366,14 @@
   var PADRAO = {
     tema: 'rosa', espessura: 1, velocidade: 1, nami: true, tamanho: 1, nado: 'volta', pulo: 25,
     bolhas: true, brilhos: true, enfeites: true,
+    nome: 'evelin_peres', nometam: 1, peixes: 3,
+    camx: 1591, camy: 747, camlargura: 329, camaltura: 333, resolucao: '1920x1080',
     skins: null, croma: {}, troca: 10, aleatorio: false, titulo: 'Estou na fila', pilula: 'League of Legends',
     recados: 'Já já começa a partida!|Aproveita pra pegar uma água 💧|Digita !pix, !insta ou !elo no chat',
     tempo: true, habilidades: true, miniaturas: true, camera: false
   };
   var BORDA = ['tema', 'espessura', 'velocidade', 'nami', 'tamanho', 'nado', 'pulo', 'bolhas', 'brilhos', 'enfeites'];
+  var PLACA = ['nome', 'nometam', 'peixes', 'camx', 'camy', 'camlargura', 'camaltura', 'resolucao'];
   var FILA = ['troca', 'aleatorio', 'titulo', 'pilula', 'recados', 'tempo', 'habilidades', 'miniaturas', 'camera'];
   var CHAVE = 'evelinperes-gerador';
 
@@ -298,7 +398,7 @@
     var base = new URL(arquivo, location.href).href;
     return base + (q.length ? '?' + q.join('&') : '');
   }
-  function linkBorda() { return montaLink('borda.html', BORDA); }
+  function linkBorda() { return montaLink('borda.html', BORDA.concat(PLACA)); }
   function linkFila() {
     var extra = [];
     var nums = estado.skins;
@@ -325,14 +425,15 @@
     if (f) f.style.transform = 'scale(' + (caixa.clientWidth / 1920) + ')';
   }
   if (window.ResizeObserver) {
-    var ro = new ResizeObserver(function (es) { es.forEach(function (e) { escala(e.target); }); });
-    ro.observe($('previa-borda')); ro.observe($('previa-fila'));
+    var ro = new ResizeObserver(function (es) { es.forEach(function (e) { escala(e.target); }); desenhaTela(); });
+    ro.observe($('previa-borda')); ro.observe($('previa-fila')); ro.observe($('tela'));
   }
 
   var aba = location.hash === '#fila' ? 'fila' : 'borda';
   var espera = 0;
   function atualizar(agora) {
     guardar();
+    desenhaTela();
     var lb = linkBorda(), lf = linkFila();
     $('link-borda').value = lb; $('abrir-borda').href = lb;
     $('link-fila').value = lf; $('abrir-fila').href = lf;
@@ -393,7 +494,9 @@
     velocidade: function (v) { return v.toFixed(1) + '×'; },
     tamanho: function (v) { return v.toFixed(1) + '×'; },
     pulo: function (v) { return v ? v + ' s' : 'sem pulo'; },
-    troca: function (v) { return v + ' s'; }
+    troca: function (v) { return v + ' s'; },
+    nometam: function (v) { return v.toFixed(1) + '×'; },
+    peixes: function (v) { return v ? v + (v > 1 ? ' peixinhos' : ' peixinho') : 'nenhum'; }
   };
   Object.keys(formatos).forEach(function (k) {
     var el = $(k);
@@ -406,7 +509,7 @@
     el.checked = estado[k];
     el.addEventListener('change', function () { estado[k] = el.checked; atualizar(); });
   });
-  ['nado', 'titulo', 'pilula'].forEach(function (k) {
+  ['nado', 'titulo', 'pilula', 'nome'].forEach(function (k) {
     var el = $(k);
     el.value = estado[k];
     el.addEventListener('input', function () { estado[k] = el.value; atualizar(); });
@@ -426,6 +529,122 @@
       else { document.execCommand('copy'); ok(); }
     });
   });
+
+  // ---------------------------------------------------------------- câmera
+  // a mini tela usa as medidas da tela do OBS (resolucao); arrastar e puxar os cantos mexe no estado
+  var CAMPOS_CAM = ['camx', 'camy', 'camlargura', 'camaltura'];
+  var FORMATOS = [
+    { nome: '✨ Igual à live', w: 329, h: 333, x: 1591, y: 747 },
+    { nome: '16:9', w: 400, h: 225 },
+    { nome: '4:3', w: 360, h: 270 },
+    { nome: 'Quadradinha', w: 320, h: 320 }
+  ];
+  function tamanhoTela() {
+    var r = String(estado.resolucao).split('x').map(Number);
+    return r[0] > 0 && r[1] > 0 ? r : [1920, 1080];
+  }
+  function limitaCam() {
+    var r = tamanhoTela();
+    estado.camlargura = Math.round(Math.min(Math.max(estado.camlargura, 40), r[0]));
+    estado.camaltura = Math.round(Math.min(Math.max(estado.camaltura, 40), r[1]));
+    estado.camx = Math.round(Math.min(Math.max(estado.camx, 0), r[0] - estado.camlargura));
+    estado.camy = Math.round(Math.min(Math.max(estado.camy, 0), r[1] - estado.camaltura));
+  }
+  function desenhaTela() {
+    var tela = $('tela'), cam = $('telaCam');
+    if (!tela || !cam) return;
+    var r = tamanhoTela(), esc = tela.clientWidth / r[0];
+    cam.style.left = (estado.camx / r[0] * 100) + '%';
+    cam.style.top = (estado.camy / r[1] * 100) + '%';
+    cam.style.width = (estado.camlargura / r[0] * 100) + '%';
+    cam.style.height = (estado.camaltura / r[1] * 100) + '%';
+    $('telaMedida').textContent = estado.camlargura + ' × ' + estado.camaltura;
+    // a plaquinha na mesma escala da tela de verdade
+    var uu = Math.min(r[0], r[1]) / 1080, fs = Math.max(8, 34 * uu * estado.nometam * esc);
+    var nome = $('telaNome');
+    nome.textContent = estado.nome;
+    nome.style.fontSize = fs + 'px';
+    nome.style.padding = (fs * 0.18) + 'px ' + (fs * 0.62) + 'px';
+    nome.style.borderWidth = Math.max(1.5, 4.5 * uu * estado.nometam * esc) + 'px';
+    CAMPOS_CAM.forEach(function (k) { if (document.activeElement !== $(k)) $(k).value = estado[k]; });
+    document.querySelectorAll('#formatos button').forEach(function (b, i) {
+      var f = FORMATOS[i], k = r[0] / 1920;
+      b.classList.toggle('sim', Math.abs(estado.camlargura - f.w * k) < 2 && Math.abs(estado.camaltura - f.h * k) < 2 && (f.x === undefined || Math.abs(estado.camx - f.x * k) < 2));
+    });
+  }
+
+  FORMATOS.forEach(function (f) {
+    var b = document.createElement('button');
+    b.type = 'button';
+    b.textContent = f.nome;
+    b.addEventListener('click', function () {
+      var k = tamanhoTela()[0] / 1920, dir = estado.camx + estado.camlargura, baixo = estado.camy + estado.camaltura;
+      estado.camlargura = f.w * k; estado.camaltura = f.h * k;
+      // sem posição própria, o formato novo fica preso no mesmo canto de baixo à direita
+      estado.camx = f.x !== undefined ? f.x * k : dir - estado.camlargura;
+      estado.camy = f.y !== undefined ? f.y * k : baixo - estado.camaltura;
+      limitaCam();
+      atualizar();
+    });
+    $('formatos').appendChild(b);
+  });
+
+  CAMPOS_CAM.forEach(function (k) {
+    var el = $(k);
+    el.addEventListener('input', function () {
+      if (el.value === '') return;
+      estado[k] = +el.value;
+      limitaCam();
+      atualizar();
+    });
+    el.addEventListener('blur', function () { el.value = estado[k]; });
+  });
+  document.querySelectorAll('.passo button').forEach(function (b) {
+    b.addEventListener('click', function (e) {
+      estado[b.dataset.k] += (+b.dataset.d) * (e.shiftKey ? 10 : 1);
+      limitaCam();
+      atualizar();
+    });
+  });
+
+  $('resolucao').value = estado.resolucao;
+  $('resolucao').addEventListener('change', function () {
+    var antes = tamanhoTela();
+    estado.resolucao = $('resolucao').value;
+    var depois = tamanhoTela(), kx = depois[0] / antes[0], ky = depois[1] / antes[1];
+    estado.camx *= kx; estado.camlargura *= kx; estado.camy *= ky; estado.camaltura *= ky;
+    limitaCam();
+    atualizar();
+  });
+
+  (function () {
+    var tela = $('tela'), cam = $('telaCam'), arrasto = null;
+    cam.addEventListener('pointerdown', function (e) {
+      e.preventDefault();
+      cam.setPointerCapture(e.pointerId);
+      cam.classList.add('arrastando');
+      arrasto = { c: e.target.dataset.c || 'mover', x0: e.clientX, y0: e.clientY, x: estado.camx, y: estado.camy, w: estado.camlargura, h: estado.camaltura };
+    });
+    cam.addEventListener('pointermove', function (e) {
+      if (!arrasto) return;
+      var r = tamanhoTela(), k = r[0] / tela.clientWidth, a = arrasto;
+      var dx = (e.clientX - a.x0) * k, dy = (e.clientY - a.y0) * k, MIN = 40;
+      var x = a.x, y = a.y, w = a.w, h = a.h;
+      if (a.c === 'mover') { x += dx; y += dy; }
+      else {
+        if (a.c.indexOf('w') > -1) { w = Math.max(MIN, Math.min(a.w - dx, a.x + a.w)); x = a.x + a.w - w; }
+        if (a.c.indexOf('e') > -1) { w = Math.max(MIN, Math.min(a.w + dx, r[0] - a.x)); }
+        if (a.c.indexOf('n') > -1) { h = Math.max(MIN, Math.min(a.h - dy, a.y + a.h)); y = a.y + a.h - h; }
+        if (a.c.indexOf('s') > -1) { h = Math.max(MIN, Math.min(a.h + dy, r[1] - a.y)); }
+      }
+      estado.camx = x; estado.camy = y; estado.camlargura = w; estado.camaltura = h;
+      limitaCam();
+      atualizar();
+    });
+    ['pointerup', 'pointercancel'].forEach(function (ev) {
+      cam.addEventListener(ev, function () { arrasto = null; cam.classList.remove('arrastando'); });
+    });
+  })();
 
   // ---------------------------------------------------------------- skins
   NamiDados.carregar().then(function (dados) {

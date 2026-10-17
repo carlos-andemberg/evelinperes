@@ -6,9 +6,12 @@
 <title>evelin_peres · Borda de ondas</title>
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="icon" href="favicon.ico" sizes="any">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@700&display=swap" rel="stylesheet">
 <style>
   html, body { margin: 0; height: 100%; overflow: hidden; background: transparent; }
-  canvas { position: fixed; inset: 0; display: block; }
+  canvas { position: fixed; inset: 0; display: block; z-index: 1; }
   /* fundo de exemplo: só aparece fora do OBS */
   body.previa {
     background:
@@ -16,11 +19,16 @@
       url("https://ddragon.leagueoflegends.com/cdn/img/champion/splash/Nami_0.jpg") center / cover no-repeat,
       #1b2a3a;
   }
+  .cam {
+    position: fixed; box-sizing: border-box; display: grid; place-items: center;
+    background: rgba(40, 20, 35, 0.55); border: 2px dashed rgba(255, 255, 255, 0.6);
+    font: 700 15px/1.4 'Segoe UI', system-ui, sans-serif; color: rgba(255, 255, 255, 0.85); text-align: center;
+  }
   .dica {
     position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%);
     font: 600 15px/1.45 'Segoe UI', system-ui, sans-serif; color: #fff; text-align: center;
     background: rgba(138, 47, 93, 0.72); padding: 10px 18px; border-radius: 14px;
-    transition: opacity 1s; pointer-events: none;
+    transition: opacity 1s; pointer-events: none; z-index: 2;
   }
 </style>
 </head>
@@ -33,13 +41,34 @@
     tema: 'rosa', espessura: 1, velocidade: 1,
     nami: true, tamanho: 1, nado: 'volta', pulo: 25,
     bolhas: true, brilhos: true, enfeites: true,
-    fundo: !Ondas.emOBS
+    // plaquinha com o nome em cima da câmera (posição em pixels da tela do OBS)
+    nome: 'evelin_peres', nometam: 1, peixes: 3,
+    camx: 1591, camy: 747, camlargura: 329, camaltura: 333, resolucao: '1920x1080',
+    fundo: !Ondas.emOBS, caixa: true
   });
+
+  var ref = op.resolucao.toLowerCase().split('x').map(Number);
+  if (!(ref[0] > 0 && ref[1] > 0)) ref = [1920, 1080];
+  op.cam = { x: op.camx, y: op.camy, w: op.camlargura, h: op.camaltura, ref: ref };
+
+  if (op.fundo) {
+    document.body.classList.add('previa');
+    // lugar da câmera, só pra ver onde a plaquinha cai
+    if (op.nome && op.caixa) {
+      var cam = document.createElement('div');
+      cam.className = 'cam';
+      cam.style.left = (op.camx / ref[0] * 100) + '%';
+      cam.style.top = (op.camy / ref[1] * 100) + '%';
+      cam.style.width = (op.camlargura / ref[0] * 100) + '%';
+      cam.style.height = (op.camaltura / ref[1] * 100) + '%';
+      cam.textContent = 'câmera';
+      document.body.appendChild(cam);
+    }
+  }
 
   var borda = Ondas.iniciar(document.getElementById('ondas'), op);
 
   if (op.fundo) {
-    document.body.classList.add('previa');
     var dica = document.createElement('div');
     dica.className = 'dica';
     dica.innerHTML = 'Prévia da borda · no OBS o fundo fica transparente<br>clique pra Nami pular';

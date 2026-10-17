@@ -18,6 +18,14 @@ Três camadas de onda correm em volta da tela: rosa atrás, rosinha no meio e br
 
 A Nami é desenhada no código (nada de imagem, fica nítida em qualquer tamanho): cabelo rosa balançando, orelhas de barbatana, cauda verde-água com escamas, cajado com o orbe de água brilhando, piscadinha. Ela nada em volta da tela toda por cima da onda do meio, com a barriga e a ponta do rabo dentro da espuma, soltando bolhinhas. De vez em quando ela **pula** pra fora da água (às vezes dando um giro) e cai com um respingo.
 
+### O nome em cima da câmera
+
+Em cima da câmera fica uma plaquinha branca e rosa com **evelin_peres**, com fio de pérolas, brilhinhos piscando, peixinhos (rosa, verde-água, laranja e lilás) dando a volta nela e bolhinhas subindo. Os peixinhos que passam por cima vão por trás da plaquinha e os de baixo passam na frente.
+
+A câmera já vem no lugar e no formato da live, que é quase quadrada e fica no canto de baixo à direita: **x 1591, y 747, 329 × 333** numa tela 1920 × 1080. Se mudar a câmera no OBS, ajuste no gerador. Lá tem uma tela pequena: arraste a câmera pra mudar de lugar e puxe as bolinhas dos cantos pra mudar o tamanho. Também tem os formatos prontos (igual à live, 16:9, 4:3, quadradinha) e os campos de X, Y, largura e altura. No OBS esses números ficam em: botão direito na câmera → **Transformar → Editar transformação** (Posição e Tamanho).
+
+A plaquinha fica centralizada em cima da câmera e nunca entra na onda da borda.
+
 ### Colocar no OBS
 
 1. **Fontes → + → Navegador**
@@ -43,6 +51,12 @@ Junte com `&`, ex.: `borda.html?espessura=1.4&nado=embaixo`. O gerador monta iss
 | `bolhas=0` | Sem bolhas |
 | `brilhos=0` | Sem brilhinhos |
 | `enfeites=0` | Sem estrela, concha e pérolas nos cantos |
+| `nome=evelin_peres` | Texto da plaquinha em cima da câmera (`nome=` vazio esconde) |
+| `nometam=1` | Tamanho da plaquinha (`0.6` a `1.8`) |
+| `peixes=3` | Quantos peixinhos dão a volta na plaquinha (`peixes=0` tira) |
+| `camx=1591&camy=747` | Canto de cima-esquerdo da câmera, em pixels da tela do OBS |
+| `camlargura=329&camaltura=333` | Tamanho da câmera |
+| `resolucao=1920x1080` | Tamanho da tela do OBS em que os números da câmera foram medidos |
 | `fundo=0` | Força o fundo transparente mesmo fora do OBS |
 
 ## A tela de fila

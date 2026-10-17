@@ -457,11 +457,69 @@
     c.restore();
   }
 
+  // Peixinho fofo: comprimento s em px, olhando pra +x. f = fase do rabo abanando.
+  var PEIXES = [
+    { corpo: '#ff8fbd', corpo2: '#ff5c9e', barriga: '#ffe1ee', cauda: '#ff6fab' },
+    { corpo: '#6fdcd4', corpo2: '#20a8b2', barriga: '#d8fbf6', cauda: '#3cc4c4' },
+    { corpo: '#ffc77a', corpo2: '#ff9a4a', barriga: '#fff3d6', cauda: '#ffad5c' },
+    { corpo: '#c7a6ff', corpo2: '#9b6bff', barriga: '#f1e8ff', cauda: '#b28cff' }
+  ];
+  function peixinho(c, s, f, cor) {
+    c.save();
+    c.scale(s / 2, s / 2);
+    // rabo
+    c.save();
+    c.translate(-0.62, 0);
+    c.rotate(Math.sin(f) * 0.38);
+    c.beginPath();
+    c.moveTo(0.05, 0);
+    c.quadraticCurveTo(-0.3, -0.5, -0.55, -0.55);
+    c.quadraticCurveTo(-0.38, 0, -0.55, 0.55);
+    c.quadraticCurveTo(-0.3, 0.5, 0.05, 0);
+    c.fillStyle = cor.cauda; c.fill();
+    c.restore();
+    // barbatana de cima
+    c.beginPath(); c.moveTo(-0.3, -0.4); c.quadraticCurveTo(-0.05, -0.86, 0.26, -0.44); c.closePath();
+    c.fillStyle = cor.cauda; c.fill();
+    // corpo
+    var g = c.createLinearGradient(0, -0.5, 0, 0.5);
+    g.addColorStop(0, cor.corpo2); g.addColorStop(0.45, cor.corpo); g.addColorStop(1, cor.barriga);
+    c.beginPath(); c.ellipse(0.02, 0, 0.72, 0.5, 0, 0, TAU);
+    c.fillStyle = g; c.fill();
+    c.strokeStyle = 'rgba(255,255,255,0.8)'; c.lineWidth = 0.1;
+    c.beginPath(); c.ellipse(-0.14, 0, 0.13, 0.43, 0, -Math.PI / 2, Math.PI / 2); c.stroke();
+    // nadadeira do lado, abanando
+    c.beginPath(); c.moveTo(0.06, 0.12); c.quadraticCurveTo(-0.14, 0.34 + Math.sin(f * 1.3) * 0.07, -0.3, 0.2); c.quadraticCurveTo(-0.1, 0.12, 0.06, 0.12);
+    c.fillStyle = 'rgba(255,255,255,0.75)'; c.fill();
+    // olho, bochecha e boquinha
+    c.fillStyle = '#ffffff'; c.beginPath(); c.arc(0.4, -0.1, 0.17, 0, TAU); c.fill();
+    c.fillStyle = '#35275e'; c.beginPath(); c.arc(0.44, -0.09, 0.105, 0, TAU); c.fill();
+    c.fillStyle = '#ffffff'; c.beginPath(); c.arc(0.47, -0.13, 0.04, 0, TAU); c.fill();
+    c.fillStyle = 'rgba(255,110,155,0.5)'; c.beginPath(); c.ellipse(0.42, 0.17, 0.1, 0.06, 0, 0, TAU); c.fill();
+    c.strokeStyle = 'rgba(80,30,60,0.6)'; c.lineWidth = 0.05;
+    c.beginPath(); c.arc(0.64, 0.07, 0.07, 0.3, Math.PI * 0.9); c.stroke();
+    c.restore();
+  }
+
+  function pilula(c, x, y, w, h) {
+    var r = h / 2;
+    c.beginPath();
+    c.moveTo(x + r, y);
+    c.lineTo(x + w - r, y);
+    c.arc(x + w - r, y + r, r, -Math.PI / 2, Math.PI / 2);
+    c.lineTo(x + r, y + h);
+    c.arc(x + r, y + r, r, Math.PI / 2, Math.PI * 1.5);
+    c.closePath();
+  }
+
   // --------------------------------------------------------------- motor
+  // nome: plaquinha com o nome (vazio = sem plaquinha). cam: {x, y, w, h, ref: [largura, altura]}
+  // é a câmera na tela de referência; a plaquinha fica em cima dela.
   var PADRAO = {
     tema: 'rosa', espessura: 1, velocidade: 1,
     nami: true, tamanho: 1, nado: 'volta', pulo: 25,
-    bolhas: true, brilhos: true, enfeites: true
+    bolhas: true, brilhos: true, enfeites: true,
+    nome: '', nometam: 1, peixes: 3, cam: null
   };
 
   function iniciar(canvas, opcoes) {
@@ -476,6 +534,17 @@
     var nami = { s: 0, dir: 1, flip: 1, fase: 0, pulo: null, proxPulo: 0, proxBolha: 0, piscar: 2.5, olho: 1 };
     var tempo = 0, ultimo = 0, rodando = true, raf = 0;
     var tmp = {};
+
+    // plaquinha do nome com peixinhos dando a volta nela
+    var placa = null;
+    if (op.nome) {
+      placa = { bolhas: [], peixes: [], prox: 0 };
+      var np = Math.max(0, Math.min(12, Math.round(op.peixes)));
+      for (var pi = 0; pi < np; pi++) {
+        placa.peixes.push({ a: pi * TAU / np, r: 0.85 + Math.random() * 0.3, cor: PEIXES[pi % PEIXES.length], f: Math.random() * TAU, faixa: (pi % 2) * 0.18 });
+      }
+      if (document.fonts && document.fonts.load) document.fonts.load('700 40px Fredoka');
+    }
 
     function medir() {
       dpr = Math.min(global.devicePixelRatio || 1, 2);
@@ -707,6 +776,136 @@
       });
     }
 
+    function geometriaPlaca(t) {
+      var fs = 34 * u * op.nometam;
+      ctx.font = '700 ' + fs + 'px Fredoka, Nunito, "Segoe UI", sans-serif';
+      var tw = ctx.measureText(op.nome).width, h = fs * 1.62, w = tw + fs * 1.35;
+      var faixa = camadas[0].c.d + camadas[0].A + 6 * u, cx, topo;
+      if (op.cam) {
+        var ex = W / op.cam.ref[0], ey = H / op.cam.ref[1];
+        cx = (op.cam.x + op.cam.w / 2) * ex;
+        topo = op.cam.y * ey;
+      } else {
+        cx = W / 2; topo = faixa + h;
+      }
+      // fica sentada na beirada de cima da câmera, sem entrar na onda da borda
+      cx = Math.min(Math.max(cx, w / 2 + faixa), W - w / 2 - faixa);
+      var cy = Math.max(topo - h * 0.2, faixa + h / 2) + Math.sin(t * 1.3) * 2.5 * u;
+      return { fs: fs, w: w, h: h, cx: cx, cy: cy, rot: Math.sin(t * 0.8) * 0.02 };
+    }
+
+    function desenhaPlaca(t, dt) {
+      var g = geometriaPlaca(t), i;
+
+      // bolhinhas subindo em volta
+      placa.prox -= dt;
+      if (placa.prox <= 0) {
+        placa.prox = 0.12 + Math.random() * 0.28;
+        placa.bolhas.push({
+          x: g.cx + (Math.random() - 0.5) * (g.w + 70 * u), y: g.cy + g.h * (0.15 + Math.random() * 0.55),
+          v: (26 + Math.random() * 30) * u, r: (2.5 + Math.random() * 5) * u, f: Math.random() * TAU,
+          vida: 0, max: 1.5 + Math.random() * 1.4, frente: Math.random() < 0.5
+        });
+      }
+      for (i = placa.bolhas.length - 1; i >= 0; i--) {
+        var b = placa.bolhas[i];
+        b.vida += dt; b.y -= b.v * dt;
+        if (b.vida > b.max) placa.bolhas.splice(i, 1);
+      }
+
+      // peixinhos dando a volta (os de cima passam por trás da plaquinha)
+      var orx = g.w / 2 + 34 * u, ory = g.h / 2 + 17 * u;
+      var peixes = placa.peixes.map(function (p) {
+        p.a += 0.55 * op.velocidade * dt;
+        p.f += dt * 9;
+        var k = 1 + p.faixa, sn = Math.sin(p.a);
+        var q = {
+          p: p, x: g.cx + Math.cos(p.a) * orx * k, y: g.cy + sn * ory * k + Math.sin(t * 2 + p.f * 0.1) * 2 * u,
+          vx: -Math.sin(p.a), vy: Math.cos(p.a) * ory / orx, frente: sn > 0
+        };
+        // de vez em quando solta uma bolhinha pela boca
+        if (Math.random() < dt * 0.5) {
+          placa.bolhas.push({ x: q.x + (q.vx < 0 ? -1 : 1) * 12 * u * p.r, y: q.y - 2 * u, v: 30 * u, r: 2 * u, f: 0, vida: 0, max: 1.2, frente: q.frente });
+        }
+        return q;
+      });
+
+      function bolhasPlaca(frente) {
+        ctx.lineWidth = Math.max(1, 1.2 * u);
+        placa.bolhas.forEach(function (b) {
+          if (b.frente !== frente) return;
+          var x = b.x + Math.sin(b.vida * 4 + b.f) * 5 * u;
+          ctx.globalAlpha = Math.min(1, b.vida * 4, (b.max - b.vida) * 2.5) * 0.95;
+          ctx.fillStyle = 'rgba(255,255,255,0.3)';
+          ctx.strokeStyle = '#ffffff';
+          ctx.beginPath(); ctx.arc(x, b.y, b.r, 0, TAU); ctx.fill(); ctx.stroke();
+          ctx.fillStyle = '#ffffff';
+          ctx.beginPath(); ctx.arc(x - b.r * 0.35, b.y - b.r * 0.35, b.r * 0.3, 0, TAU); ctx.fill();
+        });
+        ctx.globalAlpha = 1;
+      }
+      function peixesPlaca(frente) {
+        peixes.forEach(function (q) {
+          if (q.frente !== frente) return;
+          ctx.save();
+          ctx.globalAlpha = frente ? 1 : 0.85;
+          ctx.translate(q.x, q.y);
+          if (q.vx < 0) ctx.scale(-1, 1);
+          ctx.rotate(Math.atan2(q.vy, Math.abs(q.vx)) * 0.55);
+          ctx.shadowColor = 'rgba(255,255,255,0.9)';
+          ctx.shadowBlur = 4 * u * dpr;
+          peixinho(ctx, 33 * u * q.p.r * (frente ? 1 : 0.8) * Math.max(0.7, op.nometam), q.p.f, q.p.cor);
+          ctx.restore();
+        });
+      }
+
+      bolhasPlaca(false);
+      peixesPlaca(false);
+
+      // a plaquinha
+      ctx.save();
+      ctx.translate(g.cx, g.cy);
+      ctx.rotate(g.rot);
+      pilula(ctx, -g.w / 2, -g.h / 2, g.w, g.h);
+      var fundo = ctx.createLinearGradient(0, -g.h / 2, 0, g.h / 2);
+      fundo.addColorStop(0, '#ffffff'); fundo.addColorStop(1, tema.frente2);
+      ctx.shadowColor = 'rgba(255,92,158,0.45)';
+      ctx.shadowBlur = 16 * u * dpr;
+      ctx.shadowOffsetY = 4 * u * dpr;
+      ctx.fillStyle = fundo;
+      ctx.fill();
+      ctx.shadowColor = 'transparent';
+      ctx.lineWidth = 4.5 * u * op.nometam;
+      ctx.strokeStyle = tema.acento2;
+      ctx.stroke();
+      // fio de pérolas por dentro
+      var m = 7 * u * op.nometam;
+      pilula(ctx, -g.w / 2 + m, -g.h / 2 + m, g.w - 2 * m, g.h - 2 * m);
+      ctx.setLineDash([0.1, 6 * u * op.nometam]);
+      ctx.lineCap = 'round';
+      ctx.lineWidth = 2.6 * u * op.nometam;
+      ctx.strokeStyle = tema.fundo;
+      ctx.stroke();
+      ctx.setLineDash([]);
+      // o nome
+      ctx.font = '700 ' + g.fs + 'px Fredoka, Nunito, "Segoe UI", sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillStyle = tema.acento2;
+      ctx.fillText(op.nome, 0, g.fs * 0.06 + 3 * u * op.nometam);
+      var letra = ctx.createLinearGradient(0, -g.fs / 2, 0, g.fs / 2);
+      letra.addColorStop(0, tema.linha); letra.addColorStop(1, tema.acento);
+      ctx.fillStyle = letra;
+      ctx.fillText(op.nome, 0, g.fs * 0.06);
+      // brilhinhos piscando nas pontas
+      brilhinho(ctx, g.w / 2 - g.h * 0.32, -g.h / 2 + 2 * u, (4.5 + 2.5 * Math.sin(t * 3)) * u * op.nometam, '#ffffff');
+      brilhinho(ctx, -g.w / 2 + g.h * 0.3, g.h / 2 - 1 * u, (4 + 2.5 * Math.sin(t * 3 + 2)) * u * op.nometam, tema.estrela);
+      ctx.restore();
+
+      peixesPlaca(true);
+      bolhasPlaca(true);
+    }
+
     function quadro(agora) {
       if (!rodando) return;
       raf = global.requestAnimationFrame(quadro);
@@ -769,6 +968,7 @@
       desenhaGotas(dt);
       if (op.brilhos) desenhaBrilhos(dt);
       if (op.enfeites) desenhaEnfeites(t);
+      if (placa) desenhaPlaca(t, dt);
       if (op.depois) op.depois(ctx, W, H, t, u, dt);
     }
 
