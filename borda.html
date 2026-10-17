@@ -3,12 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>evelin_peres · Borda de ondas</title>
+<title>evelin_peres · Borda da câmera</title>
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="icon" href="favicon.ico" sizes="any">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cherry+Bomb+One&family=Fredoka:wght@700&family=Pacifico&family=Sniglet:wght@800&display=swap" rel="stylesheet">
 <style>
   html, body { margin: 0; height: 100%; overflow: hidden; background: transparent; }
   canvas { position: fixed; inset: 0; display: block; z-index: 1; }
@@ -41,8 +41,8 @@
     tema: 'rosa', espessura: 1, velocidade: 1,
     nami: true, tamanho: 1, nado: 'volta', pulo: 25,
     bolhas: true, brilhos: true, enfeites: true,
-    // plaquinha com o nome em cima da câmera (posição em pixels da tela do OBS)
-    nome: 'evelin_peres', nometam: 1, peixes: 3,
+    // a borda vai em volta da câmera (posição em pixels da tela do OBS); o nome flutua em cima
+    nome: 'evelin_peres', nometam: 1, peixes: 3, letra: 'pacifico',
     camx: 1591, camy: 747, camlargura: 329, camaltura: 333, resolucao: '1920x1080',
     fundo: !Ondas.emOBS, caixa: true
   });
@@ -54,7 +54,7 @@
   if (op.fundo) {
     document.body.classList.add('previa');
     // lugar da câmera, só pra ver onde a plaquinha cai
-    if (op.nome && op.caixa) {
+    if (op.caixa) {
       var cam = document.createElement('div');
       cam.className = 'cam';
       cam.style.left = (op.camx / ref[0] * 100) + '%';
@@ -71,7 +71,7 @@
   if (op.fundo) {
     var dica = document.createElement('div');
     dica.className = 'dica';
-    dica.innerHTML = 'Prévia da borda · no OBS o fundo fica transparente<br>clique pra Nami pular';
+    dica.innerHTML = 'Prévia da borda da câmera · no OBS o fundo fica transparente<br>clique pra Nami pular';
     document.body.appendChild(dica);
     setTimeout(function () { dica.style.opacity = 0; }, 5000);
   }

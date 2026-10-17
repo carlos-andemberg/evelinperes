@@ -66,22 +66,33 @@
   var emOBS = !!global.obsstudio;
 
   // ------------------------------------------------------------- caminho
-  // Retângulo de cantos redondos recuado `d` da beirada. Percorre: baixo (esq→dir),
-  // direita (baixo→cima), cima (dir→esq), esquerda (cima→baixo). A normal aponta
-  // pra dentro da tela, que é o "pra cima" da água.
-  function caminho(W, H, d, r) {
-    var x0 = d, y0 = d, x1 = W - d, y1 = H - d;
+  // Retângulo de cantos redondos de (x0, y0) a (x1, y1). A normal é sempre o "pra cima"
+  // da água, pra onde as ondas crescem e a Nami fica de cabeça:
+  //   fora = false (borda da tela): percorre baixo (esq→dir), direita (↑), cima (dir→esq),
+  //     esquerda (↓), com a normal pra dentro da tela;
+  //   fora = true (borda da câmera): percorre cima (esq→dir), direita (↓), baixo (dir→esq),
+  //     esquerda (↑), com a normal pra fora da câmera.
+  function caminho(x0, y0, x1, y1, r, fora) {
     r = Math.max(4, Math.min(r, (x1 - x0) / 2 - 1, (y1 - y0) / 2 - 1));
     var lw = Math.max(0, x1 - x0 - 2 * r), lh = Math.max(0, y1 - y0 - 2 * r), arco = Math.PI * r / 2;
-    var segs = [
+    var segs = fora ? [
+      { reta: true, len: lw, x: x0 + r, y: y0, tx: 1, ty: 0 },
+      { reta: false, len: arco, cx: x1 - r, cy: y0 + r, a0: -Math.PI / 2, giro: 1 },
+      { reta: true, len: lh, x: x1, y: y0 + r, tx: 0, ty: 1 },
+      { reta: false, len: arco, cx: x1 - r, cy: y1 - r, a0: 0, giro: 1 },
+      { reta: true, len: lw, x: x1 - r, y: y1, tx: -1, ty: 0 },
+      { reta: false, len: arco, cx: x0 + r, cy: y1 - r, a0: Math.PI / 2, giro: 1 },
+      { reta: true, len: lh, x: x0, y: y1 - r, tx: 0, ty: -1 },
+      { reta: false, len: arco, cx: x0 + r, cy: y0 + r, a0: Math.PI, giro: 1 }
+    ] : [
       { reta: true, len: lw, x: x0 + r, y: y1, tx: 1, ty: 0 },
-      { reta: false, len: arco, cx: x1 - r, cy: y1 - r, a0: Math.PI / 2 },
+      { reta: false, len: arco, cx: x1 - r, cy: y1 - r, a0: Math.PI / 2, giro: -1 },
       { reta: true, len: lh, x: x1, y: y1 - r, tx: 0, ty: -1 },
-      { reta: false, len: arco, cx: x1 - r, cy: y0 + r, a0: 0 },
+      { reta: false, len: arco, cx: x1 - r, cy: y0 + r, a0: 0, giro: -1 },
       { reta: true, len: lw, x: x1 - r, y: y0, tx: -1, ty: 0 },
-      { reta: false, len: arco, cx: x0 + r, cy: y0 + r, a0: -Math.PI / 2 },
+      { reta: false, len: arco, cx: x0 + r, cy: y0 + r, a0: -Math.PI / 2, giro: -1 },
       { reta: true, len: lh, x: x0, y: y0 + r, tx: 0, ty: 1 },
-      { reta: false, len: arco, cx: x0 + r, cy: y1 - r, a0: -Math.PI }
+      { reta: false, len: arco, cx: x0 + r, cy: y1 - r, a0: -Math.PI, giro: -1 }
     ];
     var P = 2 * lw + 2 * lh + 4 * arco;
     function ponto(s, o) {
@@ -92,8 +103,8 @@
           if (g.reta) {
             o.x = g.x + g.tx * s; o.y = g.y + g.ty * s; o.tx = g.tx; o.ty = g.ty;
           } else {
-            var a = g.a0 - s / r, c = Math.cos(a), sn = Math.sin(a);
-            o.x = g.cx + r * c; o.y = g.cy + r * sn; o.tx = sn; o.ty = -c;
+            var a = g.a0 + g.giro * s / r, c = Math.cos(a), sn = Math.sin(a);
+            o.x = g.cx + r * c; o.y = g.cy + r * sn; o.tx = -g.giro * sn; o.ty = g.giro * c;
           }
           o.nx = o.ty; o.ny = -o.tx;
           return o;
@@ -102,12 +113,12 @@
       }
       return o;
     }
-    return { P: P, ponto: ponto, lw: lw, lh: lh, r: r, d: d, x0: x0, y0: y0, x1: x1, y1: y1 };
+    return { P: P, ponto: ponto, lw: lw, lh: lh, r: r, x0: x0, y0: y0, x1: x1, y1: y1, fora: !!fora };
   }
 
   // Uma camada de onda: amostra o caminho e guarda o que precisa pra mexer a cada quadro
-  function camada(W, H, d, r, A, lambda, w, ph, passo) {
-    var c = caminho(W, H, d, r), n = Math.max(16, Math.ceil(c.P / passo)), o = {};
+  function camada(c, A, lambda, w, ph, passo) {
+    var n = Math.max(16, Math.ceil(c.P / passo)), o = {};
     var L = {
       c: c, n: n, A: A, w: w, ph: ph,
       ss: new Float32Array(n), bx: new Float32Array(n), by: new Float32Array(n),
@@ -501,16 +512,13 @@
     c.restore();
   }
 
-  function pilula(c, x, y, w, h) {
-    var r = h / 2;
-    c.beginPath();
-    c.moveTo(x + r, y);
-    c.lineTo(x + w - r, y);
-    c.arc(x + w - r, y + r, r, -Math.PI / 2, Math.PI / 2);
-    c.lineTo(x + r, y + h);
-    c.arc(x + r, y + r, r, Math.PI / 2, Math.PI * 1.5);
-    c.closePath();
-  }
+  // Letras do nome (Google Fonts, carregadas pela página). cursiva = letras emendadas.
+  var LETRAS = {
+    pacifico: { nome: 'Praia (cursiva)', familia: 'Pacifico', css: '400 {px}px Pacifico, cursive', cursiva: true, esc: 1.05 },
+    cherry: { nome: 'Fofinha', familia: 'Cherry Bomb One', css: '400 {px}px "Cherry Bomb One", Fredoka, sans-serif', cursiva: false, esc: 1.05 },
+    sniglet: { nome: 'Bolinha', familia: 'Sniglet', css: '800 {px}px Sniglet, Fredoka, sans-serif', cursiva: false, esc: 1.08 },
+    fredoka: { nome: 'Redondinha', familia: 'Fredoka', css: '700 {px}px Fredoka, Nunito, sans-serif', cursiva: false, esc: 1 }
+  };
 
   // --------------------------------------------------------------- motor
   // nome: plaquinha com o nome (vazio = sem plaquinha). cam: {x, y, w, h, ref: [largura, altura]}
@@ -519,7 +527,7 @@
     tema: 'rosa', espessura: 1, velocidade: 1,
     nami: true, tamanho: 1, nado: 'volta', pulo: 25,
     bolhas: true, brilhos: true, enfeites: true,
-    nome: '', nometam: 1, peixes: 3, cam: null
+    nome: '', nometam: 1, peixes: 3, letra: 'pacifico', cam: null
   };
 
   function iniciar(canvas, opcoes) {
@@ -529,6 +537,8 @@
     var tema = TEMAS[op.tema] || TEMAS.rosa;
     var ctx = canvas.getContext('2d');
     var W = 0, H = 0, dpr = 1, u = 1, camadas = [];
+    // com op.cam a borda é em volta da câmera: furo = buraco transparente onde ela aparece
+    var furo = null, escNami = 0.88, velNami = 125;
     var bolhas = [], gotas = [], brilhos = [];
     var sprite = document.createElement('canvas'), sctx = sprite.getContext('2d'), SO = { x: 96, y: 40, w: 152, h: 82 };
     var nami = { s: 0, dir: 1, flip: 1, fase: 0, pulo: null, proxPulo: 0, proxBolha: 0, piscar: 2.5, olho: 1 };
@@ -543,7 +553,8 @@
       for (var pi = 0; pi < np; pi++) {
         placa.peixes.push({ a: pi * TAU / np, r: 0.85 + Math.random() * 0.3, cor: PEIXES[pi % PEIXES.length], f: Math.random() * TAU, faixa: (pi % 2) * 0.18 });
       }
-      if (document.fonts && document.fonts.load) document.fonts.load('700 40px Fredoka');
+      var fonte = LETRAS[op.letra] || LETRAS.pacifico;
+      if (document.fonts && document.fonts.load) document.fonts.load(fonte.css.replace('{px}', '40'));
     }
 
     function medir() {
@@ -551,23 +562,61 @@
       W = global.innerWidth; H = global.innerHeight;
       canvas.width = Math.round(W * dpr); canvas.height = Math.round(H * dpr);
       canvas.style.width = W + 'px'; canvas.style.height = H + 'px';
-      u = Math.max(0.3, Math.min(W, H) / 1080);
-      var e = Math.max(0.3, op.espessura), R = 64 * u, passo = Math.max(3, 5 * u);
-      camadas = [
-        camada(W, H, 36 * u * e, R, 9 * u * Math.sqrt(e), 300 * u, 1.45, 0, passo),
-        camada(W, H, 25 * u * e, R, 7 * u * Math.sqrt(e), 215 * u, 1.85, 1.7, passo),
-        camada(W, H, 14 * u * e, R, 5 * u * Math.sqrt(e), 165 * u, 2.35, 3.1, passo)
-      ];
-      var kk = 0.88 * u * op.tamanho;
+      var e = Math.max(0.3, op.espessura), rq = Math.sqrt(e);
+      if (op.cam) {
+        // borda em volta da câmera: a água fica do lado de fora e as ondas crescem pra fora
+        var ex = W / op.cam.ref[0], ey = H / op.cam.ref[1];
+        var x0 = op.cam.x * ex, y0 = op.cam.y * ey, x1 = (op.cam.x + op.cam.w) * ex, y1 = (op.cam.y + op.cam.h) * ey;
+        u = Math.max(0.3, Math.min(x1 - x0, y1 - y0) / 333);
+        var Rc = 22 * u, pc = Math.max(2.5, 4 * u);
+        var anel = function (d, A, lambda, w, ph) {
+          return camada(caminho(x0 - d, y0 - d, x1 + d, y1 + d, Rc + d, true), A, lambda, w, ph, pc);
+        };
+        camadas = [
+          anel(25 * u * e, 6 * u * rq, 125 * u, 1.5, 0),
+          anel(16 * u * e, 4.5 * u * rq, 100 * u, 1.9, 1.7),
+          anel(8 * u * e, 3 * u * rq, 80 * u, 2.4, 3.1)
+        ];
+        // a borda cobre 3 px da câmera e arredonda os cantos dela
+        furo = { x: x0 + 3 * u, y: y0 + 3 * u, w: x1 - x0 - 6 * u, h: y1 - y0 - 6 * u, r: Rc - 3 * u };
+        escNami = 0.66; velNami = 80;
+      } else {
+        u = Math.max(0.3, Math.min(W, H) / 1080);
+        var R = 64 * u, passo = Math.max(3, 5 * u);
+        var faixa = function (d, A, lambda, w, ph) {
+          return camada(caminho(d, d, W - d, H - d, R, false), A, lambda, w, ph, passo);
+        };
+        camadas = [
+          faixa(36 * u * e, 9 * u * rq, 300 * u, 1.45, 0),
+          faixa(25 * u * e, 7 * u * rq, 215 * u, 1.85, 1.7),
+          faixa(14 * u * e, 5 * u * rq, 165 * u, 2.35, 3.1)
+        ];
+        furo = null; escNami = 0.88; velNami = 125;
+      }
+      var kk = escNami * u * op.tamanho;
       sprite.width = Math.ceil(SO.w * kk * dpr); sprite.height = Math.ceil(SO.h * kk * dpr);
       var trilho = camadas[0].c;
-      if (op.nado === 'embaixo') nami.s = Math.min(Math.max(nami.s, 0), trilho.lw);
+      if (vaiEVolta()) nami.s = Math.min(Math.max(nami.s, 0), trilho.lw);
       else nami.s = nami.s % trilho.P;
+    }
+
+    // "embaixo" (tela) e "cima" (câmera): nada só no primeiro lado do caminho, indo e voltando
+    function vaiEVolta() { return op.nado === 'embaixo' || op.nado === 'cima'; }
+
+    function retRedondo(x, y, w, h, r) {
+      r = Math.max(0, Math.min(r, w / 2, h / 2));
+      ctx.moveTo(x + r, y);
+      ctx.arcTo(x + w, y, x + w, y + h, r);
+      ctx.arcTo(x + w, y + h, x, y + h, r);
+      ctx.arcTo(x, y + h, x, y, r);
+      ctx.arcTo(x, y, x + w, y, r);
+      ctx.closePath();
     }
 
     function preencher(L, estilo, alpha) {
       ctx.beginPath();
-      ctx.rect(-4, -4, W + 8, H + 8);
+      if (furo) retRedondo(furo.x, furo.y, furo.w, furo.h, furo.r);
+      else ctx.rect(-4, -4, W + 8, H + 8);
       ctx.moveTo(L.px[0], L.py[0]);
       for (var i = 1; i < L.n; i++) ctx.lineTo(L.px[i], L.py[i]);
       ctx.closePath();
@@ -586,7 +635,7 @@
 
     function degrade(c1, c2, giro) {
       if (ctx.createConicGradient) {
-        var g = ctx.createConicGradient(giro, W / 2, H / 2);
+        var g = furo ? ctx.createConicGradient(giro, furo.x + furo.w / 2, furo.y + furo.h / 2) : ctx.createConicGradient(giro, W / 2, H / 2);
         g.addColorStop(0, c1); g.addColorStop(0.25, c2); g.addColorStop(0.5, c1); g.addColorStop(0.75, c2); g.addColorStop(1, c1);
         return g;
       }
@@ -597,8 +646,8 @@
 
     // ----- Nami: posição no trilho, pulos, virada
     function atualizaNami(dt) {
-      var L = camadas[0], c = L.c, vel = 125 * u * op.velocidade * (0.6 + 0.4 * op.tamanho);
-      if (op.nado === 'embaixo') {
+      var L = camadas[0], c = L.c, vel = velNami * u * op.velocidade * (0.6 + 0.4 * op.tamanho);
+      if (vaiEVolta()) {
         var margem = Math.min(c.lw * 0.2, 90 * u);
         nami.s += nami.dir * vel * dt;
         if (nami.s > c.lw - margem && nami.dir > 0) nami.dir = -1;
@@ -630,7 +679,7 @@
 
     function pular() {
       if (!op.nami || nami.pulo) return;
-      nami.pulo = { t: 0, dur: 1.45, h: (95 + Math.random() * 40) * u * Math.max(0.7, op.tamanho), giro: Math.random() < 0.4 };
+      nami.pulo = { t: 0, dur: 1.45, h: (95 + Math.random() * 40) * u * Math.max(0.7, op.tamanho) * (furo ? 0.7 : 1), giro: Math.random() < 0.4 };
       nami.proxPulo = op.pulo * (0.75 + Math.random() * 0.5);
       respingo(nami.x, nami.y, nami.nx, nami.ny, 14);
     }
@@ -649,11 +698,11 @@
     function desenhaNamiNaTela(t) {
       var L = camadas[0], c = L.c, o = c.ponto(nami.s, tmp);
       var off = onda(L, nami.s, t * op.velocidade);
-      var kk = 0.88 * u * op.tamanho;
-      var prof = off * 0.8 - 7 * u * Math.max(0.6, op.espessura);
+      var kk = escNami * u * op.tamanho;
+      var prof = off * 0.8 - (furo ? 3 : 7) * u * Math.max(0.6, op.espessura);
       var alt = 0, incl = Math.atan2(onda(L, nami.s + 8 * u, t * op.velocidade) - off, 8 * u) * -0.6, giro = 0;
       if (nami.pulo) {
-        var p = nami.pulo, q = p.t / p.dur, vel = 125 * u * op.velocidade;
+        var p = nami.pulo, q = p.t / p.dur, vel = velNami * u * op.velocidade;
         alt = p.h * 4 * q * (1 - q);
         var dAlt = p.h * 4 * (1 - 2 * q) / p.dur;
         incl = -Math.atan2(dAlt, vel * 1.6);
@@ -757,16 +806,30 @@
     }
 
     function desenhaEnfeites(t) {
-      var c = camadas[0].c, R = c.r, d = c.d, s = 0.7071;
-      var cantos = [
-        { x: d + R - R * s, y: H - d - R + R * s, cx: 0, cy: H, tipo: 'estrela' },
-        { x: W - d - R + R * s, y: H - d - R + R * s, cx: W, cy: H, tipo: 'concha' },
-        { x: d + R - R * s, y: d + R - R * s, cx: 0, cy: 0, tipo: 'perolas' },
-        { x: W - d - R + R * s, y: d + R - R * s, cx: W, cy: 0, tipo: 'perolas' }
-      ];
-      var tam = 21 * u * Math.min(1.4, Math.max(0.7, op.espessura));
+      var s = 0.7071, cantos, tam;
+      if (furo) {
+        // nos cantos da câmera, em cima da onda do meio (estrela e concha em cima, que aparecem mais)
+        var m = camadas[1].c, rm = m.r;
+        cantos = [
+          { x: m.x0 + rm - rm * s, y: m.y0 + rm - rm * s, tipo: 'estrela' },
+          { x: m.x1 - rm + rm * s, y: m.y0 + rm - rm * s, tipo: 'concha' },
+          { x: m.x0 + rm - rm * s, y: m.y1 - rm + rm * s, tipo: 'perolas' },
+          { x: m.x1 - rm + rm * s, y: m.y1 - rm + rm * s, tipo: 'perolas' }
+        ];
+        tam = 14 * u * Math.min(1.4, Math.max(0.7, op.espessura));
+      } else {
+        // nos cantos da tela, entre a onda e a quina
+        var c = camadas[0].c, R = c.r, x0 = c.x0, y0 = c.y0, x1 = c.x1, y1 = c.y1;
+        cantos = [
+          { x: (x0 + R - R * s) * 0.6, y: (y1 - R + R * s) * 0.6 + H * 0.4, tipo: 'estrela' },
+          { x: (x1 - R + R * s) * 0.6 + W * 0.4, y: (y1 - R + R * s) * 0.6 + H * 0.4, tipo: 'concha' },
+          { x: (x0 + R - R * s) * 0.6, y: (y0 + R - R * s) * 0.6, tipo: 'perolas' },
+          { x: (x1 - R + R * s) * 0.6 + W * 0.4, y: (y0 + R - R * s) * 0.6, tipo: 'perolas' }
+        ];
+        tam = 21 * u * Math.min(1.4, Math.max(0.7, op.espessura));
+      }
       cantos.forEach(function (q, i) {
-        var x = q.x + (q.cx - q.x) * 0.4, y = q.y + (q.cy - q.y) * 0.4;
+        var x = q.x, y = q.y;
         ctx.save();
         ctx.translate(x, y + Math.sin(t * 1.6 + i) * 1.5 * u);
         if (q.tipo === 'estrela') { ctx.rotate(-0.25 + Math.sin(t * 0.9) * 0.12); estrelaDoMar(ctx, tam, tema.estrela, 'rgba(255,255,255,0.75)'); }
@@ -777,21 +840,24 @@
     }
 
     function geometriaPlaca(t) {
-      var fs = 34 * u * op.nometam;
-      ctx.font = '700 ' + fs + 'px Fredoka, Nunito, "Segoe UI", sans-serif';
-      var tw = ctx.measureText(op.nome).width, h = fs * 1.62, w = tw + fs * 1.35;
-      var faixa = camadas[0].c.d + camadas[0].A + 6 * u, cx, topo;
-      if (op.cam) {
-        var ex = W / op.cam.ref[0], ey = H / op.cam.ref[1];
-        cx = (op.cam.x + op.cam.w / 2) * ex;
-        topo = op.cam.y * ey;
+      var fs = 36 * u * op.nometam;
+      var L = LETRAS[op.letra] || LETRAS.pacifico;
+      fs *= L.esc;
+      ctx.font = L.css.replace('{px}', fs.toFixed(1));
+      var tw = ctx.measureText(op.nome).width, h = fs * 1.25, w = tw + fs * 0.5;
+      var A = camadas[0], cx, cy;
+      if (furo) {
+        // flutuando acima da raia em que a Nami nada em cima da câmera, pra não ficar na frente dela
+        var topoOnda = A.c.y0 - A.A, raia = (24 * op.tamanho + 6) * u;
+        cx = furo.x + furo.w / 2;
+        cy = topoOnda - raia - h / 2;
       } else {
-        cx = W / 2; topo = faixa + h;
+        cx = W / 2;
+        cy = A.c.y0 + A.A + 6 * u + h / 2;
       }
-      // fica sentada na beirada de cima da câmera, sem entrar na onda da borda
-      cx = Math.min(Math.max(cx, w / 2 + faixa), W - w / 2 - faixa);
-      var cy = Math.max(topo - h * 0.2, faixa + h / 2) + Math.sin(t * 1.3) * 2.5 * u;
-      return { fs: fs, w: w, h: h, cx: cx, cy: cy, rot: Math.sin(t * 0.8) * 0.02 };
+      cx = Math.min(Math.max(cx, w / 2 + 4 * u), W - w / 2 - 4 * u);
+      cy = Math.max(cy, h / 2 + 4 * u) + Math.sin(t * 1.3) * 2.5 * u;
+      return { fs: fs, w: w, h: h, cx: cx, cy: cy, raia: furo ? (24 * op.tamanho + 6) * u : 0 };
     }
 
     function desenhaPlaca(t, dt) {
@@ -802,7 +868,7 @@
       if (placa.prox <= 0) {
         placa.prox = 0.12 + Math.random() * 0.28;
         placa.bolhas.push({
-          x: g.cx + (Math.random() - 0.5) * (g.w + 70 * u), y: g.cy + g.h * (0.15 + Math.random() * 0.55),
+          x: g.cx + (Math.random() - 0.5) * (g.w + 60 * u), y: g.cy + g.h * 0.5 + Math.random() * g.raia,
           v: (26 + Math.random() * 30) * u, r: (2.5 + Math.random() * 5) * u, f: Math.random() * TAU,
           vida: 0, max: 1.5 + Math.random() * 1.4, frente: Math.random() < 0.5
         });
@@ -814,7 +880,7 @@
       }
 
       // peixinhos dando a volta (os de cima passam por trás da plaquinha)
-      var orx = g.w / 2 + 34 * u, ory = g.h / 2 + 17 * u;
+      var orx = g.w / 2 + 26 * u, ory = g.h / 2 + 12 * u;
       var peixes = placa.peixes.map(function (p) {
         p.a += 0.55 * op.velocidade * dt;
         p.f += dt * 9;
@@ -862,44 +928,54 @@
       bolhasPlaca(false);
       peixesPlaca(false);
 
-      // a plaquinha
+      // o nome: só as letras, sem fundo, flutuando
+      // (letra cursiva flutua a palavra inteira, pra não quebrar a emenda das letras)
+      var L = LETRAS[op.letra] || LETRAS.pacifico, fs = g.fs, k = op.nometam;
       ctx.save();
       ctx.translate(g.cx, g.cy);
-      ctx.rotate(g.rot);
-      pilula(ctx, -g.w / 2, -g.h / 2, g.w, g.h);
-      var fundo = ctx.createLinearGradient(0, -g.h / 2, 0, g.h / 2);
-      fundo.addColorStop(0, '#ffffff'); fundo.addColorStop(1, tema.frente2);
-      ctx.shadowColor = 'rgba(255,92,158,0.45)';
-      ctx.shadowBlur = 16 * u * dpr;
-      ctx.shadowOffsetY = 4 * u * dpr;
-      ctx.fillStyle = fundo;
-      ctx.fill();
-      ctx.shadowColor = 'transparent';
-      ctx.lineWidth = 4.5 * u * op.nometam;
-      ctx.strokeStyle = tema.acento2;
-      ctx.stroke();
-      // fio de pérolas por dentro
-      var m = 7 * u * op.nometam;
-      pilula(ctx, -g.w / 2 + m, -g.h / 2 + m, g.w - 2 * m, g.h - 2 * m);
-      ctx.setLineDash([0.1, 6 * u * op.nometam]);
-      ctx.lineCap = 'round';
-      ctx.lineWidth = 2.6 * u * op.nometam;
-      ctx.strokeStyle = tema.fundo;
-      ctx.stroke();
-      ctx.setLineDash([]);
-      // o nome
-      ctx.font = '700 ' + g.fs + 'px Fredoka, Nunito, "Segoe UI", sans-serif';
-      ctx.textAlign = 'center';
+      ctx.font = L.css.replace('{px}', fs.toFixed(1));
+      ctx.textAlign = 'left';
       ctx.textBaseline = 'middle';
-      ctx.fillStyle = tema.acento2;
-      ctx.fillText(op.nome, 0, g.fs * 0.06 + 3 * u * op.nometam);
-      var letra = ctx.createLinearGradient(0, -g.fs / 2, 0, g.fs / 2);
+      ctx.lineJoin = 'round';
+      var pedacos = L.cursiva ? [op.nome] : Array.from(op.nome);
+      var largs = pedacos.map(function (p) { return ctx.measureText(p).width; });
+      var total = largs.reduce(function (a, b) { return a + b; }, 0), x = -total / 2;
+      var pos = pedacos.map(function (p, j) {
+        var fase = t * 2.4 - j * 0.6;
+        var q = L.cursiva
+          ? { x: x, w: largs[j], dy: Math.sin(t * 1.6) * 3 * u * k, rot: Math.sin(t * 1.1) * 0.03 }
+          : { x: x, w: largs[j], dy: Math.sin(fase) * 4 * u * k, rot: Math.sin(fase + 1.2) * 0.07 };
+        x += largs[j];
+        return q;
+      });
+      var letra = ctx.createLinearGradient(0, -fs * 0.5, 0, fs * 0.5);
       letra.addColorStop(0, tema.linha); letra.addColorStop(1, tema.acento);
-      ctx.fillStyle = letra;
-      ctx.fillText(op.nome, 0, g.fs * 0.06);
+      // três passadas: contorno branco com brilho rosa, sombrinha e a cor
+      [0, 1, 2].forEach(function (passada) {
+        pedacos.forEach(function (p, j) {
+          var q = pos[j];
+          ctx.save();
+          ctx.translate(q.x + q.w / 2, q.dy);
+          ctx.rotate(q.rot);
+          if (passada === 0) {
+            ctx.shadowColor = 'rgba(255,92,158,0.6)';
+            ctx.shadowBlur = 9 * u * dpr;
+            ctx.lineWidth = fs * 0.2;
+            ctx.strokeStyle = '#ffffff';
+            ctx.strokeText(p, -q.w / 2, 0);
+          } else if (passada === 1) {
+            ctx.fillStyle = tema.acento2;
+            ctx.fillText(p, -q.w / 2, fs * 0.07);
+          } else {
+            ctx.fillStyle = letra;
+            ctx.fillText(p, -q.w / 2, 0);
+          }
+          ctx.restore();
+        });
+      });
       // brilhinhos piscando nas pontas
-      brilhinho(ctx, g.w / 2 - g.h * 0.32, -g.h / 2 + 2 * u, (4.5 + 2.5 * Math.sin(t * 3)) * u * op.nometam, '#ffffff');
-      brilhinho(ctx, -g.w / 2 + g.h * 0.3, g.h / 2 - 1 * u, (4 + 2.5 * Math.sin(t * 3 + 2)) * u * op.nometam, tema.estrela);
+      brilhinho(ctx, total / 2 + 5 * u * k, -fs * 0.38, (4.5 + 2.5 * Math.sin(t * 3)) * u * k, '#ffffff');
+      brilhinho(ctx, -total / 2 - 6 * u * k, fs * 0.22, (4 + 2.5 * Math.sin(t * 3 + 2)) * u * k, tema.estrela);
       ctx.restore();
 
       peixesPlaca(true);
@@ -945,6 +1021,9 @@
       contorno(B);
       ctx.strokeStyle = tema.linha; ctx.globalAlpha = 0.45; ctx.lineWidth = 1.4 * u; ctx.stroke(); ctx.globalAlpha = 1;
 
+      // o nome vem antes da Nami: quando ela nada ou pula ali, passa na frente das letras
+      if (placa) desenhaPlaca(t, dt);
+
       // a Nami nada por cima da onda do meio; a onda da frente cobre a barriga e a ponta do rabo
       if (op.nami) {
         atualizaNami(dt);
@@ -955,6 +1034,15 @@
       preencher(C, degrade(tema.frente, tema.frente2, -t * 0.2), 0.93);
       contorno(C);
       ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 2.4 * u; ctx.stroke();
+      if (furo) {
+        // beiradinha limpa em volta da câmera
+        ctx.beginPath();
+        retRedondo(furo.x, furo.y, furo.w, furo.h, furo.r);
+        ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 2.5 * u; ctx.stroke();
+        ctx.beginPath();
+        retRedondo(furo.x + 1.7 * u, furo.y + 1.7 * u, furo.w - 3.4 * u, furo.h - 3.4 * u, Math.max(0, furo.r - 1.7 * u));
+        ctx.strokeStyle = tema.acento2; ctx.lineWidth = 1.2 * u; ctx.stroke();
+      }
 
       // espuma nas cristas
       ctx.fillStyle = '#ffffff';
@@ -968,7 +1056,6 @@
       desenhaGotas(dt);
       if (op.brilhos) desenhaBrilhos(dt);
       if (op.enfeites) desenhaEnfeites(t);
-      if (placa) desenhaPlaca(t, dt);
       if (op.depois) op.depois(ctx, W, H, t, u, dt);
     }
 
@@ -987,6 +1074,7 @@
 
   global.Ondas = {
     TEMAS: TEMAS,
+    LETRAS: LETRAS,
     PADRAO: PADRAO,
     parametros: parametros,
     emOBS: emOBS,

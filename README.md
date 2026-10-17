@@ -1,39 +1,43 @@
 # Overlays da Nami da evelin_peres 🌊💗
 
-Overlays pro OBS da [evelin_peres](https://www.twitch.tv/evelin_peres), no tema da Nami do League of Legends: branco com rosa clarinho, ondinhas nas bordas e a Nami nadando nelas. É HTML/CSS/JS puro, sem build e sem dependências, feito pra fonte **Navegador** do OBS.
+Overlays pro OBS da [evelin_peres](https://www.twitch.tv/evelin_peres), no tema da Nami do League of Legends: branco com rosa clarinho, ondinhas em volta da câmera e a Nami nadando nelas. É HTML/CSS/JS puro, sem build e sem dependências, feito pra fonte **Navegador** do OBS.
 
 **No ar:** [evelinperes.carlosandemberg.com.br](https://evelinperes.carlosandemberg.com.br). Lá você escolhe as opções, vê a prévia e copia o link pro OBS.
 
 | Arquivo | O que é | Tamanho no OBS |
 |---|---|---|
-| `borda.html` | Borda de ondas com a Nami nadando. Fundo transparente, vai por cima de qualquer cena | **1920 × 1080** (ou o tamanho da sua tela) |
+| `borda.html` | Borda de ondas em volta da webcam, com a Nami nadando e o nome flutuando em cima. Fundo transparente | **1920 × 1080** (o tamanho da tela do OBS) |
 | `fila.html` | Tela de "estou na fila": skin da Nami trocando, tempo na fila, recadinhos, habilidades e espaço pra câmera | **1920 × 1080** (ou em pé, 1080 × 1920) |
 | `index.html` | Gerador de link: escolhe cores, skins, cromas e textos, mostra a prévia e copia o link | — |
-| `ondas.js` | O motor: as três camadas de onda, espuma, bolhas, brilhos, enfeites e a Nami desenhada no canvas | — |
+| `ondas.js` | O motor: as três camadas de onda (em volta da câmera ou da tela), espuma, bolhas, brilhos, enfeites, o nome com os peixinhos e a Nami desenhada no canvas | — |
 | `dados.js`, `nami.json` | Skins, cromas e habilidades da Nami (a lista se atualiza sozinha; `nami.json` é a cópia de reserva) | — |
 
-## A borda
+## A borda da câmera
 
-Três camadas de onda correm em volta da tela: rosa atrás, rosinha no meio e branca na frente, com espuma nas cristas, brilhinhos e bolhas subindo. Nos cantos ficam uma estrela-do-mar, uma concha e pérolas. As ondas sempre fecham a volta certinho, então não tem emenda em nenhuma resolução: a borda mede a tela e se ajusta sozinha (720p, 1080p, 1440p, tela em pé...).
+A borda abraça a webcam: três camadas de onda (rosa por fora, rosinha no meio e branca colada na câmera) correm em volta dela, com espuma nas cristas, brilhinhos, bolhas e um contorno limpinho que arredonda os cantos da câmera. Nos cantos ficam a estrela-do-mar, a concha e as pérolas. O resto da tela fica livre.
 
-A Nami é desenhada no código (nada de imagem, fica nítida em qualquer tamanho): cabelo rosa balançando, orelhas de barbatana, cauda verde-água com escamas, cajado com o orbe de água brilhando, piscadinha. Ela nada em volta da tela toda por cima da onda do meio, com a barriga e a ponta do rabo dentro da espuma, soltando bolhinhas. De vez em quando ela **pula** pra fora da água (às vezes dando um giro) e cai com um respingo.
+A Nami é desenhada no código (nada de imagem, fica nítida em qualquer tamanho): cabelo rosa balançando, orelhas de barbatana, cauda verde-água com escamas, cajado com o orbe de água brilhando, piscadinha. Ela nada em volta da câmera em cima das ondas, de pé na beirada de cima, soltando bolhinhas, e de vez em quando **pula** pra fora da água (às vezes dando um giro) e cai com um respingo.
 
-### O nome em cima da câmera
+### O nome
 
-Em cima da câmera fica uma plaquinha branca e rosa com **evelin_peres**, com fio de pérolas, brilhinhos piscando, peixinhos (rosa, verde-água, laranja e lilás) dando a volta nela e bolhinhas subindo. Os peixinhos que passam por cima vão por trás da plaquinha e os de baixo passam na frente.
+Em cima da câmera flutua **evelin_peres**, só as letras, sem fundo: contorno branco com brilho rosa, sombrinha e degradê rosa. Na letra cursiva a palavra inteira flutua; nas outras cada letrinha balança no seu tempo. Em volta, peixinhos (rosa, verde-água, laranja e lilás) dão a volta no nome e bolhinhas sobem da água. O nome fica acima da faixa em que a Nami nada, e ela sempre passa na frente dele.
 
-A câmera já vem no lugar e no formato da live, que é quase quadrada e fica no canto de baixo à direita: **x 1591, y 747, 329 × 333** numa tela 1920 × 1080. Se mudar a câmera no OBS, ajuste no gerador. Lá tem uma tela pequena: arraste a câmera pra mudar de lugar e puxe as bolinhas dos cantos pra mudar o tamanho. Também tem os formatos prontos (igual à live, 16:9, 4:3, quadradinha) e os campos de X, Y, largura e altura. No OBS esses números ficam em: botão direito na câmera → **Transformar → Editar transformação** (Posição e Tamanho).
+Letras: **Praia** (Pacifico, cursiva, a padrão), **Fofinha** (Cherry Bomb One), **Bolinha** (Sniglet) e **Redondinha** (Fredoka).
 
-A plaquinha fica centralizada em cima da câmera e nunca entra na onda da borda.
+### A câmera
+
+Já vem no lugar e no formato da live, que é quase quadrada e fica no canto de baixo à direita: **x 1591, y 747, 329 × 333** numa tela 1920 × 1080. A parte da borda que passa da beirada da tela some junto, como se continuasse pra fora.
+
+Se mudar a câmera no OBS, ajuste no gerador. Lá tem uma tela pequena: arraste a câmera pra mudar de lugar e puxe as bolinhas dos cantos pra mudar o tamanho. Também tem os formatos prontos (igual à live, 16:9, 4:3, quadradinha) e os campos de X, Y, largura e altura. No OBS esses números ficam em: botão direito na câmera → **Transformar → Editar transformação** (Posição e Tamanho). Se a câmera fica em outro lugar em outra cena, é só fazer outro link pra ela.
 
 ### Colocar no OBS
 
 1. **Fontes → + → Navegador**
 2. **URL**: `https://evelinperes.carlosandemberg.com.br/borda.html`
 3. **Largura 1920, Altura 1080** (o tamanho da tela do OBS, em **Configurações → Vídeo → Resolução base**)
-4. Deixe a borda **no topo** da lista de fontes. Dá pra usar a mesma fonte em todas as cenas (botão direito → **Copiar** e **Colar (referência)** nas outras).
+4. Deixe a borda **acima da câmera** na lista de fontes. Se a câmera fica no mesmo lugar nas outras cenas, dá pra usar a mesma fonte nelas (botão direito → **Copiar** e **Colar (referência)**).
 
-Abrindo o link num navegador normal aparece a splash da Nami de fundo, só de prévia, e clicar faz a Nami pular. No OBS o fundo fica transparente.
+Abrindo o link num navegador normal aparece a splash da Nami de fundo e um quadro escuro no lugar da câmera, só de prévia, e clicar faz a Nami pular. No OBS o fundo fica transparente.
 
 ### Opções da borda
 
@@ -42,26 +46,27 @@ Junte com `&`, ex.: `borda.html?espessura=1.4&nado=embaixo`. O gerador monta iss
 | Opção | O que faz |
 |---|---|
 | `tema=rosa` | Cores: `rosa` (branco e rosa clarinho, o padrão), `lilas` ou `agua` |
-| `espessura=1` | Grossura da borda: `0.5` fininha, `2.5` bem grossa |
+| `espessura=1` | Grossura da borda em volta da câmera: `0.5` fininha, `2.5` bem grossa |
 | `velocidade=1` | Velocidade das ondas e da Nami |
 | `nami=0` | Sem a Nami |
 | `tamanho=1` | Tamanho da Nami (`0.6` a `2`) |
-| `nado=embaixo` | A Nami nada só embaixo, indo e voltando (o padrão, `volta`, é em volta da tela toda) |
+| `nado=cima` | A Nami nada só em cima da câmera, indo e voltando (o padrão, `volta`, é em volta da câmera toda) |
 | `pulo=25` | Segundos entre um pulo e outro (`pulo=0` desliga) |
 | `bolhas=0` | Sem bolhas |
 | `brilhos=0` | Sem brilhinhos |
 | `enfeites=0` | Sem estrela, concha e pérolas nos cantos |
-| `nome=evelin_peres` | Texto da plaquinha em cima da câmera (`nome=` vazio esconde) |
-| `nometam=1` | Tamanho da plaquinha (`0.6` a `1.8`) |
-| `peixes=3` | Quantos peixinhos dão a volta na plaquinha (`peixes=0` tira) |
-| `camx=1591&camy=747` | Canto de cima-esquerdo da câmera, em pixels da tela do OBS |
+| `nome=evelin_peres` | Nome flutuando em cima da câmera (`nome=` vazio esconde) |
+| `nometam=1` | Tamanho do nome (`0.6` a `1.8`) |
+| `letra=pacifico` | Letra do nome: `pacifico`, `cherry`, `sniglet` ou `fredoka` |
+| `peixes=3` | Quantos peixinhos dão a volta no nome (`peixes=0` tira) |
+| `camx=1591&camy=747` | Canto de cima-esquerdo da câmera, em pixels da tela do OBS (a borda vai em volta dela) |
 | `camlargura=329&camaltura=333` | Tamanho da câmera |
 | `resolucao=1920x1080` | Tamanho da tela do OBS em que os números da câmera foram medidos |
 | `fundo=0` | Força o fundo transparente mesmo fora do OBS |
 
 ## A tela de fila
 
-Pra cena de quando ela está esperando a partida. A borda e a Nami nadando são as mesmas, com o fundo de mar rosinha (raios de luz e bolhas subindo).
+Pra cena de quando ela está esperando a partida. Aqui a borda de ondas vai em volta da tela toda, com a Nami nadando, e o fundo é um mar rosinha (raios de luz e bolhas subindo).
 
 - **Skin da Nami**: a arte das skins escolhidas vai trocando, com zoom lento, o nome, a raridade (Épica, Lendária, Mítica, Legado) e uma barrinha mostrando quando vem a próxima. Embaixo ficam as bolinhas de todas as skins escolhidas.
 - **Croma**: em cada skin dá pra escolher um croma, que aparece num selinho no canto da arte, com o nome e a cor.

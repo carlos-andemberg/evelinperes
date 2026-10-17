@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>evelin_peres · Overlays da Nami</title>
-<meta name="description" content="Borda de ondas com a Nami nadando e tela de fila com as skins da Nami, pro OBS da evelin_peres.">
+<meta name="description" content="Borda de ondas pra câmera com a Nami nadando e tela de fila com as skins da Nami, pro OBS da evelin_peres.">
 <meta name="theme-color" content="#ff8fbd">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="icon" href="favicon.ico" sizes="any">
@@ -12,7 +12,7 @@
 <link rel="manifest" href="site.webmanifest">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cherry+Bomb+One&family=Fredoka:wght@500;600;700&family=Nunito:wght@600;700;800&family=Pacifico&family=Sniglet:wght@800&display=swap" rel="stylesheet">
 <style>
   :root {
     --rosa: #ff5c9e; --rosa2: #ffa3cb; --rosa3: #ffd3e5; --clarinho: #fff4f8; --texto: #6e2449; --suave: #a4607f;
@@ -169,10 +169,20 @@
   .tela-cam i[data-c="sw"] { left: -10px; bottom: -10px; cursor: nesw-resize; }
   .tela-cam i[data-c="se"] { right: -10px; bottom: -10px; cursor: nwse-resize; }
   .tela-nome {
-    position: absolute; left: 50%; bottom: 100%; transform: translate(-50%, 35%); white-space: nowrap; pointer-events: none;
-    font-family: var(--titulo); font-weight: 700; color: var(--rosa); background: #fff; border: 2px solid var(--rosa2);
-    border-radius: 999px; box-shadow: 0 3px 10px rgba(255, 92, 158, 0.45); line-height: 1.35;
+    position: absolute; left: 50%; bottom: 100%; transform: translate(-50%, 50%); white-space: nowrap; pointer-events: none; line-height: 1.2;
+    color: var(--rosa);
+    text-shadow: 1.5px 0 #fff, -1.5px 0 #fff, 0 1.5px #fff, 0 -1.5px #fff, 1px 1px #fff, -1px -1px #fff, 1px -1px #fff, -1px 1px #fff, 0 0 7px rgba(255, 92, 158, 0.7);
+    animation: flutua 2.6s ease-in-out infinite;
   }
+  @keyframes flutua { 50% { transform: translate(-50%, 35%); } }
+  .letras { display: flex; flex-wrap: wrap; gap: 8px; }
+  .letras button {
+    font-size: 19px; line-height: 1.3; color: var(--rosa); background: #fff; border: 2px solid var(--rosa3); border-radius: 14px;
+    padding: 6px 14px; cursor: pointer; transition: border-color 0.15s, transform 0.15s;
+  }
+  .letras button small { display: block; font: 800 10.5px 'Nunito', sans-serif; letter-spacing: 0.1em; text-transform: uppercase; color: var(--suave); }
+  .letras button:hover { border-color: var(--rosa2); transform: translateY(-1px); }
+  .letras button.sim { border-color: var(--rosa); box-shadow: 0 0 0 3px rgba(255, 92, 158, 0.18); }
   .tela-nome:empty { display: none; }
   .dica-tela { margin: 0 0 4px; text-align: center; font-size: 13px; font-weight: 700; color: var(--suave); }
   .formatos { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin: 12px 0 16px; }
@@ -182,7 +192,7 @@
   }
   .formatos button:hover { border-color: var(--rosa2); transform: translateY(-1px); }
   .formatos button.sim { background: var(--rosa); color: #fff; border-color: var(--rosa); }
-  .numeros { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin-bottom: 16px; }
+  .numeros { display: grid; grid-template-columns: repeat(auto-fit, minmax(122px, 1fr)); gap: 10px; margin-bottom: 16px; }
   .numero { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
   .numero > span { font-size: 12px; font-weight: 800; letter-spacing: 0.14em; text-transform: uppercase; color: var(--suave); text-align: center; }
   .passo { display: flex; align-items: stretch; background: var(--clarinho); border: 2px solid var(--rosa3); border-radius: 14px; overflow: hidden; }
@@ -205,7 +215,6 @@
   }
   @media (max-width: 520px) {
     .campos, .chaves { grid-template-columns: 1fr; }
-    .numeros { grid-template-columns: 1fr 1fr; }
     .card { padding: 18px 16px; }
     .skins { grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); }
   }
@@ -218,11 +227,11 @@
   <header>
     <img src="favicon.svg" alt="">
     <h1>evelin_peres</h1>
-    <p>Overlays da Nami pro OBS: a borda de ondas com ela nadando e a tela de <i>estou na fila</i> com as skins. Escolha as opções, copie o link e cole numa fonte <b>Navegador</b>.</p>
+    <p>Overlays da Nami pro OBS: a borda de ondas da câmera com ela nadando e a tela de <i>estou na fila</i> com as skins. Escolha as opções, copie o link e cole numa fonte <b>Navegador</b>.</p>
   </header>
 
   <nav class="abas" role="tablist">
-    <button role="tab" aria-selected="true" data-aba="borda">🌊 Borda de ondas</button>
+    <button role="tab" aria-selected="true" data-aba="borda">🌊 Borda da câmera</button>
     <button role="tab" aria-selected="false" data-aba="fila">🐚 Tela de fila</button>
   </nav>
 
@@ -230,8 +239,8 @@
   <section class="painel ativo" id="painel-borda" role="tabpanel">
     <div class="pilha">
     <div class="card">
-      <h2>Borda de ondas</h2>
-      <p>Fica por cima de qualquer cena (jogo, conversa, fila). O fundo é transparente e ela se ajusta sozinha a qualquer tamanho de tela.</p>
+      <h2>Borda da câmera</h2>
+      <p>Ondinhas brancas e rosa em volta da webcam, com a Nami nadando nelas e o nome flutuando em cima. O fundo é transparente: a borda vai por cima da câmera em qualquer cena.</p>
       <div class="campos">
         <div class="campo cheio"><span>Cores</span><div class="temas" id="temas"></div></div>
         <label class="campo"><span>Grossura da borda <output id="o-espessura"></output></span><input type="range" id="espessura" min="0.5" max="2.5" step="0.1"></label>
@@ -240,8 +249,8 @@
         <label class="campo"><span>Pulo a cada <output id="o-pulo"></output></span><input type="range" id="pulo" min="0" max="120" step="5"></label>
         <label class="campo cheio"><span>Onde a Nami nada</span>
           <select id="nado">
-            <option value="volta">Em volta da tela toda</option>
-            <option value="embaixo">Só embaixo, indo e voltando</option>
+            <option value="volta">Em volta da câmera toda</option>
+            <option value="cima">Só em cima, indo e voltando</option>
           </select>
         </label>
         <div class="campo cheio">
@@ -257,12 +266,13 @@
     </div>
 
     <div class="card">
-      <h2>📷 Nome em cima da câmera</h2>
-      <p>A plaquinha com o nome fica sentadinha em cima da câmera, com peixinhos dando a volta nela e bolhinhas subindo. Já vem no lugar e no formato da câmera da live; se mudar a câmera no OBS, é só ajustar aqui.</p>
+      <h2>📷 Sua câmera e o nome</h2>
+      <p>A borda abraça a câmera e o nome flutua em cima dela, só as letrinhas, com peixinhos dando a volta e bolhinhas subindo. Já vem no lugar e no formato da câmera da live; se mudar a câmera no OBS, é só ajustar aqui.</p>
       <div class="campos">
         <label class="campo"><span>Nome <small class="opcional">vazio esconde</small></span><input type="text" id="nome" maxlength="24"></label>
         <label class="campo"><span>Tamanho do nome <output id="o-nometam"></output></span><input type="range" id="nometam" min="0.6" max="1.8" step="0.1"></label>
         <label class="campo cheio"><span>Peixinhos <output id="o-peixes"></output></span><input type="range" id="peixes" min="0" max="8" step="1"></label>
+        <div class="campo cheio"><span>Letra do nome</span><div class="letras" id="letras"></div></div>
       </div>
 
       <div class="tela" id="tela">
@@ -300,7 +310,7 @@
         <ol class="passos" style="margin-top:14px">
           <li>No OBS: <b>Fontes → + → Navegador</b></li>
           <li>Cole o link em <b>URL</b> e use <b>Largura 1920</b> e <b>Altura 1080</b> (o tamanho da tela do OBS)</li>
-          <li>Deixe a borda <b>no topo</b> da lista de fontes, acima do jogo e da câmera</li>
+          <li>Deixe a borda <b>acima da câmera</b> na lista de fontes</li>
         </ol>
       </div>
     </div>
@@ -310,7 +320,7 @@
   <section class="painel" id="painel-fila" role="tabpanel">
     <div class="card">
       <h2>Tela de fila</h2>
-      <p>Pra quando estiver esperando a partida: skin da Nami trocando, tempo na fila, recadinhos e as habilidades dela. A borda e a Nami nadando seguem as opções da aba Borda.</p>
+      <p>Pra quando estiver esperando a partida: skin da Nami trocando, tempo na fila, recadinhos e as habilidades dela. As cores e a Nami nadando seguem as opções da aba Borda.</p>
       <div class="skins-topo">
         <span class="rotulo">Skins e cromas</span>
         <div><button class="botao claro pequeno" id="todas">Todas</button><button class="botao claro pequeno" id="nenhuma">Nenhuma</button></div>
@@ -366,19 +376,20 @@
   var PADRAO = {
     tema: 'rosa', espessura: 1, velocidade: 1, nami: true, tamanho: 1, nado: 'volta', pulo: 25,
     bolhas: true, brilhos: true, enfeites: true,
-    nome: 'evelin_peres', nometam: 1, peixes: 3,
+    nome: 'evelin_peres', nometam: 1, peixes: 3, letra: 'pacifico',
     camx: 1591, camy: 747, camlargura: 329, camaltura: 333, resolucao: '1920x1080',
     skins: null, croma: {}, troca: 10, aleatorio: false, titulo: 'Estou na fila', pilula: 'League of Legends',
     recados: 'Já já começa a partida!|Aproveita pra pegar uma água 💧|Digita !pix, !insta ou !elo no chat',
     tempo: true, habilidades: true, miniaturas: true, camera: false
   };
   var BORDA = ['tema', 'espessura', 'velocidade', 'nami', 'tamanho', 'nado', 'pulo', 'bolhas', 'brilhos', 'enfeites'];
-  var PLACA = ['nome', 'nometam', 'peixes', 'camx', 'camy', 'camlargura', 'camaltura', 'resolucao'];
+  var PLACA = ['nome', 'nometam', 'peixes', 'letra', 'camx', 'camy', 'camlargura', 'camaltura', 'resolucao'];
   var FILA = ['troca', 'aleatorio', 'titulo', 'pilula', 'recados', 'tempo', 'habilidades', 'miniaturas', 'camera'];
   var CHAVE = 'evelinperes-gerador';
 
   var estado = JSON.parse(JSON.stringify(PADRAO));
   try { Object.assign(estado, JSON.parse(localStorage.getItem(CHAVE) || '{}')); } catch (e) {}
+  if (estado.nado === 'embaixo') estado.nado = 'cima';  // nome antigo, de quando a borda era da tela
   function guardar() { try { localStorage.setItem(CHAVE, JSON.stringify(estado)); } catch (e) {} }
 
   var $ = function (id) { return document.getElementById(id); };
@@ -563,15 +574,33 @@
     var uu = Math.min(r[0], r[1]) / 1080, fs = Math.max(8, 34 * uu * estado.nometam * esc);
     var nome = $('telaNome');
     nome.textContent = estado.nome;
-    nome.style.fontSize = fs + 'px';
-    nome.style.padding = (fs * 0.18) + 'px ' + (fs * 0.62) + 'px';
-    nome.style.borderWidth = Math.max(1.5, 4.5 * uu * estado.nometam * esc) + 'px';
+    var L = Ondas.LETRAS[estado.letra] || Ondas.LETRAS.pacifico;
+    nome.style.font = L.css.replace('{px}', (fs * L.esc).toFixed(1));
+    // o nome flutua acima da raia em que a Nami nada
+    nome.style.bottom = 'calc(100% + ' + ((25 + 6 + 24 + 6) * uu * esc).toFixed(1) + 'px)';
+    document.querySelectorAll('#letras button').forEach(function (b) {
+      b.classList.toggle('sim', b.dataset.letra === estado.letra);
+      b.firstChild.nodeValue = estado.nome || 'evelin_peres';
+    });
     CAMPOS_CAM.forEach(function (k) { if (document.activeElement !== $(k)) $(k).value = estado[k]; });
     document.querySelectorAll('#formatos button').forEach(function (b, i) {
       var f = FORMATOS[i], k = r[0] / 1920;
       b.classList.toggle('sim', Math.abs(estado.camlargura - f.w * k) < 2 && Math.abs(estado.camaltura - f.h * k) < 2 && (f.x === undefined || Math.abs(estado.camx - f.x * k) < 2));
     });
   }
+
+  Object.keys(Ondas.LETRAS).forEach(function (k) {
+    var L = Ondas.LETRAS[k], b = document.createElement('button');
+    b.type = 'button';
+    b.dataset.letra = k;
+    b.style.font = L.css.replace('{px}', '19');
+    b.textContent = estado.nome || 'evelin_peres';
+    var sm = document.createElement('small');
+    sm.textContent = L.nome;
+    b.appendChild(sm);
+    b.addEventListener('click', function () { estado.letra = k; atualizar(); });
+    $('letras').appendChild(b);
+  });
 
   FORMATOS.forEach(function (f) {
     var b = document.createElement('button');
