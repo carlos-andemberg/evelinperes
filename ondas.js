@@ -580,6 +580,36 @@
     fredoka: { nome: 'Redondinha', familia: 'Fredoka', css: '700 {px}px Fredoka, Nunito, sans-serif', cursiva: false, esc: 1 }
   };
 
+  // Espaço (em px) que a borda da câmera precisa em volta da webcam pra nada cortar: as ondas e o
+  // brilho, a Nami nadando, o pulo dela (só da beirada de cima) e o nome com os peixinhos dando a
+  // volta. Usado pela borda "só da câmera" e pelo gerador, que mostra o tamanho da fonte do OBS.
+  // A largura do nome é uma estimativa folgada, pra não depender da letra já ter carregado.
+  var LARGURA_LETRA = { pacifico: 0.58, cherry: 0.7, sniglet: 0.66, fredoka: 0.62 };
+  function margensCamera(camW, camH, o) {
+    o = o || {};
+    var e = Math.max(0.3, o.espessura || 1), t = o.tamanho || 1, k = o.nometam || 1;
+    var u = Math.max(0.3, Math.min(camW, camH) / 333);
+    var anel = 25 * u * e + 6 * u * Math.sqrt(e);
+    var corpo = o.nami === false ? 0 : 16 * u * t + 3 * u;
+    var lado = anel + Math.max(10 * u, corpo) + 8 * u, cima = lado, meia = 0;
+    if (o.nami !== false && !(o.pulo <= 0)) {
+      // no pulo com giro ela fica em pé por um instante: conta o corpo inteiro, não só a altura
+      cima = Math.max(cima, anel + 95 * u * Math.max(0.7, t) + 48 * u * t + 8 * u);
+    }
+    if (o.nome) {
+      var L = LETRAS[o.letra] || LETRAS.pacifico;
+      var fs = 36 * u * k * L.esc, h = fs * 1.25, raia = (24 * t + 6) * u;
+      var w = String(o.nome).length * fs * (LARGURA_LETRA[o.letra] || 0.66) + fs * 0.5;
+      var peixe = o.peixes > 0 ? 33 * u * 1.15 * Math.max(0.7, k) * 0.62 : 0;
+      var orbitaY = o.peixes > 0 ? (h / 2 + 12 * u) * 1.18 + peixe : h / 2 + 6 * u;
+      var orbitaX = o.peixes > 0 ? (w / 2 + 26 * u) * 1.18 + peixe : w / 2 + 10 * u;
+      cima = Math.max(cima, anel + raia + h / 2 + orbitaY + 8 * u);
+      meia = orbitaX + 6 * u;
+    }
+    var lados = Math.max(lado, meia - camW / 2);
+    return { cima: Math.ceil(cima), baixo: Math.ceil(lado), esquerda: Math.ceil(lados), direita: Math.ceil(lados) };
+  }
+
   // --------------------------------------------------------------- motor
   // nome: plaquinha com o nome (vazio = sem plaquinha). cam: {x, y, w, h, ref: [largura, altura]}
   // é a câmera na tela de referência; a plaquinha fica em cima dela.
@@ -625,8 +655,10 @@
       var e = Math.max(0.3, op.espessura), rq = Math.sqrt(e);
       if (op.cam) {
         // borda em volta da câmera: a água fica do lado de fora e as ondas crescem pra fora
-        var ex = W / op.cam.ref[0], ey = H / op.cam.ref[1];
-        var x0 = op.cam.x * ex, y0 = op.cam.y * ey, x1 = (op.cam.x + op.cam.w) * ex, y1 = (op.cam.y + op.cam.h) * ey;
+        // op.cam pode ser uma função do tamanho da fonte (a borda "só da câmera" se ajeita sozinha)
+        var cam = typeof op.cam === 'function' ? op.cam(W, H) : op.cam;
+        var ex = W / cam.ref[0], ey = H / cam.ref[1];
+        var x0 = cam.x * ex, y0 = cam.y * ey, x1 = (cam.x + cam.w) * ex, y1 = (cam.y + cam.h) * ey;
         u = Math.max(0.3, Math.min(x1 - x0, y1 - y0) / 333);
         var Rc = 22 * u, pc = Math.max(2.5, 4 * u);
         var anel = function (d, A, lambda, w, ph) {
@@ -726,8 +758,9 @@
       }
       if (op.pulo > 0) {
         nami.proxPulo -= dt;
-        if (!nami.pulo && nami.proxPulo <= 0 && Math.abs(nami.flip) > 0.95) pular();
+        if (nami.proxPulo <= 0) nami.querPular = true;
       }
+      if (nami.querPular && !nami.pulo && podePular()) pular();
       if (nami.pulo) {
         nami.pulo.t += dt;
         if (nami.pulo.t >= nami.pulo.dur) {
@@ -737,8 +770,23 @@
       }
     }
 
+    // Na borda da câmera ela só pula da beirada de cima, e só onde dá pra cair antes da quina:
+    // assim o pulo cabe no espaço que margensCamera reserva em cima e nada corta.
+    function podePular() {
+      if (Math.abs(nami.flip) < 0.95) return false;
+      if (!furo) return true;
+      var c = camadas[0].c, m = 10 * u;
+      var viagem = velNami * u * op.velocidade * (0.6 + 0.4 * op.tamanho) * 1.45;
+      var s = ((nami.s % c.P) + c.P) % c.P;
+      if (s < m || s > c.lw - m) return false;
+      return vaiEVolta() && nami.dir < 0 ? s - viagem > m : s + viagem < c.lw - m;
+    }
+
     function pular() {
       if (!op.nami || nami.pulo) return;
+      // clique na hora errada: pula assim que chegar na beirada de cima
+      if (!podePular()) { nami.querPular = true; return; }
+      nami.querPular = false;
       nami.pulo = { t: 0, dur: 1.45, h: (95 + Math.random() * 40) * u * Math.max(0.7, op.tamanho) * (furo ? 0.7 : 1), giro: Math.random() < 0.4 };
       nami.proxPulo = op.pulo * (0.75 + Math.random() * 0.5);
       respingo(nami.x, nami.y, nami.nx, nami.ny, 14);
@@ -820,6 +868,11 @@
       }
     }
 
+    // bolhas e gotas somem de mansinho perto da beirada da fonte, em vez de cortar
+    function perto(x, y) {
+      return Math.max(0, Math.min(1, Math.min(x, W - x, y, H - y) / (14 * u)));
+    }
+
     function desenhaBolhas(dt) {
       ctx.lineWidth = Math.max(1, 1.1 * u);
       for (var i = bolhas.length - 1; i >= 0; i--) {
@@ -828,7 +881,7 @@
         if (b.vida > b.max) { bolhas.splice(i, 1); continue; }
         var bal = Math.sin(b.vida * 7 + b.fase) * 10 * u;
         b.x += (b.vx - b.ny * bal) * dt; b.y += (b.vy + b.nx * bal) * dt;
-        var a = Math.min(1, b.vida * 5, (b.max - b.vida) * 4);
+        var a = Math.min(1, b.vida * 5, (b.max - b.vida) * 4, perto(b.x, b.y));
         ctx.globalAlpha = a * 0.9;
         ctx.strokeStyle = '#ffffff';
         ctx.fillStyle = 'rgba(255,255,255,0.25)';
@@ -846,7 +899,7 @@
         if (g.vida > g.max) { gotas.splice(i, 1); continue; }
         g.vx += g.gx * dt; g.vy += g.gy * dt;
         g.x += g.vx * dt; g.y += g.vy * dt;
-        ctx.globalAlpha = Math.min(1, (g.max - g.vida) * 4);
+        ctx.globalAlpha = Math.min(1, (g.max - g.vida) * 4, perto(g.x, g.y));
         ctx.fillStyle = i % 3 ? '#ffffff' : tema.acento2;
         ctx.beginPath(); ctx.arc(g.x, g.y, g.r, 0, TAU); ctx.fill();
       }
@@ -961,7 +1014,7 @@
         placa.bolhas.forEach(function (b) {
           if (b.frente !== frente) return;
           var x = b.x + Math.sin(b.vida * 4 + b.f) * 5 * u;
-          ctx.globalAlpha = Math.min(1, b.vida * 4, (b.max - b.vida) * 2.5) * 0.95;
+          ctx.globalAlpha = Math.min(1, b.vida * 4, (b.max - b.vida) * 2.5, perto(x, b.y)) * 0.95;
           ctx.fillStyle = 'rgba(255,255,255,0.3)';
           ctx.strokeStyle = '#ffffff';
           ctx.beginPath(); ctx.arc(x, b.y, b.r, 0, TAU); ctx.fill(); ctx.stroke();
@@ -1136,6 +1189,7 @@
     TEMAS: TEMAS,
     LETRAS: LETRAS,
     PADRAO: PADRAO,
+    margensCamera: margensCamera,
     parametros: parametros,
     automatico: automatico,
     veioDeRecarga: veioDeRecarga,

@@ -48,10 +48,17 @@ Se mudar a câmera no OBS, ajuste no gerador. Lá tem uma tela pequena: arraste 
 
 ### Colocar no OBS
 
+O padrão é a borda **só da câmera**: a fonte tem o tamanho exato da webcam mais o espaço da borda, do nome com os peixinhos e do pulo da Nami (ela só pula da beirada de cima, e só onde dá pra cair antes da quina). Assim dá pra agrupar a borda com a câmera e arrastar o grupo pra qualquer canto, até encostado na beirada da tela, sem cortar nada. Bolhas e respingos somem de mansinho antes da beirada da fonte.
+
+Pra câmera da live (329 × 333 em x 1591, y 747):
+
 1. **Fontes → + → Navegador**
 2. **URL**: `https://evelinperes.carlosandemberg.com.br/borda.html`
-3. **Largura 1920, Altura 1080** (o tamanho da tela do OBS, em **Configurações → Vídeo → Resolução base**)
-4. Deixe a borda **acima da câmera** na lista de fontes. Se a câmera fica no mesmo lugar nas outras cenas, dá pra usar a mesma fonte nelas (botão direito → **Copiar** e **Colar (referência)**).
+3. **Largura 449, Altura 571** (o gerador mostra o tamanho certo pra cada câmera, nome e letra)
+4. Botão direito na borda → **Transformar → Editar transformação** → **Posição x 1531, y 567**: aí a borda cai certinho em volta da câmera.
+5. Deixe a borda **acima da câmera** na lista de fontes, selecione as duas → botão direito → **Agrupar itens selecionados**. Agora é só arrastar o grupo.
+
+Se a fonte tiver outro tamanho, a borda se ajeita lá dentro e escala junto. Com `modo=tela`, a fonte volta a ser a tela inteira (1920 × 1080) com a borda no lugar da câmera.
 
 Abrindo o link num navegador normal aparece a splash da Nami de fundo e um quadro escuro no lugar da câmera, só de prévia, e clicar faz a Nami pular. No OBS o fundo fica transparente.
 
@@ -78,6 +85,7 @@ Junte com `&`, ex.: `borda.html?espessura=1.4&nado=embaixo`. O gerador monta iss
 | `camx=1591&camy=747` | Canto de cima-esquerdo da câmera, em pixels da tela do OBS (a borda vai em volta dela) |
 | `camlargura=329&camaltura=333` | Tamanho da câmera |
 | `resolucao=1920x1080` | Tamanho da tela do OBS em que os números da câmera foram medidos |
+| `modo=tela` | A fonte é a tela inteira e a borda cai em `camx`/`camy` (o padrão, `solta`, é a fonte só da câmera) |
 | `fundo=0` | Força o fundo transparente mesmo fora do OBS |
 
 ## A tela de fila

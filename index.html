@@ -231,6 +231,16 @@
   }
   .passo input::-webkit-inner-spin-button, .passo input::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
 
+  /* jeito de colocar a borda no OBS */
+  .modos { display: grid; gap: 8px; }
+  .modos label { display: flex; gap: 10px; align-items: flex-start; padding: 10px 12px; border: 2px solid var(--rosa3); border-radius: 14px; background: #fff; cursor: pointer; }
+  .modos label:has(input:checked) { border-color: var(--rosa); box-shadow: 0 0 0 3px rgba(255, 92, 158, 0.15); }
+  .modos input { accent-color: var(--rosa); margin-top: 3px; }
+  .modos b { display: block; font-family: var(--titulo); color: var(--rosa); font-size: 16px; }
+  .modos small { display: block; color: var(--suave); font-weight: 700; line-height: 1.4; }
+  .previa.exemplo { background: linear-gradient(rgba(20, 30, 45, 0.4), rgba(20, 30, 45, 0.6)), url("https://ddragon.leagueoflegends.com/cdn/img/champion/splash/Nami_0.jpg") center / cover, #1b2a3a; }
+  .previa .contorno { position: absolute; border: 2px dashed rgba(255, 255, 255, 0.7); border-radius: 4px; pointer-events: none; z-index: 2; }
+
   /* link único e barra de salvar */
   .nota { margin: 8px 0 0; font-size: 13.5px; font-weight: 700; color: var(--suave); line-height: 1.5; }
   .nota b { color: var(--rosa); }
@@ -349,6 +359,13 @@
           </select>
         </label>
         <p class="aviso" style="font-size:13px">No OBS: botão direito na câmera → <b>Transformar → Editar transformação</b>. <b>Posição</b> é o X e Y, <b>Tamanho</b> é a largura e a altura.</p>
+        <div class="campo cheio"><span>Como a borda entra no OBS</span>
+          <div class="modos">
+            <label><input type="radio" name="modo" value="solta"><span><b>Só a câmera</b><small>A fonte tem o tamanho da câmera com a borda, o nome, os peixinhos e o pulo da Nami. Dá pra agrupar com a câmera e arrastar pra qualquer canto sem cortar nada.</small></span></label>
+            <label><input type="radio" name="modo" value="tela"><span><b>Tela inteira</b><small>A fonte é a tela toda do OBS e a borda cai no lugar da câmera. Perto da beirada da tela, um pedaço some.</small></span></label>
+          </div>
+        </div>
+        <p class="aviso cheio" id="medidasFonte" style="grid-column:1 / -1"></p>
       </div>
     </div>
     </div>
@@ -360,7 +377,7 @@
         <p class="nota">Cole no OBS <b>uma vez só</b>. Depois é só mexer aqui e clicar em <b>Salvar na live</b>: a tela no OBS se atualiza sozinha.</p>
         <ol class="passos" style="margin-top:12px">
           <li>No OBS: <b>Fontes → + → Navegador</b></li>
-          <li>Cole o link em <b>URL</b> e use <b>Largura 1920</b> e <b>Altura 1080</b> (o tamanho da tela do OBS)</li>
+          <li id="passoTamanho">Cole o link em <b>URL</b> e use <b>Largura 1920</b> e <b>Altura 1080</b> (o tamanho da tela do OBS)</li>
           <li>Deixe a borda <b>acima da câmera</b> na lista de fontes</li>
         </ol>
         <details class="fixo"><summary>Link fixo, com as opções escritas nele</summary>
@@ -499,7 +516,7 @@
     tema: 'rosa', espessura: 1, velocidade: 1, nami: true, tamanho: 1, nado: 'volta', pulo: 25,
     bolhas: true, brilhos: true, enfeites: true,
     nome: 'evelin_peres', nometam: 1, peixes: 3, letra: 'pacifico',
-    camx: 1591, camy: 747, camlargura: 329, camaltura: 333, resolucao: '1920x1080',
+    camx: 1591, camy: 747, camlargura: 329, camaltura: 333, resolucao: '1920x1080', modo: 'solta',
     skins: null, croma: {}, troca: 10, aleatorio: false, titulo: 'Estou na fila', pilula: 'League of Legends',
     recados: 'Já já começa a partida!|Aproveita pra pegar uma água 💧|Digita !pix, !insta ou !elo no chat',
     tempo: true, habilidades: true, miniaturas: true, camera: false, nomeskin: false,
@@ -512,7 +529,7 @@
   var BORDA_FILA = { ftema: 'tema', fespessura: 'espessura', fvelocidade: 'velocidade', fnami: 'nami', ftamanho: 'tamanho', fnado: 'nado', fpulo: 'pulo', fbolhas: 'bolhas', fbrilhos: 'brilhos', fenfeites: 'enfeites' };
   var CAM_FILA = { fcamx: 'camx', fcamy: 'camy', fcamlargura: 'camlargura', fcamaltura: 'camaltura', fresolucao: 'resolucao' };
   var BORDA = ['tema', 'espessura', 'velocidade', 'nami', 'tamanho', 'nado', 'pulo', 'bolhas', 'brilhos', 'enfeites'];
-  var PLACA = ['nome', 'nometam', 'peixes', 'letra', 'camx', 'camy', 'camlargura', 'camaltura', 'resolucao'];
+  var PLACA = ['nome', 'nometam', 'peixes', 'letra', 'camx', 'camy', 'camlargura', 'camaltura', 'resolucao', 'modo'];
   var FILA = ['troca', 'aleatorio', 'titulo', 'pilula', 'recados', 'tempo', 'habilidades', 'miniaturas', 'camera', 'nomeskin'];
   var CHAVE = 'evelinperes-gerador';
 
@@ -559,7 +576,8 @@
   }
 
   // ---------------------------------------------------------------- prévias
-  function previa(caixa, url) {
+  // fonte = {x, y, w, h, ref}: a prévia mostra a fonte nesse tamanho e lugar, numa tela de exemplo
+  function previa(caixa, url, fonte) {
     var f = caixa.querySelector('iframe');
     if (!f) {
       f = document.createElement('iframe');
@@ -567,12 +585,54 @@
       caixa.insertBefore(f, caixa.firstChild);
     }
     if (f.dataset.url !== url) { f.dataset.url = url; f.src = url; }
+    f.dataset.fonte = fonte ? JSON.stringify(fonte) : '';
+    caixa.classList.toggle('exemplo', !!fonte);
     escala(caixa);
     return f;
   }
   function escala(caixa) {
-    var f = caixa.querySelector('iframe');
-    if (f) f.style.transform = 'scale(' + (caixa.clientWidth / 1920) + ')';
+    var f = caixa.querySelector('iframe'), linha = caixa.querySelector('.contorno');
+    if (!f) { if (linha) linha.remove(); return; }
+    var fonte = f.dataset.fonte ? JSON.parse(f.dataset.fonte) : null;
+    if (!fonte) {
+      f.style.width = '1920px'; f.style.height = '1080px';
+      f.style.transform = 'scale(' + (caixa.clientWidth / 1920) + ')';
+      if (linha) linha.remove();
+      return;
+    }
+    var k = caixa.clientWidth / fonte.ref[0];
+    f.style.width = fonte.w + 'px'; f.style.height = fonte.h + 'px';
+    f.style.transform = 'translate(' + (fonte.x * k) + 'px,' + (fonte.y * k) + 'px) scale(' + k + ')';
+    // tracejado mostrando o tamanho da fonte
+    if (!linha) { linha = document.createElement('div'); linha.className = 'contorno'; caixa.appendChild(linha); }
+    linha.style.left = (fonte.x * k) + 'px'; linha.style.top = (fonte.y * k) + 'px';
+    linha.style.width = (fonte.w * k) + 'px'; linha.style.height = (fonte.h * k) + 'px';
+  }
+
+  // tamanho e lugar da fonte da borda "só da câmera" (mesma conta que a borda.html faz)
+  function fonteBorda() {
+    var r = String(estado.resolucao).split('x').map(Number);
+    if (!(r[0] > 0 && r[1] > 0)) r = [1920, 1080];
+    if (estado.modo === 'tela') return { x: 0, y: 0, w: r[0], h: r[1], ref: r, tela: true };
+    var M = Ondas.margensCamera(estado.camlargura, estado.camaltura, {
+      espessura: estado.espessura, tamanho: estado.tamanho, nami: estado.nami, pulo: estado.pulo,
+      nome: estado.nome, nometam: estado.nometam, letra: estado.letra, peixes: estado.peixes
+    });
+    return {
+      x: estado.camx - M.esquerda, y: estado.camy - M.cima,
+      w: estado.camlargura + M.esquerda + M.direita, h: estado.camaltura + M.cima + M.baixo, ref: r
+    };
+  }
+  function mostraMedidas() {
+    var f = fonteBorda();
+    if (f.tela) {
+      $('medidasFonte').innerHTML = '📐 Fonte com <b>Largura ' + f.w + '</b> e <b>Altura ' + f.h + '</b> (a tela do OBS), na posição <b>0, 0</b>.';
+      $('passoTamanho').innerHTML = 'Cole o link em <b>URL</b> e use <b>Largura ' + f.w + '</b> e <b>Altura ' + f.h + '</b> (o tamanho da tela do OBS)';
+      return;
+    }
+    $('medidasFonte').innerHTML = '📐 Fonte Navegador com <b>Largura ' + f.w + '</b> e <b>Altura ' + f.h + '</b>. Pra cair certinho em volta da câmera, ponha ela na posição <b>x ' + f.x + ', y ' + f.y +
+      '</b> (Transformar → Editar transformação). Depois selecione a borda e a câmera → botão direito → <b>Agrupar itens selecionados</b>, e arraste o grupo pra onde quiser. Pode passar da beirada da tela, não tem problema.';
+    $('passoTamanho').innerHTML = 'Cole o link em <b>URL</b> e use <b>Largura ' + f.w + '</b> e <b>Altura ' + f.h + '</b>; na posição <b>x ' + f.x + ', y ' + f.y + '</b>, e agrupe com a câmera';
   }
   if (window.ResizeObserver) {
     var ro = new ResizeObserver(function (es) { es.forEach(function (e) { escala(e.target); }); desenhaTela(); });
@@ -587,13 +647,19 @@
     var lb = linkBorda(), lf = linkFila();
     $('link-borda').value = lb; $('abrir-borda').href = lb;
     $('link-fila').value = lf; $('abrir-fila').href = lf;
+    mostraMedidas();
     situacaoLive();
     clearTimeout(espera);
     espera = setTimeout(function () {
       // só a aba aberta fica rodando, pra não pesar
       var sep = function (u) { return u + (u.indexOf('?') > -1 ? '&' : '?'); };
       // auto=0: a prévia mostra o que está aqui, não o que está salvo na live
-      if (aba === 'borda') { previa($('previa-borda'), sep(lb) + 'fundo=1&auto=0'); limpa('previa-fila'); }
+      if (aba === 'borda') {
+        var fb = fonteBorda();
+        if (fb.tela) previa($('previa-borda'), sep(lb) + 'fundo=1&auto=0');
+        else previa($('previa-borda'), sep(lb) + 'fundo=0&caixa=1&auto=0', fb);
+        limpa('previa-fila');
+      }
       else { previa($('previa-fila'), sep(lf) + 'auto=0'); limpa('previa-borda'); }
     }, agora ? 0 : 450);
   }
@@ -644,6 +710,10 @@
     });
   }
   montaTemas($('temas'), 'tema');
+  document.querySelectorAll('input[name="modo"]').forEach(function (r) {
+    r.checked = estado.modo === r.value;
+    r.addEventListener('change', function () { if (r.checked) { estado.modo = r.value; atualizar(); } });
+  });
   montaTemas($('temasF'), 'ftema');
 
   var formatos = {

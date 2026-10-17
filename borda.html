@@ -63,26 +63,45 @@
       // a borda vai em volta da câmera (posição em pixels da tela do OBS); o nome flutua em cima
       nome: 'evelin_peres', nometam: 1, peixes: 3, letra: 'pacifico',
       camx: 1591, camy: 747, camlargura: 329, camaltura: 333, resolucao: '1920x1080',
-      fundo: !Ondas.emOBS, caixa: true
+      // solta: a fonte tem o tamanho da câmera + o espaço da borda (pra agrupar e arrastar junto)
+      // tela: a fonte é a tela toda do OBS e a borda cai no lugar da câmera (camx, camy)
+      modo: 'solta',
+      fundo: !Ondas.emOBS, caixa: !Ondas.emOBS
     }, q);
 
     var ref = op.resolucao.toLowerCase().split('x').map(Number);
     if (!(ref[0] > 0 && ref[1] > 0)) ref = [1920, 1080];
-    op.cam = { x: op.camx, y: op.camy, w: op.camlargura, h: op.camaltura, ref: ref };
+    if (op.modo === 'tela') {
+      op.cam = { x: op.camx, y: op.camy, w: op.camlargura, h: op.camaltura, ref: ref };
+    } else {
+      // a câmera fica no meio do espaço reservado; se a fonte tiver outro tamanho, tudo escala junto
+      var M = Ondas.margensCamera(op.camlargura, op.camaltura, op);
+      var precisaW = op.camlargura + M.esquerda + M.direita, precisaH = op.camaltura + M.cima + M.baixo;
+      op.cam = function (W, H) {
+        var k = Math.min(W / precisaW, H / precisaH);
+        var ox = (W - precisaW * k) / 2, oy = (H - precisaH * k) / 2;
+        return { x: ox + M.esquerda * k, y: oy + M.cima * k, w: op.camlargura * k, h: op.camaltura * k, ref: [W, H] };
+      };
+    }
 
-    if (op.fundo) {
-      document.body.classList.add('previa');
-      // lugar da câmera, só pra ver onde a borda cai
-      if (op.caixa) {
-        var cam = document.createElement('div');
-        cam.className = 'cam';
-        cam.style.left = (op.camx / ref[0] * 100) + '%';
-        cam.style.top = (op.camy / ref[1] * 100) + '%';
-        cam.style.width = (op.camlargura / ref[0] * 100) + '%';
-        cam.style.height = (op.camaltura / ref[1] * 100) + '%';
-        cam.textContent = 'câmera';
-        document.body.appendChild(cam);
-      }
+    if (op.fundo) document.body.classList.add('previa');
+    // lugar da câmera, só fora do OBS, pra ver onde a borda cai
+    if (op.caixa) {
+      var cam = document.createElement('div');
+      cam.className = 'cam';
+      cam.textContent = 'câmera';
+      document.body.appendChild(cam);
+      var poeCaixa = function () {
+        var W = innerWidth, H = innerHeight;
+        var r = typeof op.cam === 'function' ? op.cam(W, H) : op.cam;
+        var ex = W / r.ref[0], ey = H / r.ref[1];
+        cam.style.left = (r.x * ex) + 'px';
+        cam.style.top = (r.y * ey) + 'px';
+        cam.style.width = (r.w * ex) + 'px';
+        cam.style.height = (r.h * ey) + 'px';
+      };
+      poeCaixa();
+      addEventListener('resize', poeCaixa);
     }
 
     var borda = Ondas.iniciar(document.getElementById('ondas'), op);
