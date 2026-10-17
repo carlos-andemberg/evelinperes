@@ -1,0 +1,570 @@
+{
+ "versao": "16.20.1",
+ "titulo": "a Conjuradora das Marés",
+ "skins": [
+  {
+   "num": 0,
+   "nome": "Nami Clássica",
+   "raridade": "",
+   "legado": false,
+   "cromas": []
+  },
+  {
+   "num": 1,
+   "nome": "Nami Koi",
+   "raridade": "",
+   "legado": false,
+   "cromas": [
+    {
+     "num": 4,
+     "nome": "Tropical Raio de Sol",
+     "cores": [
+      "#CF8730",
+      "#3B899A"
+     ]
+    },
+    {
+     "num": 5,
+     "nome": "Tropical Fumaça",
+     "cores": [
+      "#5C8694",
+      "#743449"
+     ]
+    },
+    {
+     "num": 6,
+     "nome": "Tropical Crepúsculo",
+     "cores": [
+      "#8A397B",
+      "#18214A"
+     ]
+    }
+   ]
+  },
+  {
+   "num": 2,
+   "nome": "Nami Iara",
+   "raridade": "",
+   "legado": false,
+   "cromas": []
+  },
+  {
+   "num": 3,
+   "nome": "Nami, a Sereia-Boi",
+   "raridade": "",
+   "legado": false,
+   "cromas": []
+  },
+  {
+   "num": 7,
+   "nome": "Nami das Profundezas",
+   "raridade": "Épica",
+   "legado": false,
+   "cromas": []
+  },
+  {
+   "num": 8,
+   "nome": "SKT T1 Nami",
+   "raridade": "Épica",
+   "legado": true,
+   "cromas": []
+  },
+  {
+   "num": 9,
+   "nome": "Nami Cibernética",
+   "raridade": "Épica",
+   "legado": false,
+   "cromas": [
+    {
+     "num": 10,
+     "nome": "Rubi",
+     "cores": [
+      "#D33528",
+      "#D33528"
+     ]
+    },
+    {
+     "num": 11,
+     "nome": "Ametista",
+     "cores": [
+      "#9C68D7",
+      "#9C68D7"
+     ]
+    },
+    {
+     "num": 12,
+     "nome": "Obsidiana",
+     "cores": [
+      "#27211C",
+      "#27211C"
+     ]
+    },
+    {
+     "num": 13,
+     "nome": "Pérola",
+     "cores": [
+      "#ECF9F8",
+      "#ECF9F8"
+     ]
+    },
+    {
+     "num": 14,
+     "nome": "Quartzo-rosa",
+     "cores": [
+      "#E58BA5",
+      "#E58BA5"
+     ]
+    }
+   ]
+  },
+  {
+   "num": 15,
+   "nome": "Nami Cajado Esplendoroso",
+   "raridade": "Épica",
+   "legado": false,
+   "cromas": [
+    {
+     "num": 16,
+     "nome": "Rubi",
+     "cores": [
+      "#D33528",
+      "#D33528"
+     ]
+    },
+    {
+     "num": 17,
+     "nome": "Quartzo-rosa",
+     "cores": [
+      "#E58BA5",
+      "#E58BA5"
+     ]
+    },
+    {
+     "num": 18,
+     "nome": "Água-marinha",
+     "cores": [
+      "#6ABBEE",
+      "#6ABBEE"
+     ]
+    },
+    {
+     "num": 19,
+     "nome": "Citrino",
+     "cores": [
+      "#DF9117",
+      "#DF9117"
+     ]
+    },
+    {
+     "num": 20,
+     "nome": "Tanzanita",
+     "cores": [
+      "#54209B",
+      "#54209B"
+     ]
+    },
+    {
+     "num": 21,
+     "nome": "Peridoto",
+     "cores": [
+      "#B6E084",
+      "#B6E084"
+     ]
+    },
+    {
+     "num": 22,
+     "nome": "Grou Celestial",
+     "cores": [
+      "#E0FFFF",
+      "#C50041"
+     ]
+    },
+    {
+     "num": 23,
+     "nome": "Pérola",
+     "cores": [
+      "#ECF9F8",
+      "#ECF9F8"
+     ]
+    }
+   ]
+  },
+  {
+   "num": 24,
+   "nome": "Nami Destino Cósmico",
+   "raridade": "Épica",
+   "legado": false,
+   "cromas": [
+    {
+     "num": 25,
+     "nome": "Rubi",
+     "cores": [
+      "#D33528",
+      "#D33528"
+     ]
+    },
+    {
+     "num": 26,
+     "nome": "Esmeralda",
+     "cores": [
+      "#2DA130",
+      "#2DA130"
+     ]
+    },
+    {
+     "num": 27,
+     "nome": "Turquesa",
+     "cores": [
+      "#73BFBE",
+      "#73BFBE"
+     ]
+    },
+    {
+     "num": 28,
+     "nome": "Ametista",
+     "cores": [
+      "#9C68D7",
+      "#9C68D7"
+     ]
+    },
+    {
+     "num": 29,
+     "nome": "Quartzo-rosa",
+     "cores": [
+      "#E58BA5",
+      "#E58BA5"
+     ]
+    },
+    {
+     "num": 30,
+     "nome": "Obsidiana",
+     "cores": [
+      "#27211C",
+      "#27211C"
+     ]
+    },
+    {
+     "num": 31,
+     "nome": "Arco-íris",
+     "cores": [
+      "#C1F2FF",
+      "#C1F2FF"
+     ]
+    }
+   ]
+  },
+  {
+   "num": 32,
+   "nome": "Nami Feiticeira",
+   "raridade": "Épica",
+   "legado": true,
+   "cromas": [
+    {
+     "num": 33,
+     "nome": "Rubi",
+     "cores": [
+      "#D33528",
+      "#D33528"
+     ]
+    },
+    {
+     "num": 34,
+     "nome": "Citrino",
+     "cores": [
+      "#DF9117",
+      "#DF9117"
+     ]
+    },
+    {
+     "num": 35,
+     "nome": "Esmeralda",
+     "cores": [
+      "#2DA130",
+      "#2DA130"
+     ]
+    },
+    {
+     "num": 36,
+     "nome": "Safira",
+     "cores": [
+      "#2756CE",
+      "#2756CE"
+     ]
+    },
+    {
+     "num": 37,
+     "nome": "Quartzo-rosa",
+     "cores": [
+      "#E58BA5",
+      "#E58BA5"
+     ]
+    },
+    {
+     "num": 38,
+     "nome": "Obsidiana",
+     "cores": [
+      "#27211C",
+      "#27211C"
+     ]
+    },
+    {
+     "num": 39,
+     "nome": "Pérola",
+     "cores": [
+      "#ECF9F8",
+      "#ECF9F8"
+     ]
+    },
+    {
+     "num": 40,
+     "nome": "Turquesa",
+     "cores": [
+      "#73BFBE",
+      "#73BFBE"
+     ]
+    }
+   ]
+  },
+  {
+   "num": 41,
+   "nome": "Nami Embalos no Espaço",
+   "raridade": "Épica",
+   "legado": false,
+   "cromas": [
+    {
+     "num": 43,
+     "nome": "Rubi",
+     "cores": [
+      "#D33528",
+      "#D33528"
+     ]
+    },
+    {
+     "num": 44,
+     "nome": "Citrino",
+     "cores": [
+      "#DF9117",
+      "#DF9117"
+     ]
+    },
+    {
+     "num": 45,
+     "nome": "Esmeralda",
+     "cores": [
+      "#2DA130",
+      "#2DA130"
+     ]
+    },
+    {
+     "num": 46,
+     "nome": "Safira",
+     "cores": [
+      "#2756CE",
+      "#2756CE"
+     ]
+    },
+    {
+     "num": 47,
+     "nome": "Quartzo-rosa",
+     "cores": [
+      "#E58BA5",
+      "#E58BA5"
+     ]
+    },
+    {
+     "num": 48,
+     "nome": "Obsidiana",
+     "cores": [
+      "#27211C",
+      "#27211C"
+     ]
+    },
+    {
+     "num": 49,
+     "nome": "Pérola",
+     "cores": [
+      "#ECF9F8",
+      "#ECF9F8"
+     ]
+    },
+    {
+     "num": 50,
+     "nome": "Arco-íris",
+     "cores": [
+      "#C1F2FF",
+      "#C1F2FF"
+     ]
+    }
+   ]
+  },
+  {
+   "num": 42,
+   "nome": "Nami Embalos no Espaço de Prestígio",
+   "raridade": "Mítica",
+   "legado": false,
+   "cromas": []
+  },
+  {
+   "num": 51,
+   "nome": "Nami Congregação das Bruxas",
+   "raridade": "Lendária",
+   "legado": false,
+   "cromas": [
+    {
+     "num": 52,
+     "nome": "Rubi",
+     "cores": [
+      "#D33528",
+      "#D33528"
+     ]
+    },
+    {
+     "num": 53,
+     "nome": "Olho de Gato",
+     "cores": [
+      "#FFEE59",
+      "#FFEE59"
+     ]
+    },
+    {
+     "num": 54,
+     "nome": "Esmeralda",
+     "cores": [
+      "#2DA130",
+      "#2DA130"
+     ]
+    },
+    {
+     "num": 55,
+     "nome": "Safira",
+     "cores": [
+      "#2756CE",
+      "#2756CE"
+     ]
+    },
+    {
+     "num": 56,
+     "nome": "Pérola",
+     "cores": [
+      "#ECF9F8",
+      "#ECF9F8"
+     ]
+    },
+    {
+     "num": 57,
+     "nome": "Profano",
+     "cores": [
+      "#429184",
+      "#942861"
+     ]
+    }
+   ]
+  },
+  {
+   "num": 58,
+   "nome": "Nami Criadora Mítica",
+   "raridade": "Épica",
+   "legado": false,
+   "cromas": [
+    {
+     "num": 59,
+     "nome": "Rubi",
+     "cores": [
+      "#D33528",
+      "#D33528"
+     ]
+    },
+    {
+     "num": 60,
+     "nome": "Turquesa",
+     "cores": [
+      "#73BFBE",
+      "#73BFBE"
+     ]
+    },
+    {
+     "num": 61,
+     "nome": "Tanzanita",
+     "cores": [
+      "#54209B",
+      "#54209B"
+     ]
+    },
+    {
+     "num": 62,
+     "nome": "Safira",
+     "cores": [
+      "#2756CE",
+      "#2756CE"
+     ]
+    },
+    {
+     "num": 63,
+     "nome": "Quartzo-rosa",
+     "cores": [
+      "#E58BA5",
+      "#E58BA5"
+     ]
+    },
+    {
+     "num": 64,
+     "nome": "Olho de Gato",
+     "cores": [
+      "#FFEE59",
+      "#FFEE59"
+     ]
+    },
+    {
+     "num": 65,
+     "nome": "Obsidiana",
+     "cores": [
+      "#27211C",
+      "#27211C"
+     ]
+    },
+    {
+     "num": 66,
+     "nome": "Pérola",
+     "cores": [
+      "#ECF9F8",
+      "#ECF9F8"
+     ]
+    }
+   ]
+  },
+  {
+   "num": 68,
+   "nome": "Nami Sombras Submersas",
+   "raridade": "Mítica",
+   "legado": false,
+   "cromas": []
+  }
+ ],
+ "habilidades": [
+  {
+   "tecla": "P",
+   "nome": "Maré Oscilante",
+   "icone": "passive/NamiPassive.png"
+  },
+  {
+   "tecla": "Q",
+   "nome": "Prisão Aquática",
+   "icone": "spell/NamiQ.png"
+  },
+  {
+   "tecla": "W",
+   "nome": "Vazante e Fluxo",
+   "icone": "spell/NamiW.png"
+  },
+  {
+   "tecla": "E",
+   "nome": "Bênção da Conjuradora",
+   "icone": "spell/NamiE.png"
+  },
+  {
+   "tecla": "R",
+   "nome": "Maré Violenta",
+   "icone": "spell/NamiR.png"
+  }
+ ]
+}

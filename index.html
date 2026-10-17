@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>evelin_peres · Overlays da Nami</title>
+<meta name="description" content="Borda de ondas com a Nami nadando e tela de fila com as skins da Nami, pro OBS da evelin_peres.">
+<meta name="theme-color" content="#ff8fbd">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="icon" href="favicon.ico" sizes="any">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="manifest" href="site.webmanifest">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --rosa: #ff5c9e; --rosa2: #ffa3cb; --rosa3: #ffd3e5; --clarinho: #fff4f8; --texto: #6e2449; --suave: #a4607f;
+    --titulo: 'Fredoka', 'Nunito', 'Segoe UI', sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0; min-height: 100vh; font-family: 'Nunito', 'Segoe UI', sans-serif; color: var(--texto);
+    background: radial-gradient(ellipse at 20% 0%, #fff 0%, transparent 55%), radial-gradient(ellipse at 90% 80%, #c9f1f3 0%, transparent 45%), linear-gradient(#fff8fb, #ffe6f0 60%, #ffd6e7);
+    background-attachment: fixed;
+  }
+  #ondas { position: fixed; inset: 0; z-index: 5; pointer-events: none; }
+  main { position: relative; z-index: 1; max-width: 1180px; margin: 0 auto; padding: 64px 28px 80px; }
+
+  header { text-align: center; margin-bottom: 30px; }
+  header img { width: 76px; height: 76px; filter: drop-shadow(0 6px 14px rgba(255, 92, 158, 0.35)); }
+  h1 {
+    margin: 6px 0 0; font-family: var(--titulo); font-weight: 700; font-size: clamp(42px, 8vw, 72px); line-height: 1; color: var(--rosa);
+    text-shadow: 3px 0 #fff, -3px 0 #fff, 0 3px #fff, 0 -3px #fff, 2px 2px #fff, -2px 2px #fff, 2px -2px #fff, -2px -2px #fff, 0 7px 0 var(--rosa2);
+  }
+  header p { margin: 14px auto 0; max-width: 560px; color: var(--suave); font-weight: 700; line-height: 1.5; }
+  header a { color: var(--rosa); }
+
+  .abas { display: flex; justify-content: center; gap: 10px; margin: 0 0 22px; flex-wrap: wrap; }
+  .abas button {
+    font: 700 17px var(--titulo); color: var(--rosa); background: #fff; border: 2px solid var(--rosa3); padding: 10px 22px; border-radius: 999px; cursor: pointer;
+    box-shadow: 0 4px 14px rgba(255, 92, 158, 0.12); transition: transform 0.2s, background 0.2s;
+  }
+  .abas button:hover { transform: translateY(-2px); }
+  .abas button[aria-selected="true"] { background: var(--rosa); color: #fff; border-color: var(--rosa); }
+
+  .painel { display: none; grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr); gap: 22px; align-items: start; }
+  .painel.ativo { display: grid; }
+  .card {
+    background: rgba(255, 255, 255, 0.88); border: 2px solid #fff; border-radius: 24px; padding: 22px;
+    box-shadow: 0 0 0 2px var(--rosa3), 0 14px 40px rgba(255, 92, 158, 0.16);
+  }
+  .card h2 { margin: 0 0 4px; font: 700 24px var(--titulo); color: var(--rosa); }
+  .card > p { margin: 0 0 18px; color: var(--suave); font-weight: 600; line-height: 1.5; }
+  .lado { position: sticky; top: 20px; display: flex; flex-direction: column; gap: 16px; }
+
+  .campos { display: grid; grid-template-columns: 1fr 1fr; gap: 16px 18px; }
+  .campo { display: flex; flex-direction: column; gap: 7px; min-width: 0; }
+  .campo.cheio { grid-column: 1 / -1; }
+  .campo > span, .rotulo { font-size: 12px; font-weight: 800; letter-spacing: 0.14em; text-transform: uppercase; color: var(--suave); display: flex; justify-content: space-between; gap: 8px; }
+  .campo > span output { color: var(--rosa); letter-spacing: 0.04em; }
+  input[type=range] { width: 100%; accent-color: var(--rosa); }
+  input[type=text], textarea, select {
+    width: 100%; font: 700 15px 'Nunito', sans-serif; color: var(--texto); background: var(--clarinho); border: 2px solid var(--rosa3);
+    border-radius: 12px; padding: 9px 12px; outline: none;
+  }
+  textarea { resize: vertical; min-height: 84px; line-height: 1.45; }
+  input[type=text]:focus, textarea:focus, select:focus { border-color: var(--rosa2); background: #fff; }
+
+  .temas { display: flex; gap: 8px; flex-wrap: wrap; }
+  .temas label { cursor: pointer; }
+  .temas input { position: absolute; opacity: 0; pointer-events: none; }
+  .temas span {
+    display: inline-flex; align-items: center; gap: 8px; padding: 7px 12px 7px 8px; border-radius: 999px; border: 2px solid var(--rosa3);
+    background: #fff; font-weight: 800; font-size: 14px;
+  }
+  .temas span i { width: 22px; height: 22px; border-radius: 50%; border: 2px solid #fff; box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.08); }
+  .temas input:checked + span { border-color: var(--rosa); box-shadow: 0 0 0 3px rgba(255, 92, 158, 0.18); }
+  .temas input:focus-visible + span { outline: 2px solid var(--rosa); }
+
+  .chaves { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 18px; }
+  .chave { display: flex; align-items: center; gap: 10px; font-weight: 700; cursor: pointer; user-select: none; }
+  .chave input { appearance: none; -webkit-appearance: none; width: 42px; height: 24px; border-radius: 999px; background: #ecd3df; position: relative; cursor: pointer; flex: none; transition: background 0.2s; margin: 0; }
+  .chave input::after { content: ''; position: absolute; left: 3px; top: 3px; width: 18px; height: 18px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2); transition: transform 0.2s; }
+  .chave input:checked { background: var(--rosa); }
+  .chave input:checked::after { transform: translateX(18px); }
+  .chave input:focus-visible { outline: 2px solid var(--rosa); outline-offset: 2px; }
+
+  /* prévia 1920x1080 encolhida */
+  .previa { position: relative; width: 100%; aspect-ratio: 16 / 9; border-radius: 16px; overflow: hidden; background: #1b2a3a; box-shadow: 0 0 0 2px #fff, 0 0 0 4px var(--rosa3); }
+  .previa iframe { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; border: 0; transform-origin: 0 0; }
+  .previa small { position: absolute; right: 10px; bottom: 8px; font-weight: 800; font-size: 11px; color: #fff; background: rgba(110, 36, 73, 0.6); padding: 3px 9px; border-radius: 999px; pointer-events: none; }
+
+  .link { display: flex; gap: 8px; }
+  .link input { flex: 1; font-size: 13px; font-family: Consolas, 'Cascadia Mono', monospace; }
+  .botao {
+    font: 700 15px var(--titulo); border: 0; border-radius: 12px; padding: 0 16px; cursor: pointer; color: #fff; background: var(--rosa);
+    box-shadow: 0 4px 0 #e0437f; transition: transform 0.15s, box-shadow 0.15s; white-space: nowrap; text-decoration: none; display: inline-flex; align-items: center;
+  }
+  .botao:hover { transform: translateY(-1px); }
+  .botao:active { transform: translateY(3px); box-shadow: 0 1px 0 #e0437f; }
+  .botao.claro { background: #fff; color: var(--rosa); box-shadow: 0 0 0 2px var(--rosa3), 0 4px 0 var(--rosa3); }
+  .botao.pequeno { font-size: 13px; padding: 6px 12px; border-radius: 10px; }
+  .passos { margin: 0; padding-left: 20px; line-height: 1.65; font-weight: 600; }
+  .passos b, .passos code { color: var(--rosa); }
+  code { font-family: Consolas, 'Cascadia Mono', monospace; font-size: 0.92em; background: var(--clarinho); padding: 1px 6px; border-radius: 6px; }
+  .aviso { margin: 0; padding: 10px 14px; border-radius: 12px; background: var(--clarinho); border: 2px dashed var(--rosa3); font-weight: 700; line-height: 1.5; }
+  .aviso:empty { display: none; }
+
+  /* skins */
+  .skins-topo { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 10px; flex-wrap: wrap; }
+  .skins-topo div { display: flex; gap: 8px; }
+  .skins { display: grid; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: 10px; }
+  .skin {
+    position: relative; display: flex; flex-direction: column; text-align: left; padding: 0; border: 2px solid var(--rosa3); background: #fff;
+    border-radius: 14px; overflow: hidden; cursor: pointer; font: inherit; color: inherit; transition: transform 0.15s, border-color 0.15s, opacity 0.15s;
+    opacity: 0.55;
+  }
+  .skin:hover { transform: translateY(-2px); opacity: 0.85; }
+  .skin.sim { opacity: 1; border-color: var(--rosa); box-shadow: 0 6px 16px rgba(255, 92, 158, 0.22); }
+  .skin img { width: 100%; aspect-ratio: 1; object-fit: cover; display: block; background: var(--rosa3); }
+  .skin .nome { padding: 6px 8px 8px; font-weight: 800; font-size: 12.5px; line-height: 1.25; }
+  .skin .nome small { display: block; font-size: 10.5px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--rosa); margin-top: 2px; }
+  .skin .marca {
+    position: absolute; top: 6px; right: 6px; width: 24px; height: 24px; border-radius: 50%; background: #fff; border: 2px solid var(--rosa3);
+    display: grid; place-items: center; font-size: 13px; font-weight: 800; color: #fff;
+  }
+  .skin.sim .marca { background: var(--rosa); border-color: #fff; }
+  .skin.sim .marca::after { content: '✓'; }
+  .cromas { display: none; flex-wrap: wrap; gap: 5px; padding: 0 8px 9px; }
+  .skin.sim .cromas { display: flex; }
+  .cromas i {
+    width: 18px; height: 18px; border-radius: 50%; border: 2px solid #fff; box-shadow: 0 0 0 1px rgba(110, 36, 73, 0.25); cursor: pointer;
+    background: conic-gradient(var(--c1) 0 50%, var(--c2) 50% 100%);
+  }
+  .cromas i.sem { background: #fff; position: relative; }
+  .cromas i.sem::after { content: ''; position: absolute; left: 50%; top: 1px; bottom: 1px; width: 2px; background: #e58bb0; transform: translateX(-50%) rotate(45deg); }
+  .cromas i.sim { box-shadow: 0 0 0 2px var(--rosa); transform: scale(1.15); }
+
+  footer { text-align: center; margin-top: 34px; color: var(--suave); font-weight: 700; font-size: 14px; line-height: 1.6; }
+  footer a { color: var(--rosa); }
+
+  @media (max-width: 900px) {
+    main { padding: 52px 18px 60px; }
+    .painel.ativo { display: flex; flex-direction: column-reverse; }
+    .lado { position: static; }
+  }
+  @media (max-width: 520px) {
+    .campos, .chaves { grid-template-columns: 1fr; }
+    .card { padding: 18px 16px; }
+    .skins { grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); }
+  }
+  @media (prefers-reduced-motion: reduce) { #ondas { display: none; } }
+</style>
+</head>
+<body>
+<canvas id="ondas" aria-hidden="true"></canvas>
+<main>
+  <header>
+    <img src="favicon.svg" alt="">
+    <h1>evelin_peres</h1>
+    <p>Overlays da Nami pro OBS: a borda de ondas com ela nadando e a tela de <i>estou na fila</i> com as skins. Escolha as opções, copie o link e cole numa fonte <b>Navegador</b>.</p>
+  </header>
+
+  <nav class="abas" role="tablist">
+    <button role="tab" aria-selected="true" data-aba="borda">🌊 Borda de ondas</button>
+    <button role="tab" aria-selected="false" data-aba="fila">🐚 Tela de fila</button>
+  </nav>
+
+  <!-- ===================================================== BORDA -->
+  <section class="painel ativo" id="painel-borda" role="tabpanel">
+    <div class="card">
+      <h2>Borda de ondas</h2>
+      <p>Fica por cima de qualquer cena (jogo, conversa, fila). O fundo é transparente e ela se ajusta sozinha a qualquer tamanho de tela.</p>
+      <div class="campos">
+        <div class="campo cheio"><span>Cores</span><div class="temas" id="temas"></div></div>
+        <label class="campo"><span>Grossura da borda <output id="o-espessura"></output></span><input type="range" id="espessura" min="0.5" max="2.5" step="0.1"></label>
+        <label class="campo"><span>Velocidade <output id="o-velocidade"></output></span><input type="range" id="velocidade" min="0.3" max="2.5" step="0.1"></label>
+        <label class="campo"><span>Tamanho da Nami <output id="o-tamanho"></output></span><input type="range" id="tamanho" min="0.6" max="2" step="0.1"></label>
+        <label class="campo"><span>Pulo a cada <output id="o-pulo"></output></span><input type="range" id="pulo" min="0" max="120" step="5"></label>
+        <label class="campo cheio"><span>Onde a Nami nada</span>
+          <select id="nado">
+            <option value="volta">Em volta da tela toda</option>
+            <option value="embaixo">Só embaixo, indo e voltando</option>
+          </select>
+        </label>
+        <div class="campo cheio">
+          <span>Detalhes</span>
+          <div class="chaves">
+            <label class="chave"><input type="checkbox" id="nami"> Nami nadando</label>
+            <label class="chave"><input type="checkbox" id="bolhas"> Bolhas</label>
+            <label class="chave"><input type="checkbox" id="brilhos"> Brilhinhos</label>
+            <label class="chave"><input type="checkbox" id="enfeites"> Estrela, concha e pérolas</label>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="lado">
+      <div class="previa" id="previa-borda"><small>prévia · clique pra Nami pular</small></div>
+      <div class="card">
+        <div class="link"><input type="text" id="link-borda" readonly aria-label="Link da borda"><button class="botao" data-copiar="link-borda">Copiar</button><a class="botao claro" id="abrir-borda" target="_blank" rel="noopener">Abrir</a></div>
+        <ol class="passos" style="margin-top:14px">
+          <li>No OBS: <b>Fontes → + → Navegador</b></li>
+          <li>Cole o link em <b>URL</b> e use <b>Largura 1920</b> e <b>Altura 1080</b> (o tamanho da tela do OBS)</li>
+          <li>Deixe a borda <b>no topo</b> da lista de fontes, acima do jogo e da câmera</li>
+        </ol>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================================================== FILA -->
+  <section class="painel" id="painel-fila" role="tabpanel">
+    <div class="card">
+      <h2>Tela de fila</h2>
+      <p>Pra quando estiver esperando a partida: skin da Nami trocando, tempo na fila, recadinhos e as habilidades dela. A borda e a Nami nadando seguem as opções da aba Borda.</p>
+      <div class="skins-topo">
+        <span class="rotulo">Skins e cromas</span>
+        <div><button class="botao claro pequeno" id="todas">Todas</button><button class="botao claro pequeno" id="nenhuma">Nenhuma</button></div>
+      </div>
+      <div class="skins" id="skins"><p class="aviso">Carregando as skins…</p></div>
+      <p class="aviso" style="margin-top:12px;font-size:13.5px">Clique na skin pra ligar ou desligar. Nas ligadas aparecem as bolinhas de croma: a escolhida vira um selinho no canto da arte.</p>
+      <div class="campos" style="margin-top:18px">
+        <label class="campo"><span>Troca de skin a cada <output id="o-troca"></output></span><input type="range" id="troca" min="4" max="60" step="1"></label>
+        <div class="campo"><span>Ordem</span><label class="chave"><input type="checkbox" id="aleatorio"> Embaralhar</label></div>
+        <label class="campo"><span>Título</span><input type="text" id="titulo" maxlength="40"></label>
+        <label class="campo"><span>Etiqueta de cima</span><input type="text" id="pilula" maxlength="40"></label>
+        <label class="campo cheio"><span>Recadinhos (um por linha, vão trocando)</span><textarea id="recados" rows="3"></textarea></label>
+        <div class="campo cheio">
+          <span>Mostrar</span>
+          <div class="chaves">
+            <label class="chave"><input type="checkbox" id="tempo"> Tempo na fila</label>
+            <label class="chave"><input type="checkbox" id="habilidades"> Habilidades da Nami</label>
+            <label class="chave"><input type="checkbox" id="miniaturas"> Bolinhas das skins</label>
+            <label class="chave"><input type="checkbox" id="camera"> Espaço pra câmera</label>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="lado">
+      <div class="previa" id="previa-fila"><small>prévia</small></div>
+      <div class="card">
+        <div class="link"><input type="text" id="link-fila" readonly aria-label="Link da tela de fila"><button class="botao" data-copiar="link-fila">Copiar</button><a class="botao claro" id="abrir-fila" target="_blank" rel="noopener">Abrir</a></div>
+        <ol class="passos" style="margin-top:14px">
+          <li>No OBS, numa cena <b>Fila</b>: <b>Fontes → + → Navegador</b></li>
+          <li>Cole o link, <b>Largura 1920</b>, <b>Altura 1080</b></li>
+          <li>Marque <b>Atualizar navegador quando a cena ficar ativa</b>: assim o tempo na fila começa do zero toda vez</li>
+        </ol>
+        <p class="aviso" id="aviso-camera" style="margin-top:12px"></p>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    Feito pra <a href="https://www.twitch.tv/evelin_peres" target="_blank" rel="noopener">twitch.tv/evelin_peres</a> 💕<br>
+    Artes da Nami: Riot Games (Data Dragon e CommunityDragon). Projeto de fã, sem ligação com a Riot.
+  </footer>
+</main>
+
+<script src="ondas.js"></script>
+<script src="dados.js"></script>
+<script>
+  // a própria página ganha a borda, com a Nami nadando em volta
+  if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    Ondas.iniciar(document.getElementById('ondas'), { espessura: 0.8, pulo: 18, enfeites: true });
+  }
+
+  // ---------------------------------------------------------------- estado
+  var PADRAO = {
+    tema: 'rosa', espessura: 1, velocidade: 1, nami: true, tamanho: 1, nado: 'volta', pulo: 25,
+    bolhas: true, brilhos: true, enfeites: true,
+    skins: null, croma: {}, troca: 10, aleatorio: false, titulo: 'Estou na fila', pilula: 'League of Legends',
+    recados: 'Já já começa a partida!|Aproveita pra pegar uma água 💧|Digita !pix, !insta ou !elo no chat',
+    tempo: true, habilidades: true, miniaturas: true, camera: false
+  };
+  var BORDA = ['tema', 'espessura', 'velocidade', 'nami', 'tamanho', 'nado', 'pulo', 'bolhas', 'brilhos', 'enfeites'];
+  var FILA = ['troca', 'aleatorio', 'titulo', 'pilula', 'recados', 'tempo', 'habilidades', 'miniaturas', 'camera'];
+  var CHAVE = 'evelinperes-gerador';
+
+  var estado = JSON.parse(JSON.stringify(PADRAO));
+  try { Object.assign(estado, JSON.parse(localStorage.getItem(CHAVE) || '{}')); } catch (e) {}
+  function guardar() { try { localStorage.setItem(CHAVE, JSON.stringify(estado)); } catch (e) {} }
+
+  var $ = function (id) { return document.getElementById(id); };
+  var todasSkins = [];
+
+  // ---------------------------------------------------------------- links
+  function valor(k, v) {
+    if (typeof v === 'boolean') return v ? '1' : '0';
+    return String(v);
+  }
+  function montaLink(arquivo, chaves, extra) {
+    var q = [];
+    chaves.forEach(function (k) {
+      if (estado[k] !== PADRAO[k]) q.push(k + '=' + encodeURIComponent(valor(k, estado[k])));
+    });
+    (extra || []).forEach(function (p) { q.push(p); });
+    var base = new URL(arquivo, location.href).href;
+    return base + (q.length ? '?' + q.join('&') : '');
+  }
+  function linkBorda() { return montaLink('borda.html', BORDA); }
+  function linkFila() {
+    var extra = [];
+    var nums = estado.skins;
+    if (nums && todasSkins.length && nums.length && nums.length < todasSkins.length) extra.push('skins=' + nums.join(','));
+    var cr = Object.keys(estado.croma).filter(function (n) { return !nums || nums.indexOf(+n) > -1; }).map(function (n) { return n + ':' + estado.croma[n]; });
+    if (cr.length) extra.push('croma=' + cr.join(','));
+    return montaLink('fila.html', BORDA.concat(FILA), extra);
+  }
+
+  // ---------------------------------------------------------------- prévias
+  function previa(caixa, url) {
+    var f = caixa.querySelector('iframe');
+    if (!f) {
+      f = document.createElement('iframe');
+      f.title = 'Prévia';
+      caixa.insertBefore(f, caixa.firstChild);
+    }
+    if (f.dataset.url !== url) { f.dataset.url = url; f.src = url; }
+    escala(caixa);
+    return f;
+  }
+  function escala(caixa) {
+    var f = caixa.querySelector('iframe');
+    if (f) f.style.transform = 'scale(' + (caixa.clientWidth / 1920) + ')';
+  }
+  if (window.ResizeObserver) {
+    var ro = new ResizeObserver(function (es) { es.forEach(function (e) { escala(e.target); }); });
+    ro.observe($('previa-borda')); ro.observe($('previa-fila'));
+  }
+
+  var aba = location.hash === '#fila' ? 'fila' : 'borda';
+  var espera = 0;
+  function atualizar(agora) {
+    guardar();
+    var lb = linkBorda(), lf = linkFila();
+    $('link-borda').value = lb; $('abrir-borda').href = lb;
+    $('link-fila').value = lf; $('abrir-fila').href = lf;
+    clearTimeout(espera);
+    espera = setTimeout(function () {
+      // só a aba aberta fica rodando, pra não pesar
+      var sep = function (u) { return u + (u.indexOf('?') > -1 ? '&' : '?'); };
+      if (aba === 'borda') { previa($('previa-borda'), sep(lb) + 'fundo=1'); limpa('previa-fila'); }
+      else { previa($('previa-fila'), lf); limpa('previa-borda'); }
+    }, agora ? 0 : 450);
+  }
+  function limpa(id) { var f = $(id).querySelector('iframe'); if (f) { f.remove(); } }
+
+  // posição da câmera, lida de dentro da prévia (que tem 1920x1080 de verdade)
+  function lerCamera() {
+    var aviso = $('aviso-camera');
+    if (!estado.camera) { aviso.textContent = ''; return; }
+    var f = $('previa-fila').querySelector('iframe');
+    try {
+      var el = f.contentDocument.getElementById('camera'), r = el.getBoundingClientRect();
+      if (!r.width) throw 0;
+      aviso.innerHTML = '📷 No OBS, ponha a câmera <b>embaixo</b> desta fonte, em <b>x ' + Math.round(r.left) + ', y ' + Math.round(r.top) +
+        '</b>, tamanho <b>' + Math.round(r.width) + ' × ' + Math.round(r.height) + '</b> (botão direito na câmera → Transformar → Editar transformação). A borda arredondada da moldura cobre os cantos.';
+    } catch (e) {
+      aviso.textContent = '📷 Ponha a câmera embaixo desta fonte, no buraco da moldura.';
+    }
+  }
+  setInterval(function () { if (aba === 'fila') lerCamera(); }, 1500);
+
+  // ---------------------------------------------------------------- abas
+  document.querySelectorAll('.abas button').forEach(function (b) {
+    b.addEventListener('click', function () { trocaAba(b.dataset.aba); });
+  });
+  function trocaAba(qual) {
+    aba = qual;
+    history.replaceState(null, '', '#' + qual);
+    document.querySelectorAll('.abas button').forEach(function (b) { b.setAttribute('aria-selected', b.dataset.aba === qual); });
+    $('painel-borda').classList.toggle('ativo', qual === 'borda');
+    $('painel-fila').classList.toggle('ativo', qual === 'fila');
+    atualizar(true);
+  }
+
+  // ---------------------------------------------------------------- campos
+  var temas = $('temas');
+  Object.keys(Ondas.TEMAS).forEach(function (k) {
+    var t = Ondas.TEMAS[k], l = document.createElement('label');
+    l.innerHTML = '<input type="radio" name="tema"><span><i></i></span>';
+    l.querySelector('input').value = k;
+    l.querySelector('input').checked = estado.tema === k;
+    l.querySelector('i').style.background = 'linear-gradient(135deg, #fff 0 35%, ' + t.fundo + ' 35% 70%, ' + t.acento + ' 70%)';
+    l.querySelector('span').appendChild(document.createTextNode(t.nome));
+    l.querySelector('input').addEventListener('change', function () { estado.tema = k; atualizar(); });
+    temas.appendChild(l);
+  });
+
+  var formatos = {
+    espessura: function (v) { return v.toFixed(1) + '×'; },
+    velocidade: function (v) { return v.toFixed(1) + '×'; },
+    tamanho: function (v) { return v.toFixed(1) + '×'; },
+    pulo: function (v) { return v ? v + ' s' : 'sem pulo'; },
+    troca: function (v) { return v + ' s'; }
+  };
+  Object.keys(formatos).forEach(function (k) {
+    var el = $(k);
+    el.value = estado[k];
+    $('o-' + k).textContent = formatos[k](+el.value);
+    el.addEventListener('input', function () { estado[k] = +el.value; $('o-' + k).textContent = formatos[k](+el.value); atualizar(); });
+  });
+  ['nami', 'bolhas', 'brilhos', 'enfeites', 'aleatorio', 'tempo', 'habilidades', 'miniaturas', 'camera'].forEach(function (k) {
+    var el = $(k);
+    el.checked = estado[k];
+    el.addEventListener('change', function () { estado[k] = el.checked; atualizar(); });
+  });
+  ['nado', 'titulo', 'pilula'].forEach(function (k) {
+    var el = $(k);
+    el.value = estado[k];
+    el.addEventListener('input', function () { estado[k] = el.value; atualizar(); });
+  });
+  $('recados').value = estado.recados.split('|').join('\n');
+  $('recados').addEventListener('input', function () {
+    estado.recados = $('recados').value.split('\n').map(function (r) { return r.trim().replace(/\|/g, '/'); }).filter(Boolean).join('|');
+    atualizar();
+  });
+
+  document.querySelectorAll('[data-copiar]').forEach(function (b) {
+    b.addEventListener('click', function () {
+      var campo = $(b.dataset.copiar);
+      campo.select();
+      var ok = function () { b.textContent = 'Copiado!'; setTimeout(function () { b.textContent = 'Copiar'; }, 1600); };
+      if (navigator.clipboard) navigator.clipboard.writeText(campo.value).then(ok, function () { document.execCommand('copy'); ok(); });
+      else { document.execCommand('copy'); ok(); }
+    });
+  });
+
+  // ---------------------------------------------------------------- skins
+  NamiDados.carregar().then(function (dados) {
+    todasSkins = dados.skins;
+    var caixa = $('skins');
+    caixa.innerHTML = '';
+    if (!estado.skins) estado.skins = todasSkins.map(function (s) { return s.num; });
+
+    todasSkins.forEach(function (s) {
+      var b = document.createElement('div');
+      b.className = 'skin';
+      b.tabIndex = 0;
+      b.setAttribute('role', 'button');
+      b.innerHTML = '<span class="marca"></span><img loading="lazy" alt=""><div class="nome"></div><div class="cromas"></div>';
+      b.querySelector('img').src = NamiDados.quadrado(s.num);
+      var nome = b.querySelector('.nome');
+      nome.textContent = s.nome;
+      if (s.raridade || s.legado) {
+        var sm = document.createElement('small');
+        sm.textContent = [s.raridade, s.legado ? 'Legado' : ''].filter(Boolean).join(' · ');
+        nome.appendChild(sm);
+      }
+      var liga = function () {
+        var i = estado.skins.indexOf(s.num);
+        if (i > -1) estado.skins.splice(i, 1); else estado.skins.push(s.num);
+        estado.skins.sort(function (a, b2) { return a - b2; });
+        pinta();
+        atualizar();
+      };
+      b.addEventListener('click', function (e) { if (!e.target.closest('.cromas')) liga(); });
+      b.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); liga(); } });
+
+      var cr = b.querySelector('.cromas');
+      if (s.cromas.length) {
+        [{ num: null, nome: 'Sem croma' }].concat(s.cromas).forEach(function (c) {
+          var i = document.createElement('i');
+          i.title = c.nome;
+          if (c.num === null) i.className = 'sem';
+          else { i.style.setProperty('--c1', c.cores[0] || '#ccc'); i.style.setProperty('--c2', c.cores[1] || c.cores[0] || '#ccc'); }
+          i.addEventListener('click', function () {
+            if (c.num === null) delete estado.croma[s.num]; else estado.croma[s.num] = c.num;
+            pinta();
+            atualizar();
+          });
+          i.dataset.num = c.num === null ? '' : c.num;
+          cr.appendChild(i);
+        });
+      }
+      b.dataset.num = s.num;
+      caixa.appendChild(b);
+    });
+    pinta();
+    atualizar(true);
+  });
+
+  function pinta() {
+    document.querySelectorAll('.skin').forEach(function (b) {
+      var n = +b.dataset.num;
+      b.classList.toggle('sim', estado.skins.indexOf(n) > -1);
+      var atual = estado.croma[n];
+      b.querySelectorAll('.cromas i').forEach(function (i) {
+        i.classList.toggle('sim', i.dataset.num === '' ? atual === undefined : +i.dataset.num === atual);
+      });
+    });
+  }
+  $('todas').addEventListener('click', function () { estado.skins = todasSkins.map(function (s) { return s.num; }); pinta(); atualizar(); });
+  $('nenhuma').addEventListener('click', function () { estado.skins = []; pinta(); atualizar(); });
+
+  trocaAba(aba);
+</script>
+</body>
+</html>

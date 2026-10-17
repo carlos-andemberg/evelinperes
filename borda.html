@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>evelin_peres · Borda de ondas</title>
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="icon" href="favicon.ico" sizes="any">
+<style>
+  html, body { margin: 0; height: 100%; overflow: hidden; background: transparent; }
+  canvas { position: fixed; inset: 0; display: block; }
+  /* fundo de exemplo: só aparece fora do OBS */
+  body.previa {
+    background:
+      linear-gradient(rgba(10, 20, 35, 0.35), rgba(10, 20, 35, 0.55)),
+      url("https://ddragon.leagueoflegends.com/cdn/img/champion/splash/Nami_0.jpg") center / cover no-repeat,
+      #1b2a3a;
+  }
+  .dica {
+    position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%);
+    font: 600 15px/1.45 'Segoe UI', system-ui, sans-serif; color: #fff; text-align: center;
+    background: rgba(138, 47, 93, 0.72); padding: 10px 18px; border-radius: 14px;
+    transition: opacity 1s; pointer-events: none;
+  }
+</style>
+</head>
+<body>
+<canvas id="ondas"></canvas>
+<script src="ondas.js"></script>
+<script>
+  // Opções no link: veja o README ou o gerador em index.html
+  var op = Ondas.parametros({
+    tema: 'rosa', espessura: 1, velocidade: 1,
+    nami: true, tamanho: 1, nado: 'volta', pulo: 25,
+    bolhas: true, brilhos: true, enfeites: true,
+    fundo: !Ondas.emOBS
+  });
+
+  var borda = Ondas.iniciar(document.getElementById('ondas'), op);
+
+  if (op.fundo) {
+    document.body.classList.add('previa');
+    var dica = document.createElement('div');
+    dica.className = 'dica';
+    dica.innerHTML = 'Prévia da borda · no OBS o fundo fica transparente<br>clique pra Nami pular';
+    document.body.appendChild(dica);
+    setTimeout(function () { dica.style.opacity = 0; }, 5000);
+  }
+  // clique (fora do OBS) faz a Nami pular
+  addEventListener('pointerdown', function () { borda.pular(); });
+</script>
+</body>
+</html>

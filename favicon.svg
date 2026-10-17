@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <defs>
+    <linearGradient id="fundo" x1="0" y1="0" x2="0.9" y2="1">
+      <stop offset="0" stop-color="#ffc4dc"/>
+      <stop offset="1" stop-color="#ff5c9e"/>
+    </linearGradient>
+    <linearGradient id="cauda" x1="0" y1="1" x2="0.4" y2="0">
+      <stop offset="0" stop-color="#1fa3ad"/>
+      <stop offset="1" stop-color="#6fe0d4"/>
+    </linearGradient>
+    <linearGradient id="nadadeira" x1="0" y1="1" x2="0" y2="0">
+      <stop offset="0" stop-color="#7fe3d8"/>
+      <stop offset="1" stop-color="#d9fffa"/>
+    </linearGradient>
+    <clipPath id="canto"><rect width="64" height="64" rx="15"/></clipPath>
+  </defs>
+  <g clip-path="url(#canto)">
+    <rect width="64" height="64" fill="url(#fundo)"/>
+    <!-- bolhas -->
+    <circle cx="14.5" cy="17" r="5" fill="#ffffff" fill-opacity="0.25" stroke="#fff" stroke-width="2.2"/>
+    <circle cx="12.6" cy="15.2" r="1.4" fill="#fff"/>
+    <circle cx="24" cy="9" r="2.4" fill="#fff"/>
+    <!-- rabo da Nami saindo da onda -->
+    <path d="M27 50 C 27 41 31 34 37.5 27.5" stroke="url(#cauda)" stroke-width="8.5" stroke-linecap="round" fill="none"/>
+    <path d="M37.5 27.5 C 31.5 25.5 27.5 18.5 27 11 C 32 14.5 36 16.5 38.6 21 C 40.6 15 45 11.2 53 9.6 C 50.5 17.5 46 24.5 37.5 27.5 Z" fill="url(#nadadeira)" stroke="#fff" stroke-width="1.6" stroke-linejoin="round"/>
+    <!-- onda branca enrolando -->
+    <path d="M-2 47 C 7 39 16 38.5 22.5 43.5 C 26.5 46.8 32.5 47 34.5 42.2 C 36.3 37.8 32.2 34.4 28.6 36.6 C 33.6 30.6 44.2 32.4 48 39.6 C 51.2 45.6 57.6 46.6 66 41 V 66 H -2 Z" fill="#fff"/>
+    <path d="M-2 55 C 10 50 20 51 30 55.5 C 40 60 52 59 66 52 V 66 H -2 Z" fill="#ffd3e5"/>
+  </g>
+</svg>
