@@ -8,7 +8,7 @@ Overlays pro OBS da [evelin_peres](https://www.twitch.tv/evelin_peres), no tema 
 
 No OBS cada tela tem o seu link, colado uma vez só:
 
-- `https://evelinperes.carlosandemberg.com.br/borda.html` (borda da câmera)
+- `https://evelinperes.carlosandemberg.com.br/borda.html` (Borda 1 da câmera; `borda2.html`, `borda3.html` e `borda4.html` são as outras, uma por cena em que a câmera muda de tamanho)
 - `https://evelinperes.carlosandemberg.com.br/fila.html` (estou na fila)
 - `https://evelinperes.carlosandemberg.com.br/comecando.html` (a live já vai começar)
 - `https://evelinperes.carlosandemberg.com.br/encerrando.html` (obrigada por assistir)
@@ -33,6 +33,8 @@ Links com opções escritas neles (`borda.html?tema=agua...`) continuam funciona
 | `dados.js`, `nami.json` | Skins, cromas e habilidades da Nami (a lista se atualiza sozinha; `nami.json` é a cópia de reserva) | — |
 
 ## A borda da câmera
+
+São quatro bordas, uma pra cada cena do OBS em que a câmera tem outro tamanho ou lugar (ex.: Borda 1 no jogo, Borda 2 na conversa). Cada uma tem a própria câmera, as próprias opções, um apelido pra você saber qual é e o próprio link (`borda.html`, `borda2.html`, `borda3.html`, `borda4.html`). No gerador, os botões **Borda 1 a 4** escolhem qual você está mexendo.
 
 A borda abraça a webcam: três camadas de onda (rosa por fora, rosinha no meio e branca colada na câmera) correm em volta dela, com espuma nas cristas, brilhinhos, bolhas e um contorno limpinho que arredonda os cantos da câmera. Nos cantos ficam a estrela-do-mar, a concha e as pérolas. O resto da tela fica livre.
 

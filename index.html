@@ -306,8 +306,10 @@
     <div class="pilha">
     <div class="card">
       <h2>Borda da câmera</h2>
-      <p>Ondinhas brancas e rosa em volta da webcam, com a Nami nadando nelas e o nome flutuando em cima. O fundo é transparente: a borda vai por cima da câmera em qualquer cena.</p>
+      <div class="cenas" id="bordas" role="tablist" aria-label="Qual borda"></div>
+      <p>Ondinhas brancas e rosa em volta da webcam, com a Nami nadando nelas e o nome flutuando em cima. Uma borda pra cada cena do OBS em que a câmera muda de tamanho: cada uma tem a própria câmera, as próprias opções e o próprio link.</p>
       <div class="campos">
+        <label class="campo cheio"><span>Apelido desta borda <small class="opcional">só pra você saber qual é</small></span><input type="text" id="apelido" maxlength="24" placeholder="ex.: Jogo, Conversando"></label>
         <div class="campo cheio"><span>Cores</span><div class="temas" id="temas"></div></div>
         <label class="campo"><span>Grossura da borda <output id="o-espessura"></output></span><input type="range" id="espessura" min="0.5" max="2.5" step="0.1"></label>
         <label class="campo"><span>Velocidade <output id="o-velocidade"></output></span><input type="range" id="velocidade" min="0.3" max="2.5" step="0.1"></label>
@@ -546,8 +548,12 @@
     fcamx: 1240, fcamy: 605, fcamlargura: 576, fcamaltura: 324, fresolucao: '1920x1080',
     // telas de cena: cada uma guarda as próprias opções em cenas[nome]; os campos da aba mostram
     // (e mexem) na que está escolhida, `cena`
-    cena: 'fila', cenas: null
+    cena: 'fila', cenas: null,
+    // bordas da câmera: uma por cena do OBS (borda = Borda 1, borda2, borda3, borda4), cada uma
+    // com as próprias opções em bordas[nome]; os campos da aba mostram a escolhida, `perfil`
+    apelido: '', perfil: 'borda', bordas: null
   };
+  var PERFIS = ['borda', 'borda2', 'borda3', 'borda4'];
   var BORDA_FILA = { ftema: 'tema', fespessura: 'espessura', fvelocidade: 'velocidade', fnami: 'nami', ftamanho: 'tamanho', fnado: 'nado', fpulo: 'pulo', fbolhas: 'bolhas', fbrilhos: 'brilhos', fenfeites: 'enfeites' };
   var CAM_FILA = { fcamx: 'camx', fcamy: 'camy', fcamlargura: 'camlargura', fcamaltura: 'camaltura', fresolucao: 'resolucao' };
   var BORDA = ['tema', 'espessura', 'velocidade', 'nami', 'tamanho', 'nado', 'pulo', 'bolhas', 'brilhos', 'enfeites'];
@@ -587,9 +593,29 @@
   function carregaCena() { CHAVES_CENA.forEach(function (k) { estado[k] = copia(estado.cenas[estado.cena][k]); }); }
   function guardaCena() { CHAVES_CENA.forEach(function (k) { estado.cenas[estado.cena][k] = copia(estado[k]); }); }
   carregaCena();
+
+  // bordas: a que já estava configurada vira a Borda 1; as outras começam como cópia dela
+  var CHAVES_BORDA = BORDA.concat(PLACA, ['apelido']);
+  if (!estado.bordas) {
+    estado.bordas = {};
+    PERFIS.forEach(function (b) {
+      estado.bordas[b] = {};
+      CHAVES_BORDA.forEach(function (k) { estado.bordas[b][k] = copia(estado[k]); });
+      estado.bordas[b].apelido = '';
+    });
+    estado.perfil = 'borda';
+  }
+  PERFIS.forEach(function (b) {
+    var o = estado.bordas[b] = estado.bordas[b] || {};
+    CHAVES_BORDA.forEach(function (k) { if (o[k] === undefined) o[k] = copia(k === 'apelido' ? '' : estado.bordas.borda[k] !== undefined ? estado.bordas.borda[k] : PADRAO[k]); });
+  });
+  if (PERFIS.indexOf(estado.perfil) < 0) estado.perfil = 'borda';
+  function carregaBorda() { CHAVES_BORDA.forEach(function (k) { estado[k] = copia(estado.bordas[estado.perfil][k]); }); }
+  function guardaBorda() { CHAVES_BORDA.forEach(function (k) { estado.bordas[estado.perfil][k] = copia(estado[k]); }); }
+  carregaBorda();
   // trocando pelo que está na live: a página vai recarregar e não pode mais gravar por cima
   var trocandoPelaLive = false;
-  function guardar() { if (trocandoPelaLive) return; guardaCena(); try { localStorage.setItem(CHAVE, JSON.stringify(estado)); } catch (e) {} }
+  function guardar() { if (trocandoPelaLive) return; guardaCena(); guardaBorda(); try { localStorage.setItem(CHAVE, JSON.stringify(estado)); } catch (e) {} }
 
   var $ = function (id) { return document.getElementById(id); };
   var todasSkins = [];
@@ -608,7 +634,16 @@
     var base = new URL(arquivo, location.href).href;
     return base + (q.length ? '?' + q.join('&') : '');
   }
-  function linkBorda() { return montaLink('borda.html', BORDA.concat(PLACA)); }
+  // link de uma borda a partir das opções dela (o = estado.bordas[b], ou o estado da borda escolhida)
+  function linkBordaDe(b, o) {
+    var q = [];
+    BORDA.concat(PLACA).forEach(function (k) {
+      if (o[k] !== PADRAO[k]) q.push(k + '=' + encodeURIComponent(valor(k, o[k])));
+    });
+    var base = new URL(b + '.html', location.href).href;
+    return base + (q.length ? '?' + q.join('&') : '');
+  }
+  function linkBorda() { return linkBordaDe(estado.perfil, estado); }
   // link de uma tela de cena a partir das opções dela (o = estado.cenas[c], ou o estado da tela escolhida)
   function linkCena(c, o) {
     var P = padraoCena(c), q = [];
@@ -702,8 +737,11 @@
     $('link-fila').value = lf; $('abrir-fila').href = lf;
     var unico = new URL(Cenas.CENAS[estado.cena].arquivo, location.href).href;
     $('unico-fila').value = unico; $('abrir-unico-fila').href = unico;
+    var unicoBorda = new URL(estado.perfil + '.html', location.href).href;
+    $('unico-borda').value = unicoBorda; $('abrir-unico-borda').href = unicoBorda;
     mostraMedidas();
     textosCena();
+    if (typeof textosBorda === 'function') textosBorda();
     situacaoLive();
     clearTimeout(espera);
     espera = setTimeout(function () {
@@ -797,7 +835,7 @@
     el.checked = estado[k];
     el.addEventListener('change', function () { estado[k] = el.checked; atualizar(); });
   });
-  ['nado', 'fnado', 'titulo', 'pilula', 'nome', 'relogio', 'rotulo'].forEach(function (k) {
+  ['nado', 'fnado', 'titulo', 'pilula', 'nome', 'relogio', 'rotulo', 'apelido'].forEach(function (k) {
     var el = $(k);
     el.value = estado[k];
     el.addEventListener('input', function () { estado[k] = el.value; atualizar(); });
@@ -980,7 +1018,7 @@
   // ---------------------------------------------------------------- salvar na live
   // O link único (sem nada depois do .html) lê o que foi salvo aqui e se atualiza sozinho no OBS.
   (function () {
-    var u = new URL('borda.html', location.href).href;
+    var u = new URL(estado.perfil + '.html', location.href).href;
     $('unico-borda').value = u;
     $('abrir-unico-borda').href = u;
   })();
@@ -988,13 +1026,15 @@
   function paramsDe(link) { var o = {}; new URL(link).searchParams.forEach(function (v, k) { o[k] = v; }); return o; }
   function opcoesAgora() {
     guardaCena();
-    var o = { borda: paramsDe(linkBorda()) };
+    guardaBorda();
+    var o = {};
+    PERFIS.forEach(function (b) { o[b] = paramsDe(linkBordaDe(b, estado.bordas[b])); });
     Cenas.ORDEM.forEach(function (c) { o[c] = paramsDe(linkCena(c, estado.cenas[c])); });
     return o;
   }
   function igual(a, b) {
     var ordena = function (o) { var r = {}; Object.keys(o || {}).sort().forEach(function (k) { r[k] = o[k]; }); return JSON.stringify(r); };
-    return ['borda'].concat(Cenas.ORDEM).every(function (t) { return ordena(a[t]) === ordena(b[t]); });
+    return PERFIS.concat(Cenas.ORDEM).every(function (t) { return ordena(a[t]) === ordena(b[t]); });
   }
   function mostra(texto, tipo) {
     var el = $('situacao');
@@ -1195,6 +1235,46 @@
     estado.cena = c;
     carregaCena();
     preencheCena();
+    atualizar(true);
+  }
+
+  // ---------------------------------------------------------------- bordas (uma por cena)
+  PERFIS.forEach(function (b, i) {
+    var bt = document.createElement('button');
+    bt.type = 'button';
+    bt.dataset.perfil = b;
+    bt.setAttribute('role', 'tab');
+    bt.addEventListener('click', function () { trocaPerfil(b); });
+    $('bordas').appendChild(bt);
+  });
+  function textosBorda() {
+    document.querySelectorAll('#bordas button').forEach(function (bt, i) {
+      var b = bt.dataset.perfil, ap = b === estado.perfil ? estado.apelido : estado.bordas[b].apelido;
+      bt.textContent = '🌊 Borda ' + (i + 1) + (ap ? ' · ' + ap : '');
+      bt.classList.toggle('sim', b === estado.perfil);
+      bt.setAttribute('aria-selected', b === estado.perfil);
+    });
+  }
+
+  // põe nos campos as opções da borda escolhida
+  function preencheBorda() {
+    ['espessura', 'velocidade', 'tamanho', 'pulo', 'nometam', 'peixes'].forEach(function (k) {
+      $(k).value = estado[k];
+      $('o-' + k).textContent = formatos[k](+estado[k]);
+    });
+    ['nami', 'bolhas', 'brilhos', 'enfeites'].forEach(function (k) { $(k).checked = estado[k]; });
+    ['nado', 'nome', 'apelido'].forEach(function (k) { $(k).value = estado[k]; });
+    document.querySelectorAll('input[name="tema"]').forEach(function (r) { r.checked = r.value === estado.tema; });
+    document.querySelectorAll('input[name="modo"]').forEach(function (r) { r.checked = r.value === estado.modo; });
+    $('resolucao').value = estado.resolucao;
+  }
+
+  function trocaPerfil(b) {
+    if (b === estado.perfil) return;
+    guardaBorda();
+    estado.perfil = b;
+    carregaBorda();
+    preencheBorda();
     atualizar(true);
   }
 

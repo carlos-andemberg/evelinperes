@@ -55,7 +55,11 @@
 <script>
   // Link único: sem nada no link, usa o que foi salvo no gerador e atualiza sozinho.
   // Com opções no link (veja o README), vale o que está no link.
-  Ondas.automatico('borda', function (q) {
+  // uma borda por cena do OBS: borda.html é a Borda 1, borda2.html a 2, e assim por diante,
+  // cada uma com a própria câmera e as próprias opções salvas
+  var PERFIL = (/(borda[234])\.html$/.exec(location.pathname) || [0, 'borda'])[1];
+  if (PERFIL !== 'borda') document.title = 'evelin_peres · Borda ' + PERFIL.slice(-1);
+  Ondas.automatico(PERFIL, function (q) {
     var op = Ondas.parametros({
       tema: 'rosa', espessura: 1, velocidade: 1,
       nami: true, tamanho: 1, nado: 'volta', pulo: 25,

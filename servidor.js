@@ -31,8 +31,12 @@ const TIPOS = {
 
 // as telas que têm opções salvas; as de cena (fila, começando, encerrando, volto já) usam a
 // mesma página, fila.html, que o servidor também entrega com o nome de cada uma
-const TELAS = ['borda', 'fila', 'comecando', 'encerrando', 'voltoja'];
-const APELIDOS = { '/comecando.html': '/fila.html', '/encerrando.html': '/fila.html', '/voltoja.html': '/fila.html' };
+// as bordas da câmera (uma por cena do OBS) também usam a mesma página, borda.html
+const TELAS = ['borda', 'borda2', 'borda3', 'borda4', 'fila', 'comecando', 'encerrando', 'voltoja'];
+const APELIDOS = {
+  '/borda2.html': '/borda.html', '/borda3.html': '/borda.html', '/borda4.html': '/borda.html',
+  '/comecando.html': '/fila.html', '/encerrando.html': '/fila.html', '/voltoja.html': '/fila.html'
+};
 
 // ------------------------------------------------------------- opções salvas
 let config = { versao: 0, salvoEm: null, estado: null };
