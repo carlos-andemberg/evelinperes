@@ -48,9 +48,10 @@
   };
 
   // ------------------------------------------------------------ parâmetros
-  // Lê as opções do link (?espessura=1.5&nami=0 ...). O tipo vem do valor padrão.
-  function parametros(padrao) {
-    var q = new URLSearchParams(global.location.search), op = {};
+  // Lê as opções do link (?espessura=1.5&nami=0 ...), ou de `fonte` (URLSearchParams ou objeto).
+  // O tipo vem do valor padrão.
+  function parametros(padrao, fonte) {
+    var q = fonte instanceof URLSearchParams ? fonte : new URLSearchParams(fonte || global.location.search), op = {};
     Object.keys(padrao).forEach(function (k) {
       var d = padrao[k], v = q.get(k);
       if (v === null) { op[k] = d; return; }
@@ -64,6 +65,65 @@
   }
 
   var emOBS = !!global.obsstudio;
+
+  // ------------------------------------------------------------ link único
+  // Sem opções no link (ou com ?auto), a tela usa o que foi salvo no gerador ("Salvar na live")
+  // e recarrega sozinha quando salvam de novo. Com opções no link (ou ?auto=0), vale o link.
+  // `fundo` e `caixa` são da prévia e não contam. comecar(q) recebe um URLSearchParams.
+  function automatico(tela, comecar) {
+    var q = new URLSearchParams(global.location.search);
+    var proprias = Array.from(q.keys()).filter(function (k) { return k !== 'fundo' && k !== 'caixa' && k !== 'auto'; });
+    var auto = q.has('auto') ? q.get('auto') !== '0' : proprias.length === 0;
+    if (!auto) { comecar(q); return; }
+
+    var CHAVE = 'evelinperes-config', versao = null;
+    function guardado() { try { return JSON.parse(global.localStorage.getItem(CHAVE)); } catch (e) { return null; } }
+    function aplica(cfg) {
+      versao = cfg ? cfg.versao : -1;
+      var p = new URLSearchParams((cfg && cfg[tela]) || {});
+      q.forEach(function (v, k) { p.set(k, v); });   // fundo=1 da prévia continua valendo
+      comecar(p);
+    }
+    function recarrega() {
+      try { global.sessionStorage.setItem('evelinperes-recarga', '1'); } catch (e) {}
+      global.location.reload();
+    }
+    function confere() {
+      fetch('/api/config', { cache: 'no-store' }).then(function (r) { return r.json(); })
+        .then(function (cfg) { if (cfg.versao !== versao) recarrega(); }).catch(function () {});
+    }
+    function escuta() {
+      if (global.EventSource) {
+        var es = new EventSource('/api/eventos');
+        es.addEventListener('config', function (e) {
+          try { if (JSON.parse(e.data).versao !== versao) recarrega(); } catch (err) {}
+        });
+      }
+      // reserva, caso o aviso na hora não chegue
+      setInterval(confere, 60000);
+    }
+    fetch('/api/config', { cache: 'no-store' }).then(function (r) {
+      if (!r.ok) throw new Error(r.status);
+      return r.json();
+    }).then(function (cfg) {
+      try { global.localStorage.setItem(CHAVE, JSON.stringify(cfg)); } catch (e) {}
+      aplica(cfg);
+      escuta();
+    }).catch(function () {
+      // sem servidor: usa a última versão que esta tela viu
+      aplica(guardado());
+      escuta();
+    });
+  }
+
+  // A recarga por causa do "Salvar na live" não zera o que estava contando (ex.: tempo na fila)
+  function veioDeRecarga() {
+    try {
+      var sim = global.sessionStorage.getItem('evelinperes-recarga') === '1';
+      global.sessionStorage.removeItem('evelinperes-recarga');
+      return sim;
+    } catch (e) { return false; }
+  }
 
   // ------------------------------------------------------------- caminho
   // Retângulo de cantos redondos de (x0, y0) a (x1, y1). A normal é sempre o "pra cima"
@@ -1077,6 +1137,8 @@
     LETRAS: LETRAS,
     PADRAO: PADRAO,
     parametros: parametros,
+    automatico: automatico,
+    veioDeRecarga: veioDeRecarga,
     emOBS: emOBS,
     iniciar: iniciar,
     desenhaNami: desenhaNami

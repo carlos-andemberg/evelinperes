@@ -255,273 +255,283 @@
 <script src="ondas.js?v=dev"></script>
 <script src="dados.js?v=dev"></script>
 <script>
-  var op = Ondas.parametros({
-    // borda e Nami nadando (iguais aos da borda.html)
-    tema: 'rosa', espessura: 1, velocidade: 1,
-    nami: true, tamanho: 1, nado: 'volta', pulo: 25,
-    bolhas: true, brilhos: true, enfeites: true,
-    // tela de fila
-    skins: '', croma: '', troca: 10, aleatorio: false,
-    titulo: 'Estou na fila', pilula: 'League of Legends',
-    recados: 'Já já começa a partida!|Aproveita pra pegar uma água 💧|Digita !pix, !insta ou !elo no chat',
-    tempo: true, habilidades: true, miniaturas: true, camera: false, nomeskin: false,
-    // lugar e tamanho da câmera em pixels da tela do OBS (sem isso ela fica no cantinho da coluna)
-    camx: -1, camy: -1, camlargura: 0, camaltura: 0, resolucao: '1920x1080'
-  });
-  var camSolta = op.camera && op.camx >= 0 && op.camy >= 0 && op.camlargura > 0 && op.camaltura > 0;
-  var telaRef = op.resolucao.toLowerCase().split('x').map(Number);
-  if (!(telaRef[0] > 0 && telaRef[1] > 0)) telaRef = [1920, 1080];
+  // Link único: sem nada no link, usa o que foi salvo no gerador e atualiza sozinho.
+  // Com opções no link (veja o README), vale o que está no link.
+  Ondas.automatico('fila', function (q) {
+    var op = Ondas.parametros({
+      // borda e Nami nadando (iguais aos da borda.html)
+      tema: 'rosa', espessura: 1, velocidade: 1,
+      nami: true, tamanho: 1, nado: 'volta', pulo: 25,
+      bolhas: true, brilhos: true, enfeites: true,
+      // tela de fila
+      skins: '', croma: '', troca: 10, aleatorio: false,
+      titulo: 'Estou na fila', pilula: 'League of Legends',
+      recados: 'Já já começa a partida!|Aproveita pra pegar uma água 💧|Digita !pix, !insta ou !elo no chat',
+      tempo: true, habilidades: true, miniaturas: true, camera: false, nomeskin: false,
+      // lugar e tamanho da câmera em pixels da tela do OBS (sem isso ela fica no cantinho da coluna)
+      camx: -1, camy: -1, camlargura: 0, camaltura: 0, resolucao: '1920x1080'
+    }, q);
+    var camSolta = op.camera && op.camx >= 0 && op.camy >= 0 && op.camlargura > 0 && op.camaltura > 0;
+    var telaRef = op.resolucao.toLowerCase().split('x').map(Number);
+    if (!(telaRef[0] > 0 && telaRef[1] > 0)) telaRef = [1920, 1080];
 
-  var tema = Ondas.TEMAS[op.tema] || Ondas.TEMAS.rosa;
-  var raiz = document.documentElement.style;
-  raiz.setProperty('--acento', tema.acento);
-  raiz.setProperty('--acento2', tema.acento2);
-  raiz.setProperty('--texto', tema.texto);
+    var tema = Ondas.TEMAS[op.tema] || Ondas.TEMAS.rosa;
+    var raiz = document.documentElement.style;
+    raiz.setProperty('--acento', tema.acento);
+    raiz.setProperty('--acento2', tema.acento2);
+    raiz.setProperty('--texto', tema.texto);
 
-  var palco = document.getElementById('palco');
-  if (op.camera) palco.classList.add('com-camera');
-  if (!op.tempo) palco.classList.add('sem-tempo');
-  if (!op.habilidades) palco.classList.add('sem-habilidades');
-  if (!op.miniaturas) palco.classList.add('sem-miniaturas');
-  if (!op.nomeskin) palco.classList.add('sem-texto');
-  if (!Ondas.emOBS) document.body.classList.add('previa');
-  // título com os três pontinhos pulando, grudados na última palavra
-  (function () {
-    var h1 = document.getElementById('titulo'), txt = op.titulo.trim(), corte = txt.lastIndexOf(' ');
-    h1.textContent = corte > 0 ? txt.slice(0, corte + 1) : '';
-    var fim = document.createElement('span');
-    fim.className = 'junto';
-    fim.textContent = corte > 0 ? txt.slice(corte + 1) : txt;
-    var pontos = document.createElement('span');
-    pontos.className = 'pontos';
-    pontos.innerHTML = '<i>.</i><i>.</i><i>.</i>';
-    fim.appendChild(pontos);
-    h1.appendChild(fim);
-  })();
-  document.getElementById('pilula').textContent = op.pilula;
-  if (!op.pilula) document.querySelector('.pilula').style.display = 'none';
+    var palco = document.getElementById('palco');
+    if (op.camera) palco.classList.add('com-camera');
+    if (!op.tempo) palco.classList.add('sem-tempo');
+    if (!op.habilidades) palco.classList.add('sem-habilidades');
+    if (!op.miniaturas) palco.classList.add('sem-miniaturas');
+    if (!op.nomeskin) palco.classList.add('sem-texto');
+    if (!Ondas.emOBS) document.body.classList.add('previa');
+    // título com os três pontinhos pulando, grudados na última palavra
+    (function () {
+      var h1 = document.getElementById('titulo'), txt = op.titulo.trim(), corte = txt.lastIndexOf(' ');
+      h1.textContent = corte > 0 ? txt.slice(0, corte + 1) : '';
+      var fim = document.createElement('span');
+      fim.className = 'junto';
+      fim.textContent = corte > 0 ? txt.slice(corte + 1) : txt;
+      var pontos = document.createElement('span');
+      pontos.className = 'pontos';
+      pontos.innerHTML = '<i>.</i><i>.</i><i>.</i>';
+      fim.appendChild(pontos);
+      h1.appendChild(fim);
+    })();
+    document.getElementById('pilula').textContent = op.pilula;
+    if (!op.pilula) document.querySelector('.pilula').style.display = 'none';
 
-  // ------------------------------------------------ fundo do mar + furo da câmera
-  var furo = null, bolhasFundo = [];
-  if (camSolta) {
-    var camEl = document.getElementById('camera'), espaco = document.createElement('div');
-    espaco.className = 'camera camera-espaco';
-    camEl.parentNode.insertBefore(espaco, camEl);
-    document.body.appendChild(camEl);
-    camEl.classList.add('solta');
-  }
-  function posicionaCamera() {
-    if (!camSolta) return;
-    var el = document.getElementById('camera'), ex = innerWidth / telaRef[0], ey = innerHeight / telaRef[1];
-    el.style.left = (op.camx * ex) + 'px';
-    el.style.top = (op.camy * ey) + 'px';
-    el.style.width = (op.camlargura * ex) + 'px';
-    el.style.height = (op.camaltura * ey) + 'px';
-  }
-  function medirFuro() {
-    if (!op.camera) return;
-    posicionaCamera();
-    var el = document.getElementById('camera'), r = el.getBoundingClientRect();
-    var borda = parseFloat(getComputedStyle(el).borderTopWidth) || 0;
-    furo = { x: r.left + borda / 2, y: r.top + borda / 2, w: r.width - borda, h: r.height - borda, r: parseFloat(getComputedStyle(el).borderTopLeftRadius) || 0 };
-    document.getElementById('cameraTxt').innerHTML = Ondas.emOBS ? '' :
-      'sua câmera aqui<br>x ' + Math.round(r.left) + ' · y ' + Math.round(r.top) + ' · ' + Math.round(r.width) + ' × ' + Math.round(r.height);
-  }
+    // ------------------------------------------------ fundo do mar + furo da câmera
+    var furo = null, bolhasFundo = [];
+    if (camSolta) {
+      var camEl = document.getElementById('camera'), espaco = document.createElement('div');
+      espaco.className = 'camera camera-espaco';
+      camEl.parentNode.insertBefore(espaco, camEl);
+      document.body.appendChild(camEl);
+      camEl.classList.add('solta');
+    }
+    function posicionaCamera() {
+      if (!camSolta) return;
+      var el = document.getElementById('camera'), ex = innerWidth / telaRef[0], ey = innerHeight / telaRef[1];
+      el.style.left = (op.camx * ex) + 'px';
+      el.style.top = (op.camy * ey) + 'px';
+      el.style.width = (op.camlargura * ex) + 'px';
+      el.style.height = (op.camaltura * ey) + 'px';
+    }
+    function medirFuro() {
+      if (!op.camera) return;
+      posicionaCamera();
+      var el = document.getElementById('camera'), r = el.getBoundingClientRect();
+      var borda = parseFloat(getComputedStyle(el).borderTopWidth) || 0;
+      furo = { x: r.left + borda / 2, y: r.top + borda / 2, w: r.width - borda, h: r.height - borda, r: parseFloat(getComputedStyle(el).borderTopLeftRadius) || 0 };
+      document.getElementById('cameraTxt').innerHTML = Ondas.emOBS ? '' :
+        'sua câmera aqui<br>x ' + Math.round(r.left) + ' · y ' + Math.round(r.top) + ' · ' + Math.round(r.width) + ' × ' + Math.round(r.height);
+    }
 
-  function fundo(ctx, W, H, t, u, dt) {
-    var g = ctx.createLinearGradient(0, 0, 0, H);
-    g.addColorStop(0, tema.ceu[0]); g.addColorStop(0.55, tema.ceu[1]); g.addColorStop(1, tema.ceu[2]);
-    ctx.fillStyle = g;
-    ctx.fillRect(0, 0, W, H);
-
-    // manchas de luz bem suaves
-    var M = Math.max(W, H);
-    [[0.18, 0.25, tema.acento2, 0.35], [0.82, 0.7, '#9fe7ee', 0.22], [0.55, 0.05, '#ffffff', 0.7]].forEach(function (m, i) {
-      var x = W * (m[0] + Math.sin(t * 0.07 + i * 2) * 0.06), y = H * (m[1] + Math.cos(t * 0.05 + i) * 0.06);
-      var rg = ctx.createRadialGradient(x, y, 0, x, y, M * 0.45);
-      rg.addColorStop(0, hexA(m[2], m[3])); rg.addColorStop(1, hexA(m[2], 0));
-      ctx.fillStyle = rg;
+    function fundo(ctx, W, H, t, u, dt) {
+      var g = ctx.createLinearGradient(0, 0, 0, H);
+      g.addColorStop(0, tema.ceu[0]); g.addColorStop(0.55, tema.ceu[1]); g.addColorStop(1, tema.ceu[2]);
+      ctx.fillStyle = g;
       ctx.fillRect(0, 0, W, H);
-    });
 
-    // raios de luz vindo de cima
-    for (var i = 0; i < 6; i++) {
-      var x = W * (0.06 + i * 0.18) + Math.sin(t * 0.25 + i * 1.7) * W * 0.03;
-      var a = W * (0.018 + (i % 3) * 0.008), b = a * 3.2, inc = W * 0.12;
-      var lg = ctx.createLinearGradient(0, 0, 0, H * 0.95);
-      lg.addColorStop(0, 'rgba(255,255,255,' + (0.42 + 0.18 * Math.sin(t * 0.6 + i)) + ')');
-      lg.addColorStop(1, 'rgba(255,255,255,0)');
-      ctx.fillStyle = lg;
-      ctx.beginPath();
-      ctx.moveTo(x - a, 0); ctx.lineTo(x + a, 0); ctx.lineTo(x + b + inc, H); ctx.lineTo(x - b + inc, H);
-      ctx.closePath();
-      ctx.fill();
+      // manchas de luz bem suaves
+      var M = Math.max(W, H);
+      [[0.18, 0.25, tema.acento2, 0.35], [0.82, 0.7, '#9fe7ee', 0.22], [0.55, 0.05, '#ffffff', 0.7]].forEach(function (m, i) {
+        var x = W * (m[0] + Math.sin(t * 0.07 + i * 2) * 0.06), y = H * (m[1] + Math.cos(t * 0.05 + i) * 0.06);
+        var rg = ctx.createRadialGradient(x, y, 0, x, y, M * 0.45);
+        rg.addColorStop(0, hexA(m[2], m[3])); rg.addColorStop(1, hexA(m[2], 0));
+        ctx.fillStyle = rg;
+        ctx.fillRect(0, 0, W, H);
+      });
+
+      // raios de luz vindo de cima
+      for (var i = 0; i < 6; i++) {
+        var x = W * (0.06 + i * 0.18) + Math.sin(t * 0.25 + i * 1.7) * W * 0.03;
+        var a = W * (0.018 + (i % 3) * 0.008), b = a * 3.2, inc = W * 0.12;
+        var lg = ctx.createLinearGradient(0, 0, 0, H * 0.95);
+        lg.addColorStop(0, 'rgba(255,255,255,' + (0.42 + 0.18 * Math.sin(t * 0.6 + i)) + ')');
+        lg.addColorStop(1, 'rgba(255,255,255,0)');
+        ctx.fillStyle = lg;
+        ctx.beginPath();
+        ctx.moveTo(x - a, 0); ctx.lineTo(x + a, 0); ctx.lineTo(x + b + inc, H); ctx.lineTo(x - b + inc, H);
+        ctx.closePath();
+        ctx.fill();
+      }
+
+      // bolhas subindo do fundo
+      if (Math.random() < dt * 3.5) {
+        bolhasFundo.push({ x: Math.random() * W, y: H + 20 * u, r: (3 + Math.random() * 9) * u, v: (35 + Math.random() * 45) * u, f: Math.random() * 6.28 });
+      }
+      ctx.lineWidth = 1.4 * u;
+      for (i = bolhasFundo.length - 1; i >= 0; i--) {
+        var bo = bolhasFundo[i];
+        bo.y -= bo.v * dt;
+        if (bo.y < -20 * u) { bolhasFundo.splice(i, 1); continue; }
+        var bx = bo.x + Math.sin(t * 1.4 + bo.f) * 8 * u;
+        ctx.fillStyle = 'rgba(255,255,255,0.28)';
+        ctx.strokeStyle = 'rgba(255,255,255,0.85)';
+        ctx.beginPath(); ctx.arc(bx, bo.y, bo.r, 0, 6.2832); ctx.fill(); ctx.stroke();
+        ctx.fillStyle = 'rgba(255,255,255,0.9)';
+        ctx.beginPath(); ctx.arc(bx - bo.r * 0.35, bo.y - bo.r * 0.35, bo.r * 0.28, 0, 6.2832); ctx.fill();
+      }
+
+      // furo transparente pra câmera (no OBS, a câmera fica embaixo desta fonte)
+      if (furo) {
+        ctx.save();
+        ctx.globalCompositeOperation = 'destination-out';
+        ctx.beginPath();
+        if (ctx.roundRect) ctx.roundRect(furo.x, furo.y, furo.w, furo.h, furo.r);
+        else ctx.rect(furo.x, furo.y, furo.w, furo.h);
+        ctx.fill();
+        ctx.restore();
+      }
     }
 
-    // bolhas subindo do fundo
-    if (Math.random() < dt * 3.5) {
-      bolhasFundo.push({ x: Math.random() * W, y: H + 20 * u, r: (3 + Math.random() * 9) * u, v: (35 + Math.random() * 45) * u, f: Math.random() * 6.28 });
-    }
-    ctx.lineWidth = 1.4 * u;
-    for (i = bolhasFundo.length - 1; i >= 0; i--) {
-      var bo = bolhasFundo[i];
-      bo.y -= bo.v * dt;
-      if (bo.y < -20 * u) { bolhasFundo.splice(i, 1); continue; }
-      var bx = bo.x + Math.sin(t * 1.4 + bo.f) * 8 * u;
-      ctx.fillStyle = 'rgba(255,255,255,0.28)';
-      ctx.strokeStyle = 'rgba(255,255,255,0.85)';
-      ctx.beginPath(); ctx.arc(bx, bo.y, bo.r, 0, 6.2832); ctx.fill(); ctx.stroke();
-      ctx.fillStyle = 'rgba(255,255,255,0.9)';
-      ctx.beginPath(); ctx.arc(bx - bo.r * 0.35, bo.y - bo.r * 0.35, bo.r * 0.28, 0, 6.2832); ctx.fill();
+    function hexA(hex, a) {
+      var n = parseInt(hex.slice(1), 16);
+      return 'rgba(' + (n >> 16) + ',' + ((n >> 8) & 255) + ',' + (n & 255) + ',' + a + ')';
     }
 
-    // furo transparente pra câmera (no OBS, a câmera fica embaixo desta fonte)
-    if (furo) {
-      ctx.save();
-      ctx.globalCompositeOperation = 'destination-out';
-      ctx.beginPath();
-      if (ctx.roundRect) ctx.roundRect(furo.x, furo.y, furo.w, furo.h, furo.r);
-      else ctx.rect(furo.x, furo.y, furo.w, furo.h);
-      ctx.fill();
-      ctx.restore();
+    op.antes = fundo;
+    var borda = Ondas.iniciar(document.getElementById('ondas'), op);
+    addEventListener('resize', medirFuro);
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(medirFuro);
+    medirFuro();
+    if (!Ondas.emOBS) addEventListener('pointerdown', function () { borda.pular(); });
+
+    // ------------------------------------------------ tempo na fila
+    // a recarga do "Salvar na live" continua contando; abrir a cena de novo começa do zero
+    var inicio = Date.now();
+    try {
+      var comecou = +sessionStorage.getItem('evelinperes-inicio');
+      if (Ondas.veioDeRecarga() && comecou) inicio = comecou;
+      sessionStorage.setItem('evelinperes-inicio', String(inicio));
+    } catch (e) {}
+    var relogio = document.getElementById('relogio'), agua = document.getElementById('agua');
+    function tique() {
+      var s = Math.floor((Date.now() - inicio) / 1000), h = Math.floor(s / 3600), m = Math.floor(s / 60) % 60, ss = s % 60;
+      relogio.textContent = (h ? h + ':' + String(m).padStart(2, '0') : m) + ':' + String(ss).padStart(2, '0');
+      agua.style.setProperty('--nivel', (18 + 64 * (1 - Math.exp(-s / 240))) + '%');
     }
-  }
+    tique();
+    setInterval(tique, 1000);
 
-  function hexA(hex, a) {
-    var n = parseInt(hex.slice(1), 16);
-    return 'rgba(' + (n >> 16) + ',' + ((n >> 8) & 255) + ',' + (n & 255) + ',' + a + ')';
-  }
-
-  op.antes = fundo;
-  var borda = Ondas.iniciar(document.getElementById('ondas'), op);
-  addEventListener('resize', medirFuro);
-  if (document.fonts && document.fonts.ready) document.fonts.ready.then(medirFuro);
-  medirFuro();
-  if (!Ondas.emOBS) addEventListener('pointerdown', function () { borda.pular(); });
-
-  // ------------------------------------------------ tempo na fila
-  var inicio = Date.now();
-  var relogio = document.getElementById('relogio'), agua = document.getElementById('agua');
-  function tique() {
-    var s = Math.floor((Date.now() - inicio) / 1000), h = Math.floor(s / 3600), m = Math.floor(s / 60) % 60, ss = s % 60;
-    relogio.textContent = (h ? h + ':' + String(m).padStart(2, '0') : m) + ':' + String(ss).padStart(2, '0');
-    agua.style.setProperty('--nivel', (18 + 64 * (1 - Math.exp(-s / 240))) + '%');
-  }
-  tique();
-  setInterval(tique, 1000);
-
-  // ------------------------------------------------ recados que vão trocando
-  var recados = op.recados.split('|').map(function (r) { return r.trim(); }).filter(Boolean);
-  var recado = document.getElementById('recado'), iRecado = 0;
-  recado.textContent = recados[0] || '';
-  if (recados.length > 1) setInterval(function () {
-    recado.classList.add('trocando');
-    setTimeout(function () {
-      iRecado = (iRecado + 1) % recados.length;
-      recado.textContent = recados[iRecado];
-      recado.classList.remove('trocando');
-    }, 600);
-  }, 7000);
-
-  // ------------------------------------------------ skins, cromas e habilidades
-  NamiDados.carregar().then(function (dados) {
-    var porNum = {};
-    dados.skins.forEach(function (s) { porNum[s.num] = s; });
-    var escolhidas = op.skins ? op.skins.split(',').map(function (n) { return porNum[parseInt(n, 10)]; }).filter(Boolean) : dados.skins.slice();
-    if (!escolhidas.length) escolhidas = dados.skins.slice();
-    if (op.aleatorio) escolhidas.sort(function () { return Math.random() - 0.5; });
-    var cromas = NamiDados.lerCromas(op.croma);
-    montaVitrine(escolhidas, cromas);
-    montaHabilidades(dados);
-  });
-
-  function montaVitrine(lista, cromas) {
-    var card = document.getElementById('card'), placa = document.getElementById('placa');
-    var mini = document.getElementById('miniaturas'), barra = document.getElementById('barra');
-    var troca = Math.max(4, op.troca), gira = lista.length > 1 && op.troca > 0;
-    document.documentElement.style.setProperty('--troca', troca + 's');
-
-    var artes = lista.map(function (s) {
-      var img = new Image();
-      img.className = 'arte';
-      img.alt = s.nome;
-      img.decoding = 'async';
-      img.onerror = function () { if (img.src.indexOf('/centered/') > -1) img.src = NamiDados.splashInteira(s.num); };
-      img.src = NamiDados.splash(s.num);
-      card.insertBefore(img, card.firstChild);
-      return img;
-    });
-
-    var minis = lista.map(function (s) {
-      var m = new Image();
-      m.src = NamiDados.quadrado(s.num);
-      m.alt = s.nome;
-      mini.appendChild(m);
-      return m;
-    });
-    // miniaturas encolhem quando tem muita skin
-    var tam = Math.min(4, 52 / Math.max(1, lista.length) - 0.8);
-    document.documentElement.style.setProperty('--mini', 'calc(var(--u) * ' + tam.toFixed(2) + ')');
-    if (lista.length < 2) mini.style.display = 'none';
-
-    var atual = -1;
-    function mostra(i) {
-      var s = lista[i];
-      if (atual >= 0) { artes[atual].classList.remove('ativa'); minis[atual].classList.remove('ativa'); }
-      // reinicia a animação de zoom
-      artes[i].classList.remove('ativa'); void artes[i].offsetWidth; artes[i].classList.add('ativa');
-      minis[i].classList.add('ativa');
-      placa.classList.add('trocando');
+    // ------------------------------------------------ recados que vão trocando
+    var recados = op.recados.split('|').map(function (r) { return r.trim(); }).filter(Boolean);
+    var recado = document.getElementById('recado'), iRecado = 0;
+    recado.textContent = recados[0] || '';
+    if (recados.length > 1) setInterval(function () {
+      recado.classList.add('trocando');
       setTimeout(function () {
-        document.getElementById('nomeSkin').textContent = s.nome;
-        document.getElementById('raridade').textContent = s.raridade || '';
-        document.getElementById('legado').textContent = s.legado ? 'Legado' : '';
-        placa.classList.remove('trocando');
-      }, atual < 0 ? 0 : 500);
-      mostraCroma(s, cromas[s.num]);
-      if (gira) { barra.classList.remove('anda'); void barra.offsetWidth; barra.classList.add('anda'); }
-      atual = i;
-    }
-    mostra(0);
-    if (gira) setInterval(function () { mostra((atual + 1) % lista.length); }, troca * 1000);
-  }
+        iRecado = (iRecado + 1) % recados.length;
+        recado.textContent = recados[iRecado];
+        recado.classList.remove('trocando');
+      }, 600);
+    }, 7000);
 
-  function mostraCroma(skin, num) {
-    var box = document.getElementById('croma');
-    var c = (skin.cromas || []).filter(function (x) { return x.num === num; })[0];
-    if (!c) { box.classList.add('oculto'); return; }
-    var img = document.getElementById('cromaImg');
-    img.src = NamiDados.croma(c.num);
-    document.getElementById('cromaNome').textContent = 'Croma ' + c.nome;
-    box.style.setProperty('--cor-croma', (c.cores && c.cores[0]) || tema.acento);
-    box.classList.remove('oculto');
-  }
-
-  function montaHabilidades(dados) {
-    if (!op.habilidades) return;
-    var box = document.getElementById('icones'), nome = document.getElementById('habNome');
-    var itens = dados.habilidades.map(function (h) {
-      var d = document.createElement('div');
-      d.className = 'icone';
-      d.innerHTML = '<img alt=""><b></b>';
-      d.querySelector('img').src = NamiDados.icone(h, dados.versao);
-      d.querySelector('b').textContent = h.tecla;
-      box.appendChild(d);
-      return d;
+    // ------------------------------------------------ skins, cromas e habilidades
+    NamiDados.carregar().then(function (dados) {
+      var porNum = {};
+      dados.skins.forEach(function (s) { porNum[s.num] = s; });
+      var escolhidas = op.skins ? op.skins.split(',').map(function (n) { return porNum[parseInt(n, 10)]; }).filter(Boolean) : dados.skins.slice();
+      if (!escolhidas.length) escolhidas = dados.skins.slice();
+      if (op.aleatorio) escolhidas.sort(function () { return Math.random() - 0.5; });
+      var cromas = NamiDados.lerCromas(op.croma);
+      montaVitrine(escolhidas, cromas);
+      montaHabilidades(dados);
     });
-    var i = -1;
-    function proxima() {
-      if (i >= 0) itens[i].classList.remove('ativa');
-      i = (i + 1) % itens.length;
-      itens[i].classList.add('ativa');
-      var h = dados.habilidades[i], em = document.createElement('em');
-      em.textContent = h.tecla;
-      nome.textContent = ' · ' + h.nome;
-      nome.insertBefore(em, nome.firstChild);
+
+    function montaVitrine(lista, cromas) {
+      var card = document.getElementById('card'), placa = document.getElementById('placa');
+      var mini = document.getElementById('miniaturas'), barra = document.getElementById('barra');
+      var troca = Math.max(4, op.troca), gira = lista.length > 1 && op.troca > 0;
+      document.documentElement.style.setProperty('--troca', troca + 's');
+
+      var artes = lista.map(function (s) {
+        var img = new Image();
+        img.className = 'arte';
+        img.alt = s.nome;
+        img.decoding = 'async';
+        img.onerror = function () { if (img.src.indexOf('/centered/') > -1) img.src = NamiDados.splashInteira(s.num); };
+        img.src = NamiDados.splash(s.num);
+        card.insertBefore(img, card.firstChild);
+        return img;
+      });
+
+      var minis = lista.map(function (s) {
+        var m = new Image();
+        m.src = NamiDados.quadrado(s.num);
+        m.alt = s.nome;
+        mini.appendChild(m);
+        return m;
+      });
+      // miniaturas encolhem quando tem muita skin
+      var tam = Math.min(4, 52 / Math.max(1, lista.length) - 0.8);
+      document.documentElement.style.setProperty('--mini', 'calc(var(--u) * ' + tam.toFixed(2) + ')');
+      if (lista.length < 2) mini.style.display = 'none';
+
+      var atual = -1;
+      function mostra(i) {
+        var s = lista[i];
+        if (atual >= 0) { artes[atual].classList.remove('ativa'); minis[atual].classList.remove('ativa'); }
+        // reinicia a animação de zoom
+        artes[i].classList.remove('ativa'); void artes[i].offsetWidth; artes[i].classList.add('ativa');
+        minis[i].classList.add('ativa');
+        placa.classList.add('trocando');
+        setTimeout(function () {
+          document.getElementById('nomeSkin').textContent = s.nome;
+          document.getElementById('raridade').textContent = s.raridade || '';
+          document.getElementById('legado').textContent = s.legado ? 'Legado' : '';
+          placa.classList.remove('trocando');
+        }, atual < 0 ? 0 : 500);
+        mostraCroma(s, cromas[s.num]);
+        if (gira) { barra.classList.remove('anda'); void barra.offsetWidth; barra.classList.add('anda'); }
+        atual = i;
+      }
+      mostra(0);
+      if (gira) setInterval(function () { mostra((atual + 1) % lista.length); }, troca * 1000);
     }
-    proxima();
-    setInterval(proxima, 3500);
-  }
+
+    function mostraCroma(skin, num) {
+      var box = document.getElementById('croma');
+      var c = (skin.cromas || []).filter(function (x) { return x.num === num; })[0];
+      if (!c) { box.classList.add('oculto'); return; }
+      var img = document.getElementById('cromaImg');
+      img.src = NamiDados.croma(c.num);
+      document.getElementById('cromaNome').textContent = 'Croma ' + c.nome;
+      box.style.setProperty('--cor-croma', (c.cores && c.cores[0]) || tema.acento);
+      box.classList.remove('oculto');
+    }
+
+    function montaHabilidades(dados) {
+      if (!op.habilidades) return;
+      var box = document.getElementById('icones'), nome = document.getElementById('habNome');
+      var itens = dados.habilidades.map(function (h) {
+        var d = document.createElement('div');
+        d.className = 'icone';
+        d.innerHTML = '<img alt=""><b></b>';
+        d.querySelector('img').src = NamiDados.icone(h, dados.versao);
+        d.querySelector('b').textContent = h.tecla;
+        box.appendChild(d);
+        return d;
+      });
+      var i = -1;
+      function proxima() {
+        if (i >= 0) itens[i].classList.remove('ativa');
+        i = (i + 1) % itens.length;
+        itens[i].classList.add('ativa');
+        var h = dados.habilidades[i], em = document.createElement('em');
+        em.textContent = h.tecla;
+        nome.textContent = ' · ' + h.nome;
+        nome.insertBefore(em, nome.firstChild);
+      }
+      proxima();
+      setInterval(proxima, 3500);
+    }
+  });
 </script>
 </body>
 </html>

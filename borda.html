@@ -53,47 +53,50 @@
 <canvas id="ondas"></canvas>
 <script src="ondas.js?v=dev"></script>
 <script>
-  // Opções no link: veja o README ou o gerador em index.html
-  var op = Ondas.parametros({
-    tema: 'rosa', espessura: 1, velocidade: 1,
-    nami: true, tamanho: 1, nado: 'volta', pulo: 25,
-    bolhas: true, brilhos: true, enfeites: true,
-    // a borda vai em volta da câmera (posição em pixels da tela do OBS); o nome flutua em cima
-    nome: 'evelin_peres', nometam: 1, peixes: 3, letra: 'pacifico',
-    camx: 1591, camy: 747, camlargura: 329, camaltura: 333, resolucao: '1920x1080',
-    fundo: !Ondas.emOBS, caixa: true
-  });
+  // Link único: sem nada no link, usa o que foi salvo no gerador e atualiza sozinho.
+  // Com opções no link (veja o README), vale o que está no link.
+  Ondas.automatico('borda', function (q) {
+    var op = Ondas.parametros({
+      tema: 'rosa', espessura: 1, velocidade: 1,
+      nami: true, tamanho: 1, nado: 'volta', pulo: 25,
+      bolhas: true, brilhos: true, enfeites: true,
+      // a borda vai em volta da câmera (posição em pixels da tela do OBS); o nome flutua em cima
+      nome: 'evelin_peres', nometam: 1, peixes: 3, letra: 'pacifico',
+      camx: 1591, camy: 747, camlargura: 329, camaltura: 333, resolucao: '1920x1080',
+      fundo: !Ondas.emOBS, caixa: true
+    }, q);
 
-  var ref = op.resolucao.toLowerCase().split('x').map(Number);
-  if (!(ref[0] > 0 && ref[1] > 0)) ref = [1920, 1080];
-  op.cam = { x: op.camx, y: op.camy, w: op.camlargura, h: op.camaltura, ref: ref };
+    var ref = op.resolucao.toLowerCase().split('x').map(Number);
+    if (!(ref[0] > 0 && ref[1] > 0)) ref = [1920, 1080];
+    op.cam = { x: op.camx, y: op.camy, w: op.camlargura, h: op.camaltura, ref: ref };
 
-  if (op.fundo) {
-    document.body.classList.add('previa');
-    // lugar da câmera, só pra ver onde a plaquinha cai
-    if (op.caixa) {
-      var cam = document.createElement('div');
-      cam.className = 'cam';
-      cam.style.left = (op.camx / ref[0] * 100) + '%';
-      cam.style.top = (op.camy / ref[1] * 100) + '%';
-      cam.style.width = (op.camlargura / ref[0] * 100) + '%';
-      cam.style.height = (op.camaltura / ref[1] * 100) + '%';
-      cam.textContent = 'câmera';
-      document.body.appendChild(cam);
+    if (op.fundo) {
+      document.body.classList.add('previa');
+      // lugar da câmera, só pra ver onde a borda cai
+      if (op.caixa) {
+        var cam = document.createElement('div');
+        cam.className = 'cam';
+        cam.style.left = (op.camx / ref[0] * 100) + '%';
+        cam.style.top = (op.camy / ref[1] * 100) + '%';
+        cam.style.width = (op.camlargura / ref[0] * 100) + '%';
+        cam.style.height = (op.camaltura / ref[1] * 100) + '%';
+        cam.textContent = 'câmera';
+        document.body.appendChild(cam);
+      }
     }
-  }
 
-  var borda = Ondas.iniciar(document.getElementById('ondas'), op);
+    var borda = Ondas.iniciar(document.getElementById('ondas'), op);
 
-  if (op.fundo) {
-    var dica = document.createElement('div');
-    dica.className = 'dica';
-    dica.innerHTML = 'Prévia da borda da câmera · no OBS o fundo fica transparente<br>clique pra Nami pular';
-    document.body.appendChild(dica);
-    setTimeout(function () { dica.style.opacity = 0; }, 5000);
-  }
-  // clique (fora do OBS) faz a Nami pular
-  addEventListener('pointerdown', function () { borda.pular(); });
+    if (op.fundo) {
+      var dica = document.createElement('div');
+      dica.className = 'dica';
+      dica.innerHTML = 'Prévia da borda da câmera · no OBS o fundo fica transparente<br>clique pra Nami pular';
+      document.body.appendChild(dica);
+      setTimeout(function () { dica.style.opacity = 0; }, 5000);
+    }
+    // clique (fora do OBS) faz a Nami pular
+    addEventListener('pointerdown', function () { borda.pular(); });
+  });
 </script>
 </body>
 </html>

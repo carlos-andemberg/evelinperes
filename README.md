@@ -1,14 +1,30 @@
 # Overlays da Nami da evelin_peres 🌊💗
 
-Overlays pro OBS da [evelin_peres](https://www.twitch.tv/evelin_peres), no tema da Nami do League of Legends: branco com rosa clarinho, ondinhas em volta da câmera e a Nami nadando nelas. É HTML/CSS/JS puro, sem build e sem dependências, feito pra fonte **Navegador** do OBS.
+Overlays pro OBS da [evelin_peres](https://www.twitch.tv/evelin_peres), no tema da Nami do League of Legends: branco com rosa clarinho, ondinhas em volta da câmera e a Nami nadando nelas. As páginas são HTML/CSS/JS puro, sem build, feitas pra fonte **Navegador** do OBS, e um servidorzinho em Node (sem dependências) guarda as opções da live.
 
-**No ar:** [evelinperes.carlosandemberg.com.br](https://evelinperes.carlosandemberg.com.br). Lá você escolhe as opções, vê a prévia e copia o link pro OBS.
+**No ar:** [evelinperes.carlosandemberg.com.br](https://evelinperes.carlosandemberg.com.br). Lá você escolhe as opções, vê a prévia e clica em **Salvar na live**.
+
+## Link único (atualiza sozinho)
+
+No OBS vão só dois links, colados uma vez:
+
+- `https://evelinperes.carlosandemberg.com.br/borda.html` (borda da câmera)
+- `https://evelinperes.carlosandemberg.com.br/fila.html` (tela de fila)
+
+Sem nada depois do `.html`, a tela usa as opções salvas no gerador. Mexeu no gerador e clicou em **Salvar na live**: as telas abertas no OBS recebem o aviso na hora e se atualizam sozinhas, e o tempo na fila continua contando. Se o servidor cair, a tela usa a última versão que viu.
+
+Cada tela tem as próprias opções: a borda da câmera e a tela de fila não dividem nada (cores, Nami, câmera, tudo separado).
+
+O **Salvar na live** pede uma senha (a variável `SENHA_EDICAO` no Coolify); o navegador lembra depois da primeira vez. Num computador novo, o gerador já abre com o que está na live, e o aviso no rodapé mostra se tem mudança que ainda não foi salva.
+
+Links com opções escritas neles (`borda.html?tema=agua...`) continuam funcionando e não mudam sozinhos: o gerador mostra esse "link fixo" escondidinho, pra testes.
 
 | Arquivo | O que é | Tamanho no OBS |
 |---|---|---|
 | `borda.html` | Borda de ondas em volta da webcam, com a Nami nadando e o nome flutuando em cima. Fundo transparente | **1920 × 1080** (o tamanho da tela do OBS) |
 | `fila.html` | Tela de "estou na fila": skin da Nami trocando, tempo na fila, recadinhos, habilidades e espaço pra câmera | **1920 × 1080** (ou em pé, 1080 × 1920) |
-| `index.html` | Gerador de link: escolhe cores, skins, cromas e textos, mostra a prévia e copia o link | — |
+| `index.html` | Gerador: escolhe cores, skins, cromas, textos e o lugar da câmera, mostra a prévia e salva na live | — |
+| `servidor.js` | Serve as páginas e guarda as opções da live (`/api/config`), avisando as telas abertas quando mudam (`/api/eventos`) | — |
 | `ondas.js` | O motor: as três camadas de onda (em volta da câmera ou da tela), espuma, bolhas, brilhos, enfeites, o nome com os peixinhos e a Nami desenhada no canvas | — |
 | `dados.js`, `nami.json` | Skins, cromas e habilidades da Nami (a lista se atualiza sozinha; `nami.json` é a cópia de reserva) | — |
 
@@ -115,15 +131,17 @@ As cores ficam em `TEMAS`, no começo de `ondas.js` (e as da Nami em `COR`, logo
 
 ## Publicar
 
-São arquivos estáticos, então qualquer hospedagem estática serve.
-
 **Coolify**
 
 1. **Projects → New Resource → Public Repository** (ou **GitHub App**, pra fazer deploy a cada push) e cole a URL deste repositório.
-2. **Build Pack**: `Dockerfile` (nginx na porta **80**). Em **Health Checks**, ligue o healthcheck no caminho `/`.
-3. Defina o domínio e clique em **Deploy**.
+2. **Build Pack**: `Dockerfile` (Node na porta **80**). Em **Health Checks**, ligue o healthcheck no caminho `/`.
+3. **Storages**: um volume em `/dados` (é onde fica o `config.json` com as opções da live; sem ele, cada deploy apaga o que foi salvo).
+4. **Environment Variables**: `SENHA_EDICAO` com a senha do **Salvar na live**.
+5. Defina o domínio e clique em **Deploy**.
 
-**Local**: `python -m http.server 5550` na pasta e abra `http://localhost:5550`.
+Os scripts vão com `?v=` e um código do conteúdo no link (o Dockerfile troca o `?v=dev` no build), então depois de cada deploy o navegador, o Cloudflare e o OBS pegam a versão nova.
+
+**Local**: `SENHA_EDICAO=teste DADOS=_dados node servidor.js 5550` na pasta e abra `http://localhost:5550`. Só pra ver as páginas, sem salvar, `python -m http.server 5550` também serve (aí o gerador avisa que está sem servidor).
 
 ---
 

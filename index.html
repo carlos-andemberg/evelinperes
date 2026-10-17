@@ -231,6 +231,29 @@
   }
   .passo input::-webkit-inner-spin-button, .passo input::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
 
+  /* link único e barra de salvar */
+  .nota { margin: 8px 0 0; font-size: 13.5px; font-weight: 700; color: var(--suave); line-height: 1.5; }
+  .nota b { color: var(--rosa); }
+  details.fixo { margin-top: 14px; border-top: 2px dashed var(--rosa3); padding-top: 12px; }
+  details.fixo summary { cursor: pointer; font-weight: 800; font-size: 13.5px; color: var(--suave); }
+  details.fixo .link { margin-top: 10px; }
+  .salvar {
+    position: fixed; left: 50%; bottom: 18px; transform: translateX(-50%); z-index: 20;
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: center;
+    width: max-content; max-width: calc(100% - 32px); padding: 10px 12px 10px 18px; border-radius: 999px;
+    background: rgba(255, 255, 255, 0.96); box-shadow: 0 0 0 2px var(--rosa3), 0 12px 32px rgba(255, 92, 158, 0.28);
+  }
+  .salvar .situacao { font-weight: 800; font-size: 14px; color: var(--suave); }
+  .salvar .situacao.ok { color: #1f9a7a; }
+  .salvar .situacao.mudou { color: var(--rosa); }
+  .salvar .situacao.erro { color: #d33b4f; }
+  .salvar input { width: 170px; font: 700 14px 'Nunito', sans-serif; border: 2px solid var(--rosa3); border-radius: 999px; padding: 8px 14px; outline: none; background: var(--clarinho); color: var(--texto); }
+  .salvar input:focus { border-color: var(--rosa2); background: #fff; }
+  .salvar .botao { padding: 10px 18px; border-radius: 999px; }
+  .salvar .botao[disabled] { opacity: 0.5; cursor: default; transform: none; }
+  .salvar button.link-texto { border: 0; background: none; color: var(--rosa); font: 800 13px 'Nunito', sans-serif; text-decoration: underline; cursor: pointer; padding: 0; }
+  main { padding-bottom: 120px; }
+
   footer { text-align: center; margin-top: 34px; color: var(--suave); font-weight: 700; font-size: 14px; line-height: 1.6; }
   footer a { color: var(--rosa); }
 
@@ -332,12 +355,18 @@
     <div class="lado">
       <div class="previa" id="previa-borda"><small>prévia · clique pra Nami pular</small></div>
       <div class="card">
-        <div class="link"><input type="text" id="link-borda" readonly aria-label="Link da borda"><button class="botao" data-copiar="link-borda">Copiar</button><a class="botao claro" id="abrir-borda" target="_blank" rel="noopener">Abrir</a></div>
-        <ol class="passos" style="margin-top:14px">
+        <span class="rotulo">Link único pro OBS</span>
+        <div class="link" style="margin-top:8px"><input type="text" id="unico-borda" readonly aria-label="Link único da borda"><button class="botao" data-copiar="unico-borda">Copiar</button><a class="botao claro" id="abrir-unico-borda" target="_blank" rel="noopener">Abrir</a></div>
+        <p class="nota">Cole no OBS <b>uma vez só</b>. Depois é só mexer aqui e clicar em <b>Salvar na live</b>: a tela no OBS se atualiza sozinha.</p>
+        <ol class="passos" style="margin-top:12px">
           <li>No OBS: <b>Fontes → + → Navegador</b></li>
           <li>Cole o link em <b>URL</b> e use <b>Largura 1920</b> e <b>Altura 1080</b> (o tamanho da tela do OBS)</li>
           <li>Deixe a borda <b>acima da câmera</b> na lista de fontes</li>
         </ol>
+        <details class="fixo"><summary>Link fixo, com as opções escritas nele</summary>
+          <div class="link"><input type="text" id="link-borda" readonly aria-label="Link fixo da borda"><button class="botao" data-copiar="link-borda">Copiar</button><a class="botao claro" id="abrir-borda" target="_blank" rel="noopener">Abrir</a></div>
+          <p class="nota">Esse não muda sozinho: as opções vão escritas no próprio link. Serve pra testar ou pra deixar uma versão travada.</p>
+        </details>
       </div>
     </div>
   </section>
@@ -347,8 +376,29 @@
     <div class="pilha">
     <div class="card">
       <h2>Tela de fila</h2>
-      <p>Pra quando estiver esperando a partida: skin da Nami trocando, tempo na fila, recadinhos e as habilidades dela. A Nami nadando segue as opções da aba Borda.</p>
-      <div class="campo" style="margin-bottom:18px"><span>Cores</span><div class="temas" id="temasF"></div></div>
+      <p>Pra quando estiver esperando a partida: skin da Nami trocando, tempo na fila, recadinhos e as habilidades dela. Tudo aqui vale só pra tela de fila.</p>
+      <div class="campos" style="margin-bottom:18px">
+        <div class="campo cheio"><span>Cores</span><div class="temas" id="temasF"></div></div>
+        <label class="campo"><span>Grossura da borda <output id="o-fespessura"></output></span><input type="range" id="fespessura" min="0.5" max="2.5" step="0.1"></label>
+        <label class="campo"><span>Velocidade <output id="o-fvelocidade"></output></span><input type="range" id="fvelocidade" min="0.3" max="2.5" step="0.1"></label>
+        <label class="campo"><span>Tamanho da Nami <output id="o-ftamanho"></output></span><input type="range" id="ftamanho" min="0.6" max="2" step="0.1"></label>
+        <label class="campo"><span>Pulo a cada <output id="o-fpulo"></output></span><input type="range" id="fpulo" min="0" max="120" step="5"></label>
+        <label class="campo cheio"><span>Onde a Nami nada</span>
+          <select id="fnado">
+            <option value="volta">Em volta da tela toda</option>
+            <option value="embaixo">Só embaixo, indo e voltando</option>
+          </select>
+        </label>
+        <div class="campo cheio">
+          <span>Detalhes da borda</span>
+          <div class="chaves">
+            <label class="chave"><input type="checkbox" id="fnami"> Nami nadando</label>
+            <label class="chave"><input type="checkbox" id="fbolhas"> Bolhas</label>
+            <label class="chave"><input type="checkbox" id="fbrilhos"> Brilhinhos</label>
+            <label class="chave"><input type="checkbox" id="fenfeites"> Estrela, concha e pérolas</label>
+          </div>
+        </div>
+      </div>
       <div class="skins-topo">
         <span class="rotulo">Skins e cromas</span>
         <div><button class="botao claro pequeno" id="todas">Todas</button><button class="botao claro pequeno" id="nenhuma">Nenhuma</button></div>
@@ -406,16 +456,29 @@
     <div class="lado">
       <div class="previa" id="previa-fila"><small>prévia</small></div>
       <div class="card">
-        <div class="link"><input type="text" id="link-fila" readonly aria-label="Link da tela de fila"><button class="botao" data-copiar="link-fila">Copiar</button><a class="botao claro" id="abrir-fila" target="_blank" rel="noopener">Abrir</a></div>
-        <ol class="passos" style="margin-top:14px">
+        <span class="rotulo">Link único pro OBS</span>
+        <div class="link" style="margin-top:8px"><input type="text" id="unico-fila" readonly aria-label="Link único da tela de fila"><button class="botao" data-copiar="unico-fila">Copiar</button><a class="botao claro" id="abrir-unico-fila" target="_blank" rel="noopener">Abrir</a></div>
+        <p class="nota">Cole no OBS <b>uma vez só</b>. Depois é só mexer aqui e clicar em <b>Salvar na live</b>: a tela no OBS se atualiza sozinha.</p>
+        <ol class="passos" style="margin-top:12px">
           <li>No OBS, numa cena <b>Fila</b>: <b>Fontes → + → Navegador</b></li>
           <li>Cole o link, <b>Largura 1920</b>, <b>Altura 1080</b></li>
           <li>Marque <b>Atualizar navegador quando a cena ficar ativa</b>: assim o tempo na fila começa do zero toda vez</li>
         </ol>
+        <details class="fixo"><summary>Link fixo, com as opções escritas nele</summary>
+          <div class="link"><input type="text" id="link-fila" readonly aria-label="Link fixo da tela de fila"><button class="botao" data-copiar="link-fila">Copiar</button><a class="botao claro" id="abrir-fila" target="_blank" rel="noopener">Abrir</a></div>
+          <p class="nota">Esse não muda sozinho: as opções vão escritas no próprio link. Serve pra testar ou pra deixar uma versão travada.</p>
+        </details>
         <p class="aviso" id="aviso-camera" style="margin-top:12px"></p>
       </div>
     </div>
   </section>
+
+  <div class="salvar" id="barraSalvar">
+    <span class="situacao" id="situacao">Conferindo a live…</span>
+    <button class="link-texto" id="carregarLive" type="button" hidden>carregar o que está na live</button>
+    <input type="password" id="senha" placeholder="Senha pra salvar" autocomplete="current-password" hidden>
+    <button class="botao" id="botaoSalvar" type="button">💾 Salvar na live</button>
+  </div>
 
   <footer>
     Feito pra <a href="https://www.twitch.tv/evelin_peres" target="_blank" rel="noopener">twitch.tv/evelin_peres</a> 💕<br>
@@ -439,10 +502,14 @@
     camx: 1591, camy: 747, camlargura: 329, camaltura: 333, resolucao: '1920x1080',
     skins: null, croma: {}, troca: 10, aleatorio: false, titulo: 'Estou na fila', pilula: 'League of Legends',
     recados: 'Já já começa a partida!|Aproveita pra pegar uma água 💧|Digita !pix, !insta ou !elo no chat',
-    tempo: true, habilidades: true, miniaturas: true, camera: false, nomeskin: false, ftema: 'rosa',
+    tempo: true, habilidades: true, miniaturas: true, camera: false, nomeskin: false,
+    // a borda e a Nami da tela de fila são só dela (nada vem da aba Borda)
+    ftema: 'rosa', fespessura: 1, fvelocidade: 1, fnami: true, ftamanho: 1, fnado: 'volta', fpulo: 25,
+    fbolhas: true, fbrilhos: true, fenfeites: true,
     // câmera da tela de fila: o padrão é o cantinho de 16:9 da coluna do título
     fcamx: 1240, fcamy: 605, fcamlargura: 576, fcamaltura: 324, fresolucao: '1920x1080'
   };
+  var BORDA_FILA = { ftema: 'tema', fespessura: 'espessura', fvelocidade: 'velocidade', fnami: 'nami', ftamanho: 'tamanho', fnado: 'nado', fpulo: 'pulo', fbolhas: 'bolhas', fbrilhos: 'brilhos', fenfeites: 'enfeites' };
   var CAM_FILA = { fcamx: 'camx', fcamy: 'camy', fcamlargura: 'camlargura', fcamaltura: 'camaltura', fresolucao: 'resolucao' };
   var BORDA = ['tema', 'espessura', 'velocidade', 'nami', 'tamanho', 'nado', 'pulo', 'bolhas', 'brilhos', 'enfeites'];
   var PLACA = ['nome', 'nometam', 'peixes', 'letra', 'camx', 'camy', 'camlargura', 'camaltura', 'resolucao'];
@@ -485,8 +552,10 @@
     if (estado.camera && camMudou) {
       Object.keys(CAM_FILA).forEach(function (k) { extra.push(CAM_FILA[k] + '=' + encodeURIComponent(estado[k])); });
     }
-    if (estado.ftema !== PADRAO.tema) extra.push('tema=' + encodeURIComponent(estado.ftema));
-    return montaLink('fila.html', BORDA.filter(function (k) { return k !== 'tema'; }).concat(FILA), extra);
+    Object.keys(BORDA_FILA).forEach(function (k) {
+      if (estado[k] !== PADRAO[k]) extra.push(BORDA_FILA[k] + '=' + encodeURIComponent(valor(k, estado[k])));
+    });
+    return montaLink('fila.html', FILA, extra);
   }
 
   // ---------------------------------------------------------------- prévias
@@ -518,12 +587,14 @@
     var lb = linkBorda(), lf = linkFila();
     $('link-borda').value = lb; $('abrir-borda').href = lb;
     $('link-fila').value = lf; $('abrir-fila').href = lf;
+    situacaoLive();
     clearTimeout(espera);
     espera = setTimeout(function () {
       // só a aba aberta fica rodando, pra não pesar
       var sep = function (u) { return u + (u.indexOf('?') > -1 ? '&' : '?'); };
-      if (aba === 'borda') { previa($('previa-borda'), sep(lb) + 'fundo=1'); limpa('previa-fila'); }
-      else { previa($('previa-fila'), lf); limpa('previa-borda'); }
+      // auto=0: a prévia mostra o que está aqui, não o que está salvo na live
+      if (aba === 'borda') { previa($('previa-borda'), sep(lb) + 'fundo=1&auto=0'); limpa('previa-fila'); }
+      else { previa($('previa-fila'), sep(lf) + 'auto=0'); limpa('previa-borda'); }
     }, agora ? 0 : 450);
   }
   function limpa(id) { var f = $(id).querySelector('iframe'); if (f) { f.remove(); } }
@@ -581,6 +652,10 @@
     tamanho: function (v) { return v.toFixed(1) + '×'; },
     pulo: function (v) { return v ? v + ' s' : 'sem pulo'; },
     troca: function (v) { return v + ' s'; },
+    fespessura: function (v) { return v.toFixed(1) + '×'; },
+    fvelocidade: function (v) { return v.toFixed(1) + '×'; },
+    ftamanho: function (v) { return v.toFixed(1) + '×'; },
+    fpulo: function (v) { return v ? v + ' s' : 'sem pulo'; },
     nometam: function (v) { return v.toFixed(1) + '×'; },
     peixes: function (v) { return v ? v + (v > 1 ? ' peixinhos' : ' peixinho') : 'nenhum'; }
   };
@@ -590,12 +665,12 @@
     $('o-' + k).textContent = formatos[k](+el.value);
     el.addEventListener('input', function () { estado[k] = +el.value; $('o-' + k).textContent = formatos[k](+el.value); atualizar(); });
   });
-  ['nami', 'bolhas', 'brilhos', 'enfeites', 'aleatorio', 'tempo', 'habilidades', 'miniaturas', 'camera', 'nomeskin'].forEach(function (k) {
+  ['nami', 'bolhas', 'brilhos', 'enfeites', 'aleatorio', 'tempo', 'habilidades', 'miniaturas', 'camera', 'nomeskin', 'fnami', 'fbolhas', 'fbrilhos', 'fenfeites'].forEach(function (k) {
     var el = $(k);
     el.checked = estado[k];
     el.addEventListener('change', function () { estado[k] = el.checked; atualizar(); });
   });
-  ['nado', 'titulo', 'pilula', 'nome'].forEach(function (k) {
+  ['nado', 'fnado', 'titulo', 'pilula', 'nome'].forEach(function (k) {
     var el = $(k);
     el.value = estado[k];
     el.addEventListener('input', function () { estado[k] = el.value; atualizar(); });
@@ -774,6 +849,97 @@
     b.addEventListener('click', function () { estado.letra = k; atualizar(); });
     $('letras').appendChild(b);
   });
+
+  // ---------------------------------------------------------------- salvar na live
+  // O link único (sem nada depois do .html) lê o que foi salvo aqui e se atualiza sozinho no OBS.
+  ['borda', 'fila'].forEach(function (t) {
+    var u = new URL(t + '.html', location.href).href;
+    $('unico-' + t).value = u;
+    $('abrir-unico-' + t).href = u;
+  });
+  var SENHA = 'evelinperes-senha', live = null, semServidor = false;
+  function paramsDe(link) { var o = {}; new URL(link).searchParams.forEach(function (v, k) { o[k] = v; }); return o; }
+  function opcoesAgora() { return { borda: paramsDe(linkBorda()), fila: paramsDe(linkFila()) }; }
+  function igual(a, b) {
+    var ordena = function (o) { var r = {}; Object.keys(o || {}).sort().forEach(function (k) { r[k] = o[k]; }); return JSON.stringify(r); };
+    return ordena(a.borda) === ordena(b.borda) && ordena(a.fila) === ordena(b.fila);
+  }
+  function mostra(texto, tipo) {
+    var el = $('situacao');
+    el.textContent = texto;
+    el.className = 'situacao' + (tipo ? ' ' + tipo : '');
+  }
+  function situacaoLive() {
+    if (semServidor) { mostra('Sem servidor aqui: use os links fixos', 'erro'); $('botaoSalvar').disabled = true; return; }
+    if (!live) return;
+    var mesmo = igual(opcoesAgora(), live);
+    if (!live.versao) mostra('Ainda não salvou nada na live');
+    else if (mesmo) mostra('✓ A live está igual a esta tela', 'ok');
+    else mostra('● Tem mudança que ainda não foi pra live', 'mudou');
+    $('carregarLive').hidden = mesmo || !live.estado;
+  }
+
+  var primeiraVez = false;
+  try { primeiraVez = !localStorage.getItem(CHAVE + '-ja-abriu'); localStorage.setItem(CHAVE + '-ja-abriu', '1'); } catch (e) {}
+  fetch('/api/config', { cache: 'no-store' }).then(function (r) {
+    if (!r.ok) throw new Error(r.status);
+    return r.json();
+  }).then(function (cfg) {
+    live = cfg;
+    // aparelho novo: começa do que está na live
+    if (primeiraVez && cfg.estado && !igual(opcoesAgora(), cfg)) {
+      try { localStorage.setItem(CHAVE, JSON.stringify(cfg.estado)); location.reload(); return; } catch (e) {}
+    }
+    situacaoLive();
+  }).catch(function () { semServidor = true; situacaoLive(); });
+
+  $('carregarLive').addEventListener('click', function () {
+    if (!live || !live.estado) return;
+    try { localStorage.setItem(CHAVE, JSON.stringify(live.estado)); } catch (e) {}
+    location.reload();
+  });
+
+  function pedeSenha(texto) {
+    var campo = $('senha');
+    campo.hidden = false;
+    campo.focus();
+    mostra(texto, 'erro');
+  }
+  function salvarNaLive() {
+    var senha = $('senha').value.trim();
+    if (!senha) { try { senha = localStorage.getItem(SENHA) || ''; } catch (e) {} }
+    if (!senha) return pedeSenha('Digite a senha pra salvar');
+    var corpo = opcoesAgora();
+    corpo.estado = estado;
+    $('botaoSalvar').disabled = true;
+    mostra('Salvando…');
+    fetch('/api/config', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + senha },
+      body: JSON.stringify(corpo)
+    }).then(function (r) {
+      return r.json().catch(function () { return {}; }).then(function (d) { return { r: r, d: d }; });
+    }).then(function (x) {
+      $('botaoSalvar').disabled = false;
+      if (x.r.status === 401) {
+        try { localStorage.removeItem(SENHA); } catch (e) {}
+        $('senha').value = '';
+        return pedeSenha(x.d.erro || 'Senha errada');
+      }
+      if (!x.r.ok) return mostra(x.d.erro || 'Não deu pra salvar', 'erro');
+      try { localStorage.setItem(SENHA, senha); } catch (e) {}
+      $('senha').value = '';
+      $('senha').hidden = true;
+      live = { versao: x.d.versao, borda: corpo.borda, fila: corpo.fila, estado: estado };
+      situacaoLive();
+      mostra('✓ Salvo! O OBS já pegou as mudanças', 'ok');
+    }).catch(function () {
+      $('botaoSalvar').disabled = false;
+      mostra('Sem conexão com o servidor', 'erro');
+    });
+  }
+  $('botaoSalvar').addEventListener('click', salvarNaLive);
+  $('senha').addEventListener('keydown', function (e) { if (e.key === 'Enter') salvarNaLive(); });
 
   // ---------------------------------------------------------------- skins
   NamiDados.carregar().then(function (dados) {
