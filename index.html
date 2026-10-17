@@ -347,7 +347,8 @@
     <div class="pilha">
     <div class="card">
       <h2>Tela de fila</h2>
-      <p>Pra quando estiver esperando a partida: skin da Nami trocando, tempo na fila, recadinhos e as habilidades dela. As cores e a Nami nadando seguem as opções da aba Borda.</p>
+      <p>Pra quando estiver esperando a partida: skin da Nami trocando, tempo na fila, recadinhos e as habilidades dela. A Nami nadando segue as opções da aba Borda.</p>
+      <div class="campo" style="margin-bottom:18px"><span>Cores</span><div class="temas" id="temasF"></div></div>
       <div class="skins-topo">
         <span class="rotulo">Skins e cromas</span>
         <div><button class="botao claro pequeno" id="todas">Todas</button><button class="botao claro pequeno" id="nenhuma">Nenhuma</button></div>
@@ -438,7 +439,7 @@
     camx: 1591, camy: 747, camlargura: 329, camaltura: 333, resolucao: '1920x1080',
     skins: null, croma: {}, troca: 10, aleatorio: false, titulo: 'Estou na fila', pilula: 'League of Legends',
     recados: 'Já já começa a partida!|Aproveita pra pegar uma água 💧|Digita !pix, !insta ou !elo no chat',
-    tempo: true, habilidades: true, miniaturas: true, camera: false, nomeskin: false,
+    tempo: true, habilidades: true, miniaturas: true, camera: false, nomeskin: false, ftema: 'rosa',
     // câmera da tela de fila: o padrão é o cantinho de 16:9 da coluna do título
     fcamx: 1240, fcamy: 605, fcamlargura: 576, fcamaltura: 324, fresolucao: '1920x1080'
   };
@@ -451,6 +452,8 @@
   var estado = JSON.parse(JSON.stringify(PADRAO));
   try { Object.assign(estado, JSON.parse(localStorage.getItem(CHAVE) || '{}')); } catch (e) {}
   if (estado.nado === 'embaixo') estado.nado = 'cima';  // nome antigo, de quando a borda era da tela
+  // antes a fila usava as cores da aba Borda: quem já tinha escolhido continua com a mesma
+  try { if (!('ftema' in JSON.parse(localStorage.getItem(CHAVE) || '{}'))) estado.ftema = estado.tema; } catch (e) {}
   function guardar() { try { localStorage.setItem(CHAVE, JSON.stringify(estado)); } catch (e) {} }
 
   var $ = function (id) { return document.getElementById(id); };
@@ -482,7 +485,8 @@
     if (estado.camera && camMudou) {
       Object.keys(CAM_FILA).forEach(function (k) { extra.push(CAM_FILA[k] + '=' + encodeURIComponent(estado[k])); });
     }
-    return montaLink('fila.html', BORDA.concat(FILA), extra);
+    if (estado.ftema !== PADRAO.tema) extra.push('tema=' + encodeURIComponent(estado.ftema));
+    return montaLink('fila.html', BORDA.filter(function (k) { return k !== 'tema'; }).concat(FILA), extra);
   }
 
   // ---------------------------------------------------------------- prévias
@@ -554,17 +558,22 @@
   }
 
   // ---------------------------------------------------------------- campos
-  var temas = $('temas');
-  Object.keys(Ondas.TEMAS).forEach(function (k) {
-    var t = Ondas.TEMAS[k], l = document.createElement('label');
-    l.innerHTML = '<input type="radio" name="tema"><span><i></i></span>';
-    l.querySelector('input').value = k;
-    l.querySelector('input').checked = estado.tema === k;
-    l.querySelector('i').style.background = 'linear-gradient(135deg, #fff 0 35%, ' + t.fundo + ' 35% 70%, ' + t.acento + ' 70%)';
-    l.querySelector('span').appendChild(document.createTextNode(t.nome));
-    l.querySelector('input').addEventListener('change', function () { estado.tema = k; atualizar(); });
-    temas.appendChild(l);
-  });
+  function montaTemas(caixa, chave) {
+    Object.keys(Ondas.TEMAS).forEach(function (k) {
+      var t = Ondas.TEMAS[k], l = document.createElement('label');
+      l.innerHTML = '<input type="radio"><span><i></i></span>';
+      var r = l.querySelector('input');
+      r.name = chave;
+      r.value = k;
+      r.checked = estado[chave] === k;
+      l.querySelector('i').style.background = 'linear-gradient(135deg, #fff 0 35%, ' + t.fundo + ' 35% 70%, ' + t.acento + ' 70%)';
+      l.querySelector('span').appendChild(document.createTextNode(t.nome));
+      r.addEventListener('change', function () { estado[chave] = k; atualizar(); });
+      caixa.appendChild(l);
+    });
+  }
+  montaTemas($('temas'), 'tema');
+  montaTemas($('temasF'), 'ftema');
 
   var formatos = {
     espessura: function (v) { return v.toFixed(1) + '×'; },
