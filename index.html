@@ -199,6 +199,17 @@
   .letras button:hover { border-color: var(--rosa2); transform: translateY(-1px); }
   .letras button.sim { border-color: var(--rosa); box-shadow: 0 0 0 3px rgba(255, 92, 158, 0.18); }
   .tela-nome:empty { display: none; }
+  .tela-cam { z-index: 2; }
+  /* mini tela da fila: rascunho da arte da skin e do título, pra ver onde a câmera cai */
+  .tela.tela-fila { background: radial-gradient(ellipse at 20% 10%, #fff, transparent 55%), linear-gradient(#fff8fb, #ffe6f0 55%, #ffd3e5); }
+  .tela.tela-fila::before {
+    content: ""; position: absolute; left: 5.6%; top: 16.5%; width: 56.5%; aspect-ratio: 16 / 9; border-radius: 9px;
+    background: linear-gradient(135deg, #8fd8e2, #c99ad8); border: 3px solid #fff; box-shadow: 0 0 0 2px var(--rosa2);
+  }
+  .tela.tela-fila::after {
+    content: "Estou na fila..."; position: absolute; left: 65.5%; top: 19%; width: 30%;
+    font: 700 clamp(11px, 2.1vw, 22px)/1.05 var(--titulo); color: var(--rosa);
+  }
   .dica-tela { margin: 0 0 4px; text-align: center; font-size: 13px; font-weight: 700; color: var(--suave); }
   .formatos { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin: 12px 0 16px; }
   .formatos button {
@@ -333,6 +344,7 @@
 
   <!-- ===================================================== FILA -->
   <section class="painel" id="painel-fila" role="tabpanel">
+    <div class="pilha">
     <div class="card">
       <h2>Tela de fila</h2>
       <p>Pra quando estiver esperando a partida: skin da Nami trocando, tempo na fila, recadinhos e as habilidades dela. As cores e a Nami nadando seguem as opções da aba Borda.</p>
@@ -354,10 +366,41 @@
             <label class="chave"><input type="checkbox" id="tempo"> Tempo na fila</label>
             <label class="chave"><input type="checkbox" id="habilidades"> Habilidades da Nami</label>
             <label class="chave"><input type="checkbox" id="miniaturas"> Bolinhas das skins</label>
+            <label class="chave"><input type="checkbox" id="nomeskin"> Nome da skin na arte</label>
             <label class="chave"><input type="checkbox" id="camera"> Espaço pra câmera</label>
           </div>
         </div>
       </div>
+    </div>
+
+    <div class="card" id="cardCamFila">
+      <h2>📷 Câmera na tela de fila</h2>
+      <p>Deixe o espaço da câmera no formato e no tamanho da sua webcam. No OBS a câmera fica <b>embaixo</b> da fonte da fila e aparece pelo buraco da moldura.</p>
+      <div class="tela tela-fila" id="telaF">
+        <div class="tela-cam" id="telaCamF">
+          <b>📷 câmera<small id="telaMedidaF"></small></b>
+          <i data-c="nw"></i><i data-c="ne"></i><i data-c="sw"></i><i data-c="se"></i>
+        </div>
+      </div>
+      <p class="dica-tela">Arraste a câmera pra mudar de lugar e puxe as bolinhas dos cantos pra mudar o tamanho.</p>
+      <div class="formatos" id="formatosF"></div>
+      <div class="numeros">
+        <div class="numero"><span>X</span><div class="passo"><button type="button" data-k="fcamx" data-d="-1" aria-label="Menos">−</button><input type="number" id="fcamx" aria-label="Posição X"><button type="button" data-k="fcamx" data-d="1" aria-label="Mais">+</button></div></div>
+        <div class="numero"><span>Y</span><div class="passo"><button type="button" data-k="fcamy" data-d="-1" aria-label="Menos">−</button><input type="number" id="fcamy" aria-label="Posição Y"><button type="button" data-k="fcamy" data-d="1" aria-label="Mais">+</button></div></div>
+        <div class="numero"><span>Largura</span><div class="passo"><button type="button" data-k="fcamlargura" data-d="-1" aria-label="Menos">−</button><input type="number" id="fcamlargura" aria-label="Largura"><button type="button" data-k="fcamlargura" data-d="1" aria-label="Mais">+</button></div></div>
+        <div class="numero"><span>Altura</span><div class="passo"><button type="button" data-k="fcamaltura" data-d="-1" aria-label="Menos">−</button><input type="number" id="fcamaltura" aria-label="Altura"><button type="button" data-k="fcamaltura" data-d="1" aria-label="Mais">+</button></div></div>
+      </div>
+      <div class="campos">
+        <label class="campo"><span>Tela do OBS</span>
+          <select id="resolucaoF">
+            <option value="1920x1080">1920 × 1080</option>
+            <option value="1280x720">1280 × 720</option>
+            <option value="2560x1440">2560 × 1440</option>
+          </select>
+        </label>
+        <p class="aviso" style="font-size:13px">Depois de ajustar, ponha a câmera no OBS nesse mesmo lugar e tamanho: botão direito nela → <b>Transformar → Editar transformação</b>.</p>
+      </div>
+    </div>
     </div>
     <div class="lado">
       <div class="previa" id="previa-fila"><small>prévia</small></div>
@@ -395,11 +438,14 @@
     camx: 1591, camy: 747, camlargura: 329, camaltura: 333, resolucao: '1920x1080',
     skins: null, croma: {}, troca: 10, aleatorio: false, titulo: 'Estou na fila', pilula: 'League of Legends',
     recados: 'Já já começa a partida!|Aproveita pra pegar uma água 💧|Digita !pix, !insta ou !elo no chat',
-    tempo: true, habilidades: true, miniaturas: true, camera: false
+    tempo: true, habilidades: true, miniaturas: true, camera: false, nomeskin: false,
+    // câmera da tela de fila: o padrão é o cantinho de 16:9 da coluna do título
+    fcamx: 1240, fcamy: 605, fcamlargura: 576, fcamaltura: 324, fresolucao: '1920x1080'
   };
+  var CAM_FILA = { fcamx: 'camx', fcamy: 'camy', fcamlargura: 'camlargura', fcamaltura: 'camaltura', fresolucao: 'resolucao' };
   var BORDA = ['tema', 'espessura', 'velocidade', 'nami', 'tamanho', 'nado', 'pulo', 'bolhas', 'brilhos', 'enfeites'];
   var PLACA = ['nome', 'nometam', 'peixes', 'letra', 'camx', 'camy', 'camlargura', 'camaltura', 'resolucao'];
-  var FILA = ['troca', 'aleatorio', 'titulo', 'pilula', 'recados', 'tempo', 'habilidades', 'miniaturas', 'camera'];
+  var FILA = ['troca', 'aleatorio', 'titulo', 'pilula', 'recados', 'tempo', 'habilidades', 'miniaturas', 'camera', 'nomeskin'];
   var CHAVE = 'evelinperes-gerador';
 
   var estado = JSON.parse(JSON.stringify(PADRAO));
@@ -431,6 +477,11 @@
     if (nums && todasSkins.length && nums.length && nums.length < todasSkins.length) extra.push('skins=' + nums.join(','));
     var cr = Object.keys(estado.croma).filter(function (n) { return !nums || nums.indexOf(+n) > -1; }).map(function (n) { return n + ':' + estado.croma[n]; });
     if (cr.length) extra.push('croma=' + cr.join(','));
+    // lugar e tamanho da câmera só vão no link se mudaram (sem eles a fila usa o cantinho padrão)
+    var camMudou = Object.keys(CAM_FILA).some(function (k) { return estado[k] !== PADRAO[k]; });
+    if (estado.camera && camMudou) {
+      Object.keys(CAM_FILA).forEach(function (k) { extra.push(CAM_FILA[k] + '=' + encodeURIComponent(estado[k])); });
+    }
     return montaLink('fila.html', BORDA.concat(FILA), extra);
   }
 
@@ -530,7 +581,7 @@
     $('o-' + k).textContent = formatos[k](+el.value);
     el.addEventListener('input', function () { estado[k] = +el.value; $('o-' + k).textContent = formatos[k](+el.value); atualizar(); });
   });
-  ['nami', 'bolhas', 'brilhos', 'enfeites', 'aleatorio', 'tempo', 'habilidades', 'miniaturas', 'camera'].forEach(function (k) {
+  ['nami', 'bolhas', 'brilhos', 'enfeites', 'aleatorio', 'tempo', 'habilidades', 'miniaturas', 'camera', 'nomeskin'].forEach(function (k) {
     var el = $(k);
     el.checked = estado[k];
     el.addEventListener('change', function () { estado[k] = el.checked; atualizar(); });
@@ -557,51 +608,149 @@
   });
 
   // ---------------------------------------------------------------- câmera
-  // a mini tela usa as medidas da tela do OBS (resolucao); arrastar e puxar os cantos mexe no estado
-  var CAMPOS_CAM = ['camx', 'camy', 'camlargura', 'camaltura'];
-  var FORMATOS = [
-    { nome: '✨ Igual à live', w: 329, h: 333, x: 1591, y: 747 },
-    { nome: '16:9', w: 400, h: 225 },
-    { nome: '4:3', w: 360, h: 270 },
-    { nome: 'Quadradinha', w: 320, h: 320 }
-  ];
-  function tamanhoTela() {
-    var r = String(estado.resolucao).split('x').map(Number);
-    return r[0] > 0 && r[1] > 0 ? r : [1920, 1080];
+  // Editor de câmera (borda e fila): a mini tela usa as medidas da tela do OBS; arrastar e
+  // puxar os cantos mexe no estado. cfg.k = nomes das chaves no estado; cfg.id = sufixo dos ids.
+  function editorCamera(cfg) {
+    var K = cfg.k, CAMPOS = [K.x, K.y, K.w, K.h], id = function (n) { return $(n + cfg.id); };
+    var tela = id('tela'), cam = id('telaCam');
+    function ref() {
+      var r = String(estado[K.res]).split('x').map(Number);
+      return r[0] > 0 && r[1] > 0 ? r : [1920, 1080];
+    }
+    function limita() {
+      var r = ref();
+      estado[K.w] = Math.round(Math.min(Math.max(estado[K.w], 40), r[0]));
+      estado[K.h] = Math.round(Math.min(Math.max(estado[K.h], 40), r[1]));
+      estado[K.x] = Math.round(Math.min(Math.max(estado[K.x], 0), r[0] - estado[K.w]));
+      estado[K.y] = Math.round(Math.min(Math.max(estado[K.y], 0), r[1] - estado[K.h]));
+    }
+    function desenha() {
+      var r = ref(), esc = tela.clientWidth / r[0];
+      cam.style.left = (estado[K.x] / r[0] * 100) + '%';
+      cam.style.top = (estado[K.y] / r[1] * 100) + '%';
+      cam.style.width = (estado[K.w] / r[0] * 100) + '%';
+      cam.style.height = (estado[K.h] / r[1] * 100) + '%';
+      id('telaMedida').textContent = estado[K.w] + ' × ' + estado[K.h];
+      if (cfg.desenhaExtra) cfg.desenhaExtra(r, esc);
+      CAMPOS.forEach(function (k) { if (document.activeElement !== $(k)) $(k).value = estado[k]; });
+      id('formatos').querySelectorAll('button').forEach(function (b, i) {
+        var f = cfg.formatos[i], k = r[0] / 1920;
+        b.classList.toggle('sim', Math.abs(estado[K.w] - f.w * k) < 2 && Math.abs(estado[K.h] - f.h * k) < 2 && (f.x === undefined || Math.abs(estado[K.x] - f.x * k) < 2));
+      });
+    }
+
+    cfg.formatos.forEach(function (f) {
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.textContent = f.nome;
+      b.addEventListener('click', function () {
+        var k = ref()[0] / 1920, dir = estado[K.x] + estado[K.w], meio = estado[K.x] + estado[K.w] / 2, baixo = estado[K.y] + estado[K.h];
+        estado[K.w] = f.w * k; estado[K.h] = f.h * k;
+        // sem posição própria, o formato novo fica preso embaixo (no canto da direita ou no meio)
+        estado[K.x] = f.x !== undefined ? f.x * k : (cfg.ancora === 'meio' ? meio - estado[K.w] / 2 : dir - estado[K.w]);
+        estado[K.y] = f.y !== undefined ? f.y * k : baixo - estado[K.h];
+        limita();
+        atualizar();
+      });
+      id('formatos').appendChild(b);
+    });
+
+    CAMPOS.forEach(function (k) {
+      var el = $(k);
+      el.addEventListener('input', function () {
+        if (el.value === '') return;
+        estado[k] = +el.value;
+        limita();
+        atualizar();
+      });
+      el.addEventListener('blur', function () { el.value = estado[k]; });
+    });
+    tela.closest('.card').querySelectorAll('.passo button').forEach(function (b) {
+      b.addEventListener('click', function (e) {
+        estado[b.dataset.k] += (+b.dataset.d) * (e.shiftKey ? 10 : 1);
+        limita();
+        atualizar();
+      });
+    });
+
+    id('resolucao').value = estado[K.res];
+    id('resolucao').addEventListener('change', function () {
+      var antes = ref();
+      estado[K.res] = id('resolucao').value;
+      var depois = ref(), kx = depois[0] / antes[0], ky = depois[1] / antes[1];
+      estado[K.x] *= kx; estado[K.w] *= kx; estado[K.y] *= ky; estado[K.h] *= ky;
+      limita();
+      atualizar();
+    });
+
+    var arrasto = null;
+    cam.addEventListener('pointerdown', function (e) {
+      e.preventDefault();
+      cam.setPointerCapture(e.pointerId);
+      cam.classList.add('arrastando');
+      arrasto = { c: e.target.dataset.c || 'mover', x0: e.clientX, y0: e.clientY, x: estado[K.x], y: estado[K.y], w: estado[K.w], h: estado[K.h] };
+    });
+    cam.addEventListener('pointermove', function (e) {
+      if (!arrasto) return;
+      var r = ref(), k = r[0] / tela.clientWidth, a = arrasto;
+      var dx = (e.clientX - a.x0) * k, dy = (e.clientY - a.y0) * k, MIN = 40;
+      var x = a.x, y = a.y, w = a.w, h = a.h;
+      if (a.c === 'mover') { x += dx; y += dy; }
+      else {
+        if (a.c.indexOf('w') > -1) { w = Math.max(MIN, Math.min(a.w - dx, a.x + a.w)); x = a.x + a.w - w; }
+        if (a.c.indexOf('e') > -1) { w = Math.max(MIN, Math.min(a.w + dx, r[0] - a.x)); }
+        if (a.c.indexOf('n') > -1) { h = Math.max(MIN, Math.min(a.h - dy, a.y + a.h)); y = a.y + a.h - h; }
+        if (a.c.indexOf('s') > -1) { h = Math.max(MIN, Math.min(a.h + dy, r[1] - a.y)); }
+      }
+      estado[K.x] = x; estado[K.y] = y; estado[K.w] = w; estado[K.h] = h;
+      limita();
+      atualizar();
+    });
+    ['pointerup', 'pointercancel'].forEach(function (ev) {
+      cam.addEventListener(ev, function () { arrasto = null; cam.classList.remove('arrastando'); });
+    });
+    return { desenha: desenha };
   }
-  function limitaCam() {
-    var r = tamanhoTela();
-    estado.camlargura = Math.round(Math.min(Math.max(estado.camlargura, 40), r[0]));
-    estado.camaltura = Math.round(Math.min(Math.max(estado.camaltura, 40), r[1]));
-    estado.camx = Math.round(Math.min(Math.max(estado.camx, 0), r[0] - estado.camlargura));
-    estado.camy = Math.round(Math.min(Math.max(estado.camy, 0), r[1] - estado.camaltura));
-  }
+
+  // câmera da borda: com o nome flutuando em cima, na mesma escala da tela de verdade
+  var camBorda = editorCamera({
+    id: '', k: { x: 'camx', y: 'camy', w: 'camlargura', h: 'camaltura', res: 'resolucao' },
+    formatos: [
+      { nome: '✨ Igual à live', w: 329, h: 333, x: 1591, y: 747 },
+      { nome: '16:9', w: 400, h: 225 },
+      { nome: '4:3', w: 360, h: 270 },
+      { nome: 'Quadradinha', w: 320, h: 320 }
+    ],
+    desenhaExtra: function (r, esc) {
+      var uu = Math.min(r[0], r[1]) / 1080, fs = Math.max(8, 34 * uu * estado.nometam * esc);
+      var nome = $('telaNome'), L = Ondas.LETRAS[estado.letra] || Ondas.LETRAS.pacifico;
+      nome.textContent = estado.nome;
+      nome.style.font = L.css.replace('{px}', (fs * L.esc).toFixed(1));
+      // o nome flutua acima da raia em que a Nami nada
+      nome.style.bottom = 'calc(100% + ' + ((25 + 6 + 24 + 6) * uu * esc).toFixed(1) + 'px)';
+      document.querySelectorAll('#letras button').forEach(function (b) {
+        b.classList.toggle('sim', b.dataset.letra === estado.letra);
+        b.firstChild.nodeValue = estado.nome || 'evelin_peres';
+      });
+    }
+  });
+
+  // câmera da tela de fila: sem mexer, ela fica no cantinho da coluna (o padrão de 16:9)
+  var camFila = editorCamera({
+    id: 'F', k: { x: 'fcamx', y: 'fcamy', w: 'fcamlargura', h: 'fcamaltura', res: 'fresolucao' }, ancora: 'meio',
+    formatos: [
+      { nome: '🖥 Padrão (16:9)', w: 576, h: 324, x: 1240, y: 605 },
+      { nome: '✨ Igual à câmera do jogo', w: 329, h: 333 },
+      { nome: '4:3', w: 480, h: 360 },
+      { nome: 'Quadradinha', w: 360, h: 360 }
+    ]
+  });
+
   function desenhaTela() {
-    var tela = $('tela'), cam = $('telaCam');
-    if (!tela || !cam) return;
-    var r = tamanhoTela(), esc = tela.clientWidth / r[0];
-    cam.style.left = (estado.camx / r[0] * 100) + '%';
-    cam.style.top = (estado.camy / r[1] * 100) + '%';
-    cam.style.width = (estado.camlargura / r[0] * 100) + '%';
-    cam.style.height = (estado.camaltura / r[1] * 100) + '%';
-    $('telaMedida').textContent = estado.camlargura + ' × ' + estado.camaltura;
-    // a plaquinha na mesma escala da tela de verdade
-    var uu = Math.min(r[0], r[1]) / 1080, fs = Math.max(8, 34 * uu * estado.nometam * esc);
-    var nome = $('telaNome');
-    nome.textContent = estado.nome;
-    var L = Ondas.LETRAS[estado.letra] || Ondas.LETRAS.pacifico;
-    nome.style.font = L.css.replace('{px}', (fs * L.esc).toFixed(1));
-    // o nome flutua acima da raia em que a Nami nada
-    nome.style.bottom = 'calc(100% + ' + ((25 + 6 + 24 + 6) * uu * esc).toFixed(1) + 'px)';
-    document.querySelectorAll('#letras button').forEach(function (b) {
-      b.classList.toggle('sim', b.dataset.letra === estado.letra);
-      b.firstChild.nodeValue = estado.nome || 'evelin_peres';
-    });
-    CAMPOS_CAM.forEach(function (k) { if (document.activeElement !== $(k)) $(k).value = estado[k]; });
-    document.querySelectorAll('#formatos button').forEach(function (b, i) {
-      var f = FORMATOS[i], k = r[0] / 1920;
-      b.classList.toggle('sim', Math.abs(estado.camlargura - f.w * k) < 2 && Math.abs(estado.camaltura - f.h * k) < 2 && (f.x === undefined || Math.abs(estado.camx - f.x * k) < 2));
-    });
+    if (!camBorda || !camFila) return;
+    camBorda.desenha();
+    camFila.desenha();
+    $('cardCamFila').hidden = !estado.camera;
   }
 
   Object.keys(Ondas.LETRAS).forEach(function (k) {
@@ -616,79 +765,6 @@
     b.addEventListener('click', function () { estado.letra = k; atualizar(); });
     $('letras').appendChild(b);
   });
-
-  FORMATOS.forEach(function (f) {
-    var b = document.createElement('button');
-    b.type = 'button';
-    b.textContent = f.nome;
-    b.addEventListener('click', function () {
-      var k = tamanhoTela()[0] / 1920, dir = estado.camx + estado.camlargura, baixo = estado.camy + estado.camaltura;
-      estado.camlargura = f.w * k; estado.camaltura = f.h * k;
-      // sem posição própria, o formato novo fica preso no mesmo canto de baixo à direita
-      estado.camx = f.x !== undefined ? f.x * k : dir - estado.camlargura;
-      estado.camy = f.y !== undefined ? f.y * k : baixo - estado.camaltura;
-      limitaCam();
-      atualizar();
-    });
-    $('formatos').appendChild(b);
-  });
-
-  CAMPOS_CAM.forEach(function (k) {
-    var el = $(k);
-    el.addEventListener('input', function () {
-      if (el.value === '') return;
-      estado[k] = +el.value;
-      limitaCam();
-      atualizar();
-    });
-    el.addEventListener('blur', function () { el.value = estado[k]; });
-  });
-  document.querySelectorAll('.passo button').forEach(function (b) {
-    b.addEventListener('click', function (e) {
-      estado[b.dataset.k] += (+b.dataset.d) * (e.shiftKey ? 10 : 1);
-      limitaCam();
-      atualizar();
-    });
-  });
-
-  $('resolucao').value = estado.resolucao;
-  $('resolucao').addEventListener('change', function () {
-    var antes = tamanhoTela();
-    estado.resolucao = $('resolucao').value;
-    var depois = tamanhoTela(), kx = depois[0] / antes[0], ky = depois[1] / antes[1];
-    estado.camx *= kx; estado.camlargura *= kx; estado.camy *= ky; estado.camaltura *= ky;
-    limitaCam();
-    atualizar();
-  });
-
-  (function () {
-    var tela = $('tela'), cam = $('telaCam'), arrasto = null;
-    cam.addEventListener('pointerdown', function (e) {
-      e.preventDefault();
-      cam.setPointerCapture(e.pointerId);
-      cam.classList.add('arrastando');
-      arrasto = { c: e.target.dataset.c || 'mover', x0: e.clientX, y0: e.clientY, x: estado.camx, y: estado.camy, w: estado.camlargura, h: estado.camaltura };
-    });
-    cam.addEventListener('pointermove', function (e) {
-      if (!arrasto) return;
-      var r = tamanhoTela(), k = r[0] / tela.clientWidth, a = arrasto;
-      var dx = (e.clientX - a.x0) * k, dy = (e.clientY - a.y0) * k, MIN = 40;
-      var x = a.x, y = a.y, w = a.w, h = a.h;
-      if (a.c === 'mover') { x += dx; y += dy; }
-      else {
-        if (a.c.indexOf('w') > -1) { w = Math.max(MIN, Math.min(a.w - dx, a.x + a.w)); x = a.x + a.w - w; }
-        if (a.c.indexOf('e') > -1) { w = Math.max(MIN, Math.min(a.w + dx, r[0] - a.x)); }
-        if (a.c.indexOf('n') > -1) { h = Math.max(MIN, Math.min(a.h - dy, a.y + a.h)); y = a.y + a.h - h; }
-        if (a.c.indexOf('s') > -1) { h = Math.max(MIN, Math.min(a.h + dy, r[1] - a.y)); }
-      }
-      estado.camx = x; estado.camy = y; estado.camlargura = w; estado.camaltura = h;
-      limitaCam();
-      atualizar();
-    });
-    ['pointerup', 'pointercancel'].forEach(function (ev) {
-      cam.addEventListener(ev, function () { arrasto = null; cam.classList.remove('arrastando'); });
-    });
-  })();
 
   // ---------------------------------------------------------------- skins
   NamiDados.carregar().then(function (dados) {

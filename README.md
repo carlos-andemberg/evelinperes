@@ -68,12 +68,12 @@ Junte com `&`, ex.: `borda.html?espessura=1.4&nado=embaixo`. O gerador monta iss
 
 Pra cena de quando ela está esperando a partida. Aqui a borda de ondas vai em volta da tela toda, com a Nami nadando, e o fundo é um mar rosinha (raios de luz e bolhas subindo).
 
-- **Skin da Nami**: a arte das skins escolhidas vai trocando, com zoom lento, o nome, a raridade (Épica, Lendária, Mítica, Legado) e uma barrinha mostrando quando vem a próxima. Embaixo ficam as bolinhas de todas as skins escolhidas.
+- **Skin da Nami**: a arte das skins escolhidas vai trocando, com zoom lento e uma barrinha mostrando quando vem a próxima. Só a arte, sem texto por cima (com `nomeskin=1` aparecem o nome e a raridade). Embaixo ficam as bolinhas de todas as skins escolhidas.
 - **Croma**: em cada skin dá pra escolher um croma, que aparece num selinho no canto da arte, com o nome e a cor.
 - **Tempo na fila**: uma bolha que vai enchendo de água enquanto o tempo passa.
 - **Recadinhos**: frases que vão trocando embaixo do tempo (ex.: comandos do chat).
 - **Habilidades da Nami**: passiva, Q, W, E e R, com o nome de cada uma aparecendo em sequência.
-- **Espaço pra câmera** (opcional): um buraco transparente com moldura. A câmera vai **embaixo** desta fonte no OBS. O gerador mostra a posição e o tamanho exatos.
+- **Espaço pra câmera** (opcional): um buraco transparente com moldura. A câmera vai **embaixo** desta fonte no OBS. No gerador dá pra arrastar e redimensionar o espaço no formato da sua webcam, e ele mostra a posição e o tamanho exatos.
 
 As skins vêm da lista do CommunityDragon, então skin nova da Nami aparece sozinha. Se a lista não carregar, vale a cópia em `nami.json`. As artes vêm do Data Dragon da Riot.
 
@@ -102,6 +102,10 @@ Além das opções da borda:
 | `habilidades=0` | Esconde as habilidades |
 | `miniaturas=0` | Esconde as bolinhas das skins |
 | `camera=1` | Liga o espaço pra câmera |
+| `camx=1240&camy=605` | Lugar do espaço da câmera, em pixels da tela do OBS (sem isso ele fica no cantinho da coluna do título) |
+| `camlargura=576&camaltura=324` | Tamanho do espaço da câmera (o gerador tem o formato igual à câmera do jogo, 4:3 e quadradinha) |
+| `resolucao=1920x1080` | Tamanho da tela do OBS em que os números da câmera foram medidos |
+| `nomeskin=1` | Mostra o nome, a raridade e o croma por cima da arte (o padrão é só a arte) |
 
 Numa fonte em pé (ex.: 1080 × 1920) a tela se arruma sozinha: título em cima, depois tempo, câmera e a arte da skin.
 

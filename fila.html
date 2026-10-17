@@ -191,7 +191,13 @@
   .com-camera .bolha { width: calc(var(--u) * 7.6); height: calc(var(--u) * 7.6); }
   .com-camera .bolha b { font-size: calc(var(--u) * 2); }
   .previa .camera { background: rgba(60, 30, 50, 0.55); }
+  /* câmera solta: lugar e tamanho escolhidos no gerador (camx, camy, camlargura, camaltura).
+     No lugar antigo fica um espaço invisível, pra coluna do título não mudar. */
+  .camera.solta { position: fixed; display: grid; width: auto; aspect-ratio: auto; z-index: 2; }
+  .camera-espaco { visibility: hidden; }
 
+  /* só a arte da skin, sem nome, raridade nem nome do croma por cima */
+  .sem-texto .placa, .sem-texto .croma span, .sem-texto .card::after { display: none; }
   .sem-tempo .tempo .bolha, .sem-tempo .tempo small { display: none; }
   .sem-habilidades .habilidades { display: none; }
   .sem-miniaturas .miniaturas { display: none; }
@@ -258,8 +264,13 @@
     skins: '', croma: '', troca: 10, aleatorio: false,
     titulo: 'Estou na fila', pilula: 'League of Legends',
     recados: 'Já já começa a partida!|Aproveita pra pegar uma água 💧|Digita !pix, !insta ou !elo no chat',
-    tempo: true, habilidades: true, miniaturas: true, camera: false
+    tempo: true, habilidades: true, miniaturas: true, camera: false, nomeskin: false,
+    // lugar e tamanho da câmera em pixels da tela do OBS (sem isso ela fica no cantinho da coluna)
+    camx: -1, camy: -1, camlargura: 0, camaltura: 0, resolucao: '1920x1080'
   });
+  var camSolta = op.camera && op.camx >= 0 && op.camy >= 0 && op.camlargura > 0 && op.camaltura > 0;
+  var telaRef = op.resolucao.toLowerCase().split('x').map(Number);
+  if (!(telaRef[0] > 0 && telaRef[1] > 0)) telaRef = [1920, 1080];
 
   var tema = Ondas.TEMAS[op.tema] || Ondas.TEMAS.rosa;
   var raiz = document.documentElement.style;
@@ -272,6 +283,7 @@
   if (!op.tempo) palco.classList.add('sem-tempo');
   if (!op.habilidades) palco.classList.add('sem-habilidades');
   if (!op.miniaturas) palco.classList.add('sem-miniaturas');
+  if (!op.nomeskin) palco.classList.add('sem-texto');
   if (!Ondas.emOBS) document.body.classList.add('previa');
   // título com os três pontinhos pulando, grudados na última palavra
   (function () {
@@ -291,8 +303,24 @@
 
   // ------------------------------------------------ fundo do mar + furo da câmera
   var furo = null, bolhasFundo = [];
+  if (camSolta) {
+    var camEl = document.getElementById('camera'), espaco = document.createElement('div');
+    espaco.className = 'camera camera-espaco';
+    camEl.parentNode.insertBefore(espaco, camEl);
+    document.body.appendChild(camEl);
+    camEl.classList.add('solta');
+  }
+  function posicionaCamera() {
+    if (!camSolta) return;
+    var el = document.getElementById('camera'), ex = innerWidth / telaRef[0], ey = innerHeight / telaRef[1];
+    el.style.left = (op.camx * ex) + 'px';
+    el.style.top = (op.camy * ey) + 'px';
+    el.style.width = (op.camlargura * ex) + 'px';
+    el.style.height = (op.camaltura * ey) + 'px';
+  }
   function medirFuro() {
     if (!op.camera) return;
+    posicionaCamera();
     var el = document.getElementById('camera'), r = el.getBoundingClientRect();
     var borda = parseFloat(getComputedStyle(el).borderTopWidth) || 0;
     furo = { x: r.left + borda / 2, y: r.top + borda / 2, w: r.width - borda, h: r.height - borda, r: parseFloat(getComputedStyle(el).borderTopLeftRadius) || 0 };
