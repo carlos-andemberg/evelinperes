@@ -614,10 +614,8 @@
     var r = String(estado.resolucao).split('x').map(Number);
     if (!(r[0] > 0 && r[1] > 0)) r = [1920, 1080];
     if (estado.modo === 'tela') return { x: 0, y: 0, w: r[0], h: r[1], ref: r, tela: true };
-    var M = Ondas.margensCamera(estado.camlargura, estado.camaltura, {
-      espessura: estado.espessura, tamanho: estado.tamanho, nami: estado.nami, pulo: estado.pulo,
-      nome: estado.nome, nometam: estado.nometam, letra: estado.letra, peixes: estado.peixes
-    });
+    // só muda quando a câmera muda de tamanho (o resto se ajeita dentro desse espaço)
+    var M = Ondas.margensCamera(estado.camlargura, estado.camaltura);
     return {
       x: estado.camx - M.esquerda, y: estado.camy - M.cima,
       w: estado.camlargura + M.esquerda + M.direita, h: estado.camaltura + M.cima + M.baixo, ref: r

@@ -580,34 +580,14 @@
     fredoka: { nome: 'Redondinha', familia: 'Fredoka', css: '700 {px}px Fredoka, Nunito, sans-serif', cursiva: false, esc: 1 }
   };
 
-  // Espaço (em px) que a borda da câmera precisa em volta da webcam pra nada cortar: as ondas e o
-  // brilho, a Nami nadando, o pulo dela (só da beirada de cima) e o nome com os peixinhos dando a
-  // volta. Usado pela borda "só da câmera" e pelo gerador, que mostra o tamanho da fonte do OBS.
-  // A largura do nome é uma estimativa folgada, pra não depender da letra já ter carregado.
-  var LARGURA_LETRA = { pacifico: 0.58, cherry: 0.7, sniglet: 0.66, fredoka: 0.62 };
-  function margensCamera(camW, camH, o) {
-    o = o || {};
-    var e = Math.max(0.3, o.espessura || 1), t = o.tamanho || 1, k = o.nometam || 1;
+  // Espaço (em px) em volta da webcam na borda "só da câmera". Depende só do tamanho da câmera,
+  // então a fonte do OBS não muda quando mexe no nome, na letra, na Nami ou na grossura: o que
+  // não couber nesse espaço encolhe (o nome, a borda, a Nami e o pulo; veja op.caber no motor).
+  // Com as opções padrão cabe tudo: as ondas, o brilho, o nome com os peixinhos e o pulo com giro.
+  function margensCamera(camW, camH) {
     var u = Math.max(0.3, Math.min(camW, camH) / 333);
-    var anel = 25 * u * e + 6 * u * Math.sqrt(e);
-    var corpo = o.nami === false ? 0 : 16 * u * t + 3 * u;
-    var lado = anel + Math.max(10 * u, corpo) + 8 * u, cima = lado, meia = 0;
-    if (o.nami !== false && !(o.pulo <= 0)) {
-      // no pulo com giro ela fica em pé por um instante: conta o corpo inteiro, não só a altura
-      cima = Math.max(cima, anel + 95 * u * Math.max(0.7, t) + 48 * u * t + 8 * u);
-    }
-    if (o.nome) {
-      var L = LETRAS[o.letra] || LETRAS.pacifico;
-      var fs = 36 * u * k * L.esc, h = fs * 1.25, raia = (24 * t + 6) * u;
-      var w = String(o.nome).length * fs * (LARGURA_LETRA[o.letra] || 0.66) + fs * 0.5;
-      var peixe = o.peixes > 0 ? 33 * u * 1.15 * Math.max(0.7, k) * 0.62 : 0;
-      var orbitaY = o.peixes > 0 ? (h / 2 + 12 * u) * 1.18 + peixe : h / 2 + 6 * u;
-      var orbitaX = o.peixes > 0 ? (w / 2 + 26 * u) * 1.18 + peixe : w / 2 + 10 * u;
-      cima = Math.max(cima, anel + raia + h / 2 + orbitaY + 8 * u);
-      meia = orbitaX + 6 * u;
-    }
-    var lados = Math.max(lado, meia - camW / 2);
-    return { cima: Math.ceil(cima), baixo: Math.ceil(lado), esquerda: Math.ceil(lados), direita: Math.ceil(lados) };
+    var lado = Math.ceil(70 * u), cima = Math.ceil(200 * u);
+    return { cima: cima, baixo: lado, esquerda: lado, direita: lado };
   }
 
   // --------------------------------------------------------------- motor
@@ -629,6 +609,9 @@
     var W = 0, H = 0, dpr = 1, u = 1, camadas = [];
     // com op.cam a borda é em volta da câmera: furo = buraco transparente onde ela aparece
     var furo = null, escNami = 0.88, velNami = 125;
+    // op.caber: tudo tem que caber no espaço em volta da câmera (fonte de tamanho fixo).
+    // tamNami e puloMax são a Nami e o pulo já encolhidos pra caber, se precisar.
+    var tamNami = 1, puloMax = Infinity, espaco = null;
     var bolhas = [], gotas = [], brilhos = [];
     var sprite = document.createElement('canvas'), sctx = sprite.getContext('2d'), SO = { x: 96, y: 40, w: 152, h: 82 };
     var nami = { s: 0, dir: 1, flip: 1, fase: 0, pulo: null, proxPulo: 0, proxBolha: 0, piscar: 2.5, olho: 1 };
@@ -660,6 +643,17 @@
         var ex = W / cam.ref[0], ey = H / cam.ref[1];
         var x0 = cam.x * ex, y0 = cam.y * ey, x1 = (cam.x + cam.w) * ex, y1 = (cam.y + cam.h) * ey;
         u = Math.max(0.3, Math.min(x1 - x0, y1 - y0) / 333);
+        tamNami = op.tamanho; puloMax = Infinity; espaco = null;
+        if (op.caber) {
+          // a fonte tem tamanho fixo: a borda, a Nami e o pulo encolhem se não couberem
+          espaco = { cima: y0, lado: Math.min(x0, W - x1, H - y1), largura: W };
+          var cabe = function (ee) { return (25 * ee + 6 * Math.sqrt(ee) + 14) * u <= espaco.lado; };
+          while (e > 0.3 && !cabe(e)) e = Math.max(0.3, e - 0.05);
+          rq = Math.sqrt(e);
+          var anelPx = (25 * e + 6 * rq) * u;
+          tamNami = Math.max(0.5, Math.min(op.tamanho, (espaco.lado - anelPx - 7 * u) / (16 * u)));
+          puloMax = Math.max(0, espaco.cima - anelPx - 48 * u * tamNami - 8 * u);
+        }
         var Rc = 22 * u, pc = Math.max(2.5, 4 * u);
         var anel = function (d, A, lambda, w, ph) {
           return camada(caminho(x0 - d, y0 - d, x1 + d, y1 + d, Rc + d, true), A, lambda, w, ph, pc);
@@ -683,9 +677,9 @@
           faixa(25 * u * e, 7 * u * rq, 215 * u, 1.85, 1.7),
           faixa(14 * u * e, 5 * u * rq, 165 * u, 2.35, 3.1)
         ];
-        furo = null; escNami = 0.88; velNami = 125;
+        furo = null; escNami = 0.88; velNami = 125; tamNami = op.tamanho; puloMax = Infinity; espaco = null;
       }
-      var kk = escNami * u * op.tamanho;
+      var kk = escNami * u * tamNami;
       sprite.width = Math.ceil(SO.w * kk * dpr); sprite.height = Math.ceil(SO.h * kk * dpr);
       var trilho = camadas[0].c;
       if (vaiEVolta()) nami.s = Math.min(Math.max(nami.s, 0), trilho.lw);
@@ -738,7 +732,7 @@
 
     // ----- Nami: posição no trilho, pulos, virada
     function atualizaNami(dt) {
-      var L = camadas[0], c = L.c, vel = velNami * u * op.velocidade * (0.6 + 0.4 * op.tamanho);
+      var L = camadas[0], c = L.c, vel = velNami * u * op.velocidade * (0.6 + 0.4 * tamNami);
       if (vaiEVolta()) {
         var margem = Math.min(c.lw * 0.2, 90 * u);
         nami.s += nami.dir * vel * dt;
@@ -776,7 +770,7 @@
       if (Math.abs(nami.flip) < 0.95) return false;
       if (!furo) return true;
       var c = camadas[0].c, m = 10 * u;
-      var viagem = velNami * u * op.velocidade * (0.6 + 0.4 * op.tamanho) * 1.45;
+      var viagem = velNami * u * op.velocidade * (0.6 + 0.4 * tamNami) * 1.45;
       var s = ((nami.s % c.P) + c.P) % c.P;
       if (s < m || s > c.lw - m) return false;
       return vaiEVolta() && nami.dir < 0 ? s - viagem > m : s + viagem < c.lw - m;
@@ -787,7 +781,7 @@
       // clique na hora errada: pula assim que chegar na beirada de cima
       if (!podePular()) { nami.querPular = true; return; }
       nami.querPular = false;
-      nami.pulo = { t: 0, dur: 1.45, h: (95 + Math.random() * 40) * u * Math.max(0.7, op.tamanho) * (furo ? 0.7 : 1), giro: Math.random() < 0.4 };
+      nami.pulo = { t: 0, dur: 1.45, h: Math.min(puloMax, (95 + Math.random() * 40) * u * Math.max(0.7, tamNami) * (furo ? 0.7 : 1)), giro: Math.random() < 0.4 };
       nami.proxPulo = op.pulo * (0.75 + Math.random() * 0.5);
       respingo(nami.x, nami.y, nami.nx, nami.ny, 14);
     }
@@ -806,7 +800,7 @@
     function desenhaNamiNaTela(t) {
       var L = camadas[0], c = L.c, o = c.ponto(nami.s, tmp);
       var off = onda(L, nami.s, t * op.velocidade);
-      var kk = escNami * u * op.tamanho;
+      var kk = escNami * u * tamNami;
       var prof = off * 0.8 - (furo ? 3 : 7) * u * Math.max(0.6, op.espessura);
       var alt = 0, incl = Math.atan2(onda(L, nami.s + 8 * u, t * op.velocidade) - off, 8 * u) * -0.6, giro = 0;
       if (nami.pulo) {
@@ -957,11 +951,26 @@
       var L = LETRAS[op.letra] || LETRAS.pacifico;
       fs *= L.esc;
       ctx.font = L.css.replace('{px}', fs.toFixed(1));
-      var tw = ctx.measureText(op.nome).width, h = fs * 1.25, w = tw + fs * 0.5;
+      var tw = ctx.measureText(op.nome).width;
+      if (espaco && furo) {
+        // altura do nome com a órbita dos peixinhos e a largura da órbita têm que caber na fonte
+        var anelPx = (furo.y - 3 * u) - (camadas[0].c.y0 - camadas[0].A), raiaPx = (24 * tamNami + 6) * u;
+        var peixe = op.peixes > 0 ? 33 * u * 1.15 * Math.max(0.7, op.nometam) * 0.62 : 0;
+        var fsAlto = (espaco.cima - anelPx - raiaPx - 12 * 1.18 * u - peixe - 8 * u) / (0.625 + 0.625 * 1.18);
+        var proporcao = tw / fs;
+        var fsLargo = (espaco.largura / 2 - 6 * u - peixe - 26 * 1.18 * u) / ((proporcao / 2 + 0.25) * 1.18);
+        var cabe = Math.max(8 * u, Math.min(fs, fsAlto, fsLargo));
+        if (cabe < fs) {
+          fs = cabe;
+          ctx.font = L.css.replace('{px}', fs.toFixed(1));
+          tw = ctx.measureText(op.nome).width;
+        }
+      }
+      var h = fs * 1.25, w = tw + fs * 0.5;
       var A = camadas[0], cx, cy;
       if (furo) {
         // flutuando acima da raia em que a Nami nada em cima da câmera, pra não ficar na frente dela
-        var topoOnda = A.c.y0 - A.A, raia = (24 * op.tamanho + 6) * u;
+        var topoOnda = A.c.y0 - A.A, raia = (24 * tamNami + 6) * u;
         cx = furo.x + furo.w / 2;
         cy = topoOnda - raia - h / 2;
       } else {
@@ -970,7 +979,7 @@
       }
       cx = Math.min(Math.max(cx, w / 2 + 4 * u), W - w / 2 - 4 * u);
       cy = Math.max(cy, h / 2 + 4 * u) + Math.sin(t * 1.3) * 2.5 * u;
-      return { fs: fs, w: w, h: h, cx: cx, cy: cy, raia: furo ? (24 * op.tamanho + 6) * u : 0 };
+      return { fs: fs, w: w, h: h, cx: cx, cy: cy, raia: furo ? (24 * tamNami + 6) * u : 0 };
     }
 
     function desenhaPlaca(t, dt) {

@@ -54,11 +54,11 @@ Pra câmera da live (329 × 333 em x 1591, y 747):
 
 1. **Fontes → + → Navegador**
 2. **URL**: `https://evelinperes.carlosandemberg.com.br/borda.html`
-3. **Largura 449, Altura 571** (o gerador mostra o tamanho certo pra cada câmera, nome e letra)
-4. Botão direito na borda → **Transformar → Editar transformação** → **Posição x 1531, y 567**: aí a borda cai certinho em volta da câmera.
+3. **Largura 469, Altura 601** (só muda se a câmera mudar de tamanho; o gerador mostra)
+4. Botão direito na borda → **Transformar → Editar transformação** → **Posição x 1521, y 549**: aí a borda cai certinho em volta da câmera.
 5. Deixe a borda **acima da câmera** na lista de fontes, selecione as duas → botão direito → **Agrupar itens selecionados**. Agora é só arrastar o grupo.
 
-Se a fonte tiver outro tamanho, a borda se ajeita lá dentro e escala junto. Com `modo=tela`, a fonte volta a ser a tela inteira (1920 × 1080) com a borda no lugar da câmera.
+O tamanho da fonte só muda se a câmera mudar de tamanho. Mexer no nome, na letra, na Nami ou na grossura não muda nada no OBS: se algo não couber no espaço, encolhe (o nome, a borda, a Nami ou o pulo). Se a fonte tiver outro tamanho, a borda se ajeita lá dentro e escala junto. Com `modo=tela`, a fonte volta a ser a tela inteira (1920 × 1080) com a borda no lugar da câmera.
 
 Abrindo o link num navegador normal aparece a splash da Nami de fundo e um quadro escuro no lugar da câmera, só de prévia, e clicar faz a Nami pular. No OBS o fundo fica transparente.
 

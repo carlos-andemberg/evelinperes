@@ -75,7 +75,9 @@
       op.cam = { x: op.camx, y: op.camy, w: op.camlargura, h: op.camaltura, ref: ref };
     } else {
       // a câmera fica no meio do espaço reservado; se a fonte tiver outro tamanho, tudo escala junto
-      var M = Ondas.margensCamera(op.camlargura, op.camaltura, op);
+      // o espaço depende só do tamanho da câmera; o que não couber nele encolhe (op.caber)
+      var M = Ondas.margensCamera(op.camlargura, op.camaltura);
+      op.caber = true;
       var precisaW = op.camlargura + M.esquerda + M.direita, precisaH = op.camaltura + M.cima + M.baixo;
       op.cam = function (W, H) {
         var k = Math.min(W / precisaW, H / precisaH);
