@@ -211,6 +211,13 @@
     font: 700 clamp(11px, 2.1vw, 22px)/1.05 var(--titulo); color: var(--rosa);
   }
   .dica-tela { margin: 0 0 4px; text-align: center; font-size: 13px; font-weight: 700; color: var(--suave); }
+  .cenas { display: flex; flex-wrap: wrap; gap: 8px; margin: 6px 0 12px; }
+  .cenas button {
+    font: 700 15px var(--titulo); color: var(--rosa); background: #fff; border: 2px solid var(--rosa3);
+    border-radius: 999px; padding: 7px 14px; cursor: pointer; transition: border-color 0.15s, transform 0.15s;
+  }
+  .cenas button:hover { border-color: var(--rosa2); transform: translateY(-1px); }
+  .cenas button.sim { background: var(--rosa); color: #fff; border-color: var(--rosa); }
   .formatos { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin: 12px 0 16px; }
   .formatos button {
     font: 800 13px 'Nunito', sans-serif; color: var(--rosa); background: #fff; border: 2px solid var(--rosa3);
@@ -291,7 +298,7 @@
 
   <nav class="abas" role="tablist">
     <button role="tab" aria-selected="true" data-aba="borda">🌊 Borda da câmera</button>
-    <button role="tab" aria-selected="false" data-aba="fila">🐚 Tela de fila</button>
+    <button role="tab" aria-selected="false" data-aba="fila">📺 Telas</button>
   </nav>
 
   <!-- ===================================================== BORDA -->
@@ -392,8 +399,9 @@
   <section class="painel" id="painel-fila" role="tabpanel">
     <div class="pilha">
     <div class="card">
-      <h2>Tela de fila</h2>
-      <p>Pra quando estiver esperando a partida: skin da Nami trocando, tempo na fila, recadinhos e as habilidades dela. Tudo aqui vale só pra tela de fila.</p>
+      <h2>Telas</h2>
+      <div class="cenas" id="cenas" role="tablist" aria-label="Qual tela"></div>
+      <p id="cenaTexto"></p>
       <div class="campos" style="margin-bottom:18px">
         <div class="campo cheio"><span>Cores</span><div class="temas" id="temasF"></div></div>
         <label class="campo"><span>Grossura da borda <output id="o-fespessura"></output></span><input type="range" id="fespessura" min="0.5" max="2.5" step="0.1"></label>
@@ -427,11 +435,20 @@
         <div class="campo"><span>Ordem</span><label class="chave"><input type="checkbox" id="aleatorio"> Embaralhar</label></div>
         <label class="campo"><span>Título</span><input type="text" id="titulo" maxlength="40"></label>
         <label class="campo"><span>Etiqueta de cima</span><input type="text" id="pilula" maxlength="40"></label>
+        <label class="campo"><span>Relógio</span>
+          <select id="relogio">
+            <option value="sobe">Contando desde que a cena abriu</option>
+            <option value="desce">Contagem regressiva</option>
+          </select>
+        </label>
+        <label class="campo"><span>Texto do relógio</span><input type="text" id="rotulo" maxlength="30"></label>
+        <label class="campo cheio" id="campoMinutos"><span>Contagem de <output id="o-minutos"></output></span><input type="range" id="minutos" min="1" max="30" step="1"></label>
         <label class="campo cheio"><span>Recadinhos (um por linha, vão trocando)</span><textarea id="recados" rows="3"></textarea></label>
         <div class="campo cheio">
           <span>Mostrar</span>
           <div class="chaves">
-            <label class="chave"><input type="checkbox" id="tempo"> Tempo na fila</label>
+            <label class="chave"><input type="checkbox" id="tempo"> Relógio</label>
+            <label class="chave"><input type="checkbox" id="pontos"> Três pontinhos no título</label>
             <label class="chave"><input type="checkbox" id="habilidades"> Habilidades da Nami</label>
             <label class="chave"><input type="checkbox" id="miniaturas"> Bolinhas das skins</label>
             <label class="chave"><input type="checkbox" id="nomeskin"> Nome da skin na arte</label>
@@ -442,7 +459,7 @@
     </div>
 
     <div class="card" id="cardCamFila">
-      <h2>📷 Câmera na tela de fila</h2>
+      <h2>📷 Câmera nesta tela</h2>
       <p>Deixe o espaço da câmera no formato e no tamanho da sua webcam. No OBS a câmera fica <b>embaixo</b> da fonte da fila e aparece pelo buraco da moldura.</p>
       <div class="tela tela-fila" id="telaF">
         <div class="tela-cam" id="telaCamF">
@@ -477,9 +494,9 @@
         <div class="link" style="margin-top:8px"><input type="text" id="unico-fila" readonly aria-label="Link único da tela de fila"><button class="botao" data-copiar="unico-fila">Copiar</button><a class="botao claro" id="abrir-unico-fila" target="_blank" rel="noopener">Abrir</a></div>
         <p class="nota">Cole no OBS <b>uma vez só</b>. Depois é só mexer aqui e clicar em <b>Salvar na live</b>: a tela no OBS se atualiza sozinha.</p>
         <ol class="passos" style="margin-top:12px">
-          <li>No OBS, numa cena <b>Fila</b>: <b>Fontes → + → Navegador</b></li>
+          <li id="passoCena">No OBS, numa cena <b>Fila</b>: <b>Fontes → + → Navegador</b></li>
           <li>Cole o link, <b>Largura 1920</b>, <b>Altura 1080</b></li>
-          <li>Marque <b>Atualizar navegador quando a cena ficar ativa</b>: assim o tempo na fila começa do zero toda vez</li>
+          <li id="passoAtualizar">Marque <b>Atualizar navegador quando a cena ficar ativa</b>: assim o tempo na fila começa do zero toda vez</li>
         </ol>
         <details class="fixo"><summary>Link fixo, com as opções escritas nele</summary>
           <div class="link"><input type="text" id="link-fila" readonly aria-label="Link fixo da tela de fila"><button class="botao" data-copiar="link-fila">Copiar</button><a class="botao claro" id="abrir-fila" target="_blank" rel="noopener">Abrir</a></div>
@@ -505,6 +522,7 @@
 
 <script src="ondas.js?v=dev"></script>
 <script src="dados.js?v=dev"></script>
+<script src="cenas.js?v=dev"></script>
 <script>
   // a própria página ganha a borda, com a Nami nadando em volta
   if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
@@ -520,17 +538,23 @@
     skins: null, croma: {}, troca: 10, aleatorio: false, titulo: 'Estou na fila', pilula: 'League of Legends',
     recados: 'Já já começa a partida!|Aproveita pra pegar uma água 💧|Digita !pix, !insta ou !elo no chat',
     tempo: true, habilidades: true, miniaturas: true, camera: false, nomeskin: false,
+    pontos: true, relogio: 'sobe', minutos: 5, rotulo: 'tempo na fila',
     // a borda e a Nami da tela de fila são só dela (nada vem da aba Borda)
     ftema: 'rosa', fespessura: 1, fvelocidade: 1, fnami: true, ftamanho: 1, fnado: 'volta', fpulo: 25,
     fbolhas: true, fbrilhos: true, fenfeites: true,
     // câmera da tela de fila: o padrão é o cantinho de 16:9 da coluna do título
-    fcamx: 1240, fcamy: 605, fcamlargura: 576, fcamaltura: 324, fresolucao: '1920x1080'
+    fcamx: 1240, fcamy: 605, fcamlargura: 576, fcamaltura: 324, fresolucao: '1920x1080',
+    // telas de cena: cada uma guarda as próprias opções em cenas[nome]; os campos da aba mostram
+    // (e mexem) na que está escolhida, `cena`
+    cena: 'fila', cenas: null
   };
   var BORDA_FILA = { ftema: 'tema', fespessura: 'espessura', fvelocidade: 'velocidade', fnami: 'nami', ftamanho: 'tamanho', fnado: 'nado', fpulo: 'pulo', fbolhas: 'bolhas', fbrilhos: 'brilhos', fenfeites: 'enfeites' };
   var CAM_FILA = { fcamx: 'camx', fcamy: 'camy', fcamlargura: 'camlargura', fcamaltura: 'camaltura', fresolucao: 'resolucao' };
   var BORDA = ['tema', 'espessura', 'velocidade', 'nami', 'tamanho', 'nado', 'pulo', 'bolhas', 'brilhos', 'enfeites'];
   var PLACA = ['nome', 'nometam', 'peixes', 'letra', 'camx', 'camy', 'camlargura', 'camaltura', 'resolucao', 'modo'];
-  var FILA = ['troca', 'aleatorio', 'titulo', 'pilula', 'recados', 'tempo', 'habilidades', 'miniaturas', 'camera', 'nomeskin'];
+  var FILA = ['troca', 'aleatorio', 'titulo', 'pilula', 'recados', 'tempo', 'habilidades', 'miniaturas', 'camera', 'nomeskin', 'pontos', 'relogio', 'minutos', 'rotulo'];
+  // tudo que é de uma tela de cena (o resto do estado é da borda da câmera)
+  var CHAVES_CENA = FILA.concat(['skins', 'croma'], Object.keys(BORDA_FILA), Object.keys(CAM_FILA));
   var CHAVE = 'evelinperes-gerador';
 
   var estado = JSON.parse(JSON.stringify(PADRAO));
@@ -538,7 +562,34 @@
   if (estado.nado === 'embaixo') estado.nado = 'cima';  // nome antigo, de quando a borda era da tela
   // antes a fila usava as cores da aba Borda: quem já tinha escolhido continua com a mesma
   try { if (!('ftema' in JSON.parse(localStorage.getItem(CHAVE) || '{}'))) estado.ftema = estado.tema; } catch (e) {}
-  function guardar() { try { localStorage.setItem(CHAVE, JSON.stringify(estado)); } catch (e) {} }
+
+  // padrão de cada tela de cena: o da fila com os textos e o relógio dela (cenas.js)
+  function padraoCena(c) {
+    var o = {}, C = Cenas.CENAS[c];
+    CHAVES_CENA.forEach(function (k) { o[k] = PADRAO[k]; });
+    o.titulo = C.titulo; o.recados = C.recados; o.tempo = C.tempo; o.pontos = C.pontos; o.relogio = C.relogio; o.rotulo = C.rotulo;
+    return o;
+  }
+  var copia = function (v) { return v && typeof v === 'object' ? JSON.parse(JSON.stringify(v)) : v; };
+  // quem vinha só com a fila: o que já está configurado vira a tela de fila, as outras começam no padrão
+  if (!estado.cenas) {
+    estado.cenas = {};
+    estado.cenas.fila = {};
+    CHAVES_CENA.forEach(function (k) { estado.cenas.fila[k] = copia(estado[k]); });
+    estado.cena = 'fila';
+  }
+  Cenas.ORDEM.forEach(function (c) {
+    var P = padraoCena(c), o = estado.cenas[c] = estado.cenas[c] || {};
+    CHAVES_CENA.forEach(function (k) { if (o[k] === undefined) o[k] = copia(P[k]); });
+  });
+  if (!Cenas.CENAS[estado.cena]) estado.cena = 'fila';
+  // os campos mexem nas chaves soltas do estado: elas são a tela escolhida
+  function carregaCena() { CHAVES_CENA.forEach(function (k) { estado[k] = copia(estado.cenas[estado.cena][k]); }); }
+  function guardaCena() { CHAVES_CENA.forEach(function (k) { estado.cenas[estado.cena][k] = copia(estado[k]); }); }
+  carregaCena();
+  // trocando pelo que está na live: a página vai recarregar e não pode mais gravar por cima
+  var trocandoPelaLive = false;
+  function guardar() { if (trocandoPelaLive) return; guardaCena(); try { localStorage.setItem(CHAVE, JSON.stringify(estado)); } catch (e) {} }
 
   var $ = function (id) { return document.getElementById(id); };
   var todasSkins = [];
@@ -558,22 +609,26 @@
     return base + (q.length ? '?' + q.join('&') : '');
   }
   function linkBorda() { return montaLink('borda.html', BORDA.concat(PLACA)); }
-  function linkFila() {
-    var extra = [];
-    var nums = estado.skins;
-    if (nums && todasSkins.length && nums.length && nums.length < todasSkins.length) extra.push('skins=' + nums.join(','));
-    var cr = Object.keys(estado.croma).filter(function (n) { return !nums || nums.indexOf(+n) > -1; }).map(function (n) { return n + ':' + estado.croma[n]; });
-    if (cr.length) extra.push('croma=' + cr.join(','));
-    // lugar e tamanho da câmera só vão no link se mudaram (sem eles a fila usa o cantinho padrão)
-    var camMudou = Object.keys(CAM_FILA).some(function (k) { return estado[k] !== PADRAO[k]; });
-    if (estado.camera && camMudou) {
-      Object.keys(CAM_FILA).forEach(function (k) { extra.push(CAM_FILA[k] + '=' + encodeURIComponent(estado[k])); });
+  // link de uma tela de cena a partir das opções dela (o = estado.cenas[c], ou o estado da tela escolhida)
+  function linkCena(c, o) {
+    var P = padraoCena(c), q = [];
+    FILA.forEach(function (k) { if (o[k] !== P[k]) q.push(k + '=' + encodeURIComponent(valor(k, o[k]))); });
+    var nums = o.skins;
+    if (nums && todasSkins.length && nums.length && nums.length < todasSkins.length) q.push('skins=' + nums.join(','));
+    var cr = Object.keys(o.croma || {}).filter(function (n) { return !nums || nums.indexOf(+n) > -1; }).map(function (n) { return n + ':' + o.croma[n]; });
+    if (cr.length) q.push('croma=' + cr.join(','));
+    // lugar e tamanho da câmera só vão no link se mudaram (sem eles a tela usa o cantinho padrão)
+    var camMudou = Object.keys(CAM_FILA).some(function (k) { return o[k] !== P[k]; });
+    if (o.camera && camMudou) {
+      Object.keys(CAM_FILA).forEach(function (k) { q.push(CAM_FILA[k] + '=' + encodeURIComponent(o[k])); });
     }
     Object.keys(BORDA_FILA).forEach(function (k) {
-      if (estado[k] !== PADRAO[k]) extra.push(BORDA_FILA[k] + '=' + encodeURIComponent(valor(k, estado[k])));
+      if (o[k] !== P[k]) q.push(BORDA_FILA[k] + '=' + encodeURIComponent(valor(k, o[k])));
     });
-    return montaLink('fila.html', FILA, extra);
+    var base = new URL(Cenas.CENAS[c].arquivo, location.href).href;
+    return base + (q.length ? '?' + q.join('&') : '');
   }
+  function linkFila() { return linkCena(estado.cena, estado); }
 
   // ---------------------------------------------------------------- prévias
   // fonte = {x, y, w, h, ref}: a prévia mostra a fonte nesse tamanho e lugar, numa tela de exemplo
@@ -645,7 +700,10 @@
     var lb = linkBorda(), lf = linkFila();
     $('link-borda').value = lb; $('abrir-borda').href = lb;
     $('link-fila').value = lf; $('abrir-fila').href = lf;
+    var unico = new URL(Cenas.CENAS[estado.cena].arquivo, location.href).href;
+    $('unico-fila').value = unico; $('abrir-unico-fila').href = unico;
     mostraMedidas();
+    textosCena();
     situacaoLive();
     clearTimeout(espera);
     espera = setTimeout(function () {
@@ -724,6 +782,7 @@
     fvelocidade: function (v) { return v.toFixed(1) + '×'; },
     ftamanho: function (v) { return v.toFixed(1) + '×'; },
     fpulo: function (v) { return v ? v + ' s' : 'sem pulo'; },
+    minutos: function (v) { return v + (v > 1 ? ' minutos' : ' minuto'); },
     nometam: function (v) { return v.toFixed(1) + '×'; },
     peixes: function (v) { return v ? v + (v > 1 ? ' peixinhos' : ' peixinho') : 'nenhum'; }
   };
@@ -733,12 +792,12 @@
     $('o-' + k).textContent = formatos[k](+el.value);
     el.addEventListener('input', function () { estado[k] = +el.value; $('o-' + k).textContent = formatos[k](+el.value); atualizar(); });
   });
-  ['nami', 'bolhas', 'brilhos', 'enfeites', 'aleatorio', 'tempo', 'habilidades', 'miniaturas', 'camera', 'nomeskin', 'fnami', 'fbolhas', 'fbrilhos', 'fenfeites'].forEach(function (k) {
+  ['nami', 'bolhas', 'brilhos', 'enfeites', 'aleatorio', 'tempo', 'habilidades', 'miniaturas', 'camera', 'nomeskin', 'pontos', 'fnami', 'fbolhas', 'fbrilhos', 'fenfeites'].forEach(function (k) {
     var el = $(k);
     el.checked = estado[k];
     el.addEventListener('change', function () { estado[k] = el.checked; atualizar(); });
   });
-  ['nado', 'fnado', 'titulo', 'pilula', 'nome'].forEach(function (k) {
+  ['nado', 'fnado', 'titulo', 'pilula', 'nome', 'relogio', 'rotulo'].forEach(function (k) {
     var el = $(k);
     el.value = estado[k];
     el.addEventListener('input', function () { estado[k] = el.value; atualizar(); });
@@ -920,17 +979,22 @@
 
   // ---------------------------------------------------------------- salvar na live
   // O link único (sem nada depois do .html) lê o que foi salvo aqui e se atualiza sozinho no OBS.
-  ['borda', 'fila'].forEach(function (t) {
-    var u = new URL(t + '.html', location.href).href;
-    $('unico-' + t).value = u;
-    $('abrir-unico-' + t).href = u;
-  });
+  (function () {
+    var u = new URL('borda.html', location.href).href;
+    $('unico-borda').value = u;
+    $('abrir-unico-borda').href = u;
+  })();
   var SENHA = 'evelinperes-senha', live = null, semServidor = false;
   function paramsDe(link) { var o = {}; new URL(link).searchParams.forEach(function (v, k) { o[k] = v; }); return o; }
-  function opcoesAgora() { return { borda: paramsDe(linkBorda()), fila: paramsDe(linkFila()) }; }
+  function opcoesAgora() {
+    guardaCena();
+    var o = { borda: paramsDe(linkBorda()) };
+    Cenas.ORDEM.forEach(function (c) { o[c] = paramsDe(linkCena(c, estado.cenas[c])); });
+    return o;
+  }
   function igual(a, b) {
     var ordena = function (o) { var r = {}; Object.keys(o || {}).sort().forEach(function (k) { r[k] = o[k]; }); return JSON.stringify(r); };
-    return ordena(a.borda) === ordena(b.borda) && ordena(a.fila) === ordena(b.fila);
+    return ['borda'].concat(Cenas.ORDEM).every(function (t) { return ordena(a[t]) === ordena(b[t]); });
   }
   function mostra(texto, tipo) {
     var el = $('situacao');
@@ -956,13 +1020,14 @@
     live = cfg;
     // aparelho novo: começa do que está na live
     if (primeiraVez && cfg.estado && !igual(opcoesAgora(), cfg)) {
-      try { localStorage.setItem(CHAVE, JSON.stringify(cfg.estado)); location.reload(); return; } catch (e) {}
+      try { trocandoPelaLive = true; localStorage.setItem(CHAVE, JSON.stringify(cfg.estado)); location.reload(); return; } catch (e) {}
     }
     situacaoLive();
   }).catch(function () { semServidor = true; situacaoLive(); });
 
   $('carregarLive').addEventListener('click', function () {
     if (!live || !live.estado) return;
+    trocandoPelaLive = true;
     try { localStorage.setItem(CHAVE, JSON.stringify(live.estado)); } catch (e) {}
     location.reload();
   });
@@ -1075,6 +1140,63 @@
   }
   $('todas').addEventListener('click', function () { estado.skins = todasSkins.map(function (s) { return s.num; }); pinta(); atualizar(); });
   $('nenhuma').addEventListener('click', function () { estado.skins = []; pinta(); atualizar(); });
+
+  // ---------------------------------------------------------------- telas de cena
+  var SOBRE_CENA = {
+    fila: 'Pra quando estiver esperando a partida: skin da Nami trocando, tempo na fila, recadinhos e as habilidades dela.',
+    comecando: 'Pro comecinho da live: contagem regressiva até começar, skin da Nami trocando e recadinhos.',
+    encerrando: 'Pro fim da live: o agradecimento, skin da Nami trocando e recadinhos.',
+    voltoja: 'Pra pausa: o tempo que você está fora, skin da Nami trocando e recadinhos.'
+  };
+  var CURTO = { fila: 'Estou na fila', comecando: 'Começando', encerrando: 'Encerrando', voltoja: 'Volto já' };
+  Cenas.ORDEM.forEach(function (c) {
+    var b = document.createElement('button');
+    b.type = 'button';
+    b.dataset.cena = c;
+    b.setAttribute('role', 'tab');
+    b.textContent = Cenas.CENAS[c].icone + ' ' + CURTO[c];
+    b.addEventListener('click', function () { trocaCena(c); });
+    $('cenas').appendChild(b);
+  });
+
+  function textosCena() {
+    var C = Cenas.CENAS[estado.cena];
+    document.querySelectorAll('#cenas button').forEach(function (b) {
+      b.classList.toggle('sim', b.dataset.cena === estado.cena);
+      b.setAttribute('aria-selected', b.dataset.cena === estado.cena);
+    });
+    $('cenaTexto').textContent = SOBRE_CENA[estado.cena] + ' Cada tela tem as próprias opções e o próprio link.';
+    $('passoCena').innerHTML = 'No OBS, na cena de <b>' + C.nome + '</b>: <b>Fontes → + → Navegador</b>';
+    $('passoAtualizar').innerHTML = 'Marque <b>Atualizar navegador quando a cena ficar ativa</b>: assim o ' +
+      (estado.relogio === 'desce' ? 'relógio recomeça a contagem' : 'relógio começa do zero') + ' toda vez que você troca pra essa cena';
+    $('campoMinutos').hidden = estado.relogio !== 'desce';
+  }
+
+  // põe nos campos as opções da tela escolhida
+  function preencheCena() {
+    ['troca', 'fespessura', 'fvelocidade', 'ftamanho', 'fpulo', 'minutos'].forEach(function (k) {
+      $(k).value = estado[k];
+      $('o-' + k).textContent = formatos[k](+estado[k]);
+    });
+    ['aleatorio', 'tempo', 'habilidades', 'miniaturas', 'camera', 'nomeskin', 'pontos', 'fnami', 'fbolhas', 'fbrilhos', 'fenfeites'].forEach(function (k) {
+      $(k).checked = estado[k];
+    });
+    ['fnado', 'titulo', 'pilula', 'relogio', 'rotulo'].forEach(function (k) { $(k).value = estado[k]; });
+    $('recados').value = estado.recados.split('|').join('\n');
+    document.querySelectorAll('input[name="ftema"]').forEach(function (r) { r.checked = r.value === estado.ftema; });
+    $('resolucaoF').value = estado.fresolucao;
+    if (!estado.skins && todasSkins.length) estado.skins = todasSkins.map(function (s) { return s.num; });
+    pinta();
+  }
+
+  function trocaCena(c) {
+    if (c === estado.cena) return;
+    guardaCena();
+    estado.cena = c;
+    carregaCena();
+    preencheCena();
+    atualizar(true);
+  }
 
   trocaAba(aba);
 </script>

@@ -154,6 +154,8 @@
     text-shadow: 0 0 calc(var(--u) * 0.4) #fff, 0 0 calc(var(--u) * 0.4) #fff, 0 0 calc(var(--u) * 0.8) #fff;
     font-variant-numeric: tabular-nums;
   }
+  .bolha b.fim { font-size: calc(var(--u) * 1.7); }
+  .com-camera .bolha b.fim { font-size: calc(var(--u) * 1.35); }
   .tempo-txt { min-width: 0; }
   .tempo-txt small { display: block; font-weight: 800; font-size: calc(var(--u) * 0.95); letter-spacing: 0.16em; text-transform: uppercase; color: var(--acento); opacity: 0.85; }
   .tempo-txt p { margin: calc(var(--u) * 0.4) 0 0; font-weight: 800; font-size: calc(var(--u) * 1.65); line-height: 1.25; transition: opacity 0.6s; }
@@ -245,7 +247,7 @@
         </div>
         <b id="relogio">0:00</b>
       </div>
-      <div class="tempo-txt"><small>tempo na fila</small><p id="recado"></p></div>
+      <div class="tempo-txt"><small id="rotulo">tempo na fila</small><p id="recado"></p></div>
     </div>
     <div class="habilidades" id="habilidades"><div class="icones" id="icones"></div><p id="habNome">&nbsp;</p></div>
     <div class="camera" id="camera"><span id="cameraTxt"></span></div>
@@ -254,10 +256,15 @@
 
 <script src="ondas.js?v=dev"></script>
 <script src="dados.js?v=dev"></script>
+<script src="cenas.js?v=dev"></script>
 <script>
   // Link único: sem nada no link, usa o que foi salvo no gerador e atualiza sozinho.
   // Com opções no link (veja o README), vale o que está no link.
-  Ondas.automatico('fila', function (q) {
+  // Esta página faz as quatro telas de cena (fila, começando, encerrando, volto já): veja cenas.js
+  var CENA = Cenas.atual(), PADRAO_CENA = Cenas.CENAS[CENA];
+  document.title = 'evelin_peres · ' + PADRAO_CENA.nome;
+
+  Ondas.automatico(CENA, function (q) {
     var op = Ondas.parametros({
       // borda e Nami nadando (iguais aos da borda.html)
       tema: 'rosa', espessura: 1, velocidade: 1,
@@ -265,9 +272,11 @@
       bolhas: true, brilhos: true, enfeites: true,
       // tela de fila
       skins: '', croma: '', troca: 10, aleatorio: false,
-      titulo: 'Estou na fila', pilula: 'League of Legends',
-      recados: 'Já já começa a partida!|Aproveita pra pegar uma água 💧|Digita !pix, !insta ou !elo no chat',
-      tempo: true, habilidades: true, miniaturas: true, camera: false, nomeskin: false,
+      titulo: PADRAO_CENA.titulo, pilula: 'League of Legends', pontos: PADRAO_CENA.pontos,
+      recados: PADRAO_CENA.recados,
+      tempo: PADRAO_CENA.tempo, habilidades: true, miniaturas: true, camera: false, nomeskin: false,
+      // relógio: "sobe" conta desde que a cena abriu, "desce" é contagem regressiva de `minutos`
+      relogio: PADRAO_CENA.relogio, minutos: 5, rotulo: PADRAO_CENA.rotulo,
       // lugar e tamanho da câmera em pixels da tela do OBS (sem isso ela fica no cantinho da coluna)
       camx: -1, camy: -1, camlargura: 0, camaltura: 0, resolucao: '1920x1080'
     }, q);
@@ -288,19 +297,22 @@
     if (!op.miniaturas) palco.classList.add('sem-miniaturas');
     if (!op.nomeskin) palco.classList.add('sem-texto');
     if (!Ondas.emOBS) document.body.classList.add('previa');
-    // título com os três pontinhos pulando, grudados na última palavra
+    // título com os três pontinhos pulando (se ligados), grudados na última palavra
     (function () {
       var h1 = document.getElementById('titulo'), txt = op.titulo.trim(), corte = txt.lastIndexOf(' ');
       h1.textContent = corte > 0 ? txt.slice(0, corte + 1) : '';
       var fim = document.createElement('span');
       fim.className = 'junto';
       fim.textContent = corte > 0 ? txt.slice(corte + 1) : txt;
-      var pontos = document.createElement('span');
-      pontos.className = 'pontos';
-      pontos.innerHTML = '<i>.</i><i>.</i><i>.</i>';
-      fim.appendChild(pontos);
+      if (op.pontos) {
+        var pontos = document.createElement('span');
+        pontos.className = 'pontos';
+        pontos.innerHTML = '<i>.</i><i>.</i><i>.</i>';
+        fim.appendChild(pontos);
+      }
       h1.appendChild(fim);
     })();
+    document.getElementById('rotulo').textContent = op.rotulo;
     document.getElementById('pilula').textContent = op.pilula;
     if (!op.pilula) document.querySelector('.pilula').style.display = 'none';
 
@@ -404,17 +416,30 @@
 
     // ------------------------------------------------ tempo na fila
     // a recarga do "Salvar na live" continua contando; abrir a cena de novo começa do zero
-    var inicio = Date.now();
+    var inicio = Date.now(), CHAVE_INICIO = 'evelinperes-inicio-' + CENA;
     try {
-      var comecou = +sessionStorage.getItem('evelinperes-inicio');
+      var comecou = +sessionStorage.getItem(CHAVE_INICIO);
       if (Ondas.veioDeRecarga() && comecou) inicio = comecou;
-      sessionStorage.setItem('evelinperes-inicio', String(inicio));
+      sessionStorage.setItem(CHAVE_INICIO, String(inicio));
     } catch (e) {}
     var relogio = document.getElementById('relogio'), agua = document.getElementById('agua');
+    var total = Math.max(1, op.minutos) * 60;
+    function formata(s) {
+      var h = Math.floor(s / 3600), m = Math.floor(s / 60) % 60, ss = s % 60;
+      return (h ? h + ':' + String(m).padStart(2, '0') : m) + ':' + String(ss).padStart(2, '0');
+    }
     function tique() {
-      var s = Math.floor((Date.now() - inicio) / 1000), h = Math.floor(s / 3600), m = Math.floor(s / 60) % 60, ss = s % 60;
-      relogio.textContent = (h ? h + ':' + String(m).padStart(2, '0') : m) + ':' + String(ss).padStart(2, '0');
-      agua.style.setProperty('--nivel', (18 + 64 * (1 - Math.exp(-s / 240))) + '%');
+      var s = Math.floor((Date.now() - inicio) / 1000);
+      if (op.relogio === 'desce') {
+        // contagem regressiva: a bolha enche até a hora de começar
+        var falta = total - s;
+        relogio.textContent = falta > 0 ? formata(falta) : 'já já!';
+        relogio.classList.toggle('fim', falta <= 0);
+        agua.style.setProperty('--nivel', (18 + 70 * Math.min(1, s / total)) + '%');
+      } else {
+        relogio.textContent = formata(s);
+        agua.style.setProperty('--nivel', (18 + 64 * (1 - Math.exp(-s / 240))) + '%');
+      }
     }
     tique();
     setInterval(tique, 1000);

@@ -2,7 +2,7 @@
  * servidor.js · serve as páginas e guarda as opções da live
  *
  * Node puro, sem dependências. Além dos arquivos, tem a API do "link único":
- *   GET  /api/config    → { versao, salvoEm, borda: {...}, fila: {...}, estado: {...} }
+ *   GET  /api/config    → { versao, salvoEm, borda: {...}, fila: {...}, comecando: {...}, ..., estado: {...} }
  *   PUT  /api/config    → salva (precisa de "Authorization: Bearer <SENHA_EDICAO>")
  *   GET  /api/conferir  → 200 se a senha confere, 401 se não
  *   GET  /api/eventos   → Server-Sent Events: avisa as telas abertas (no OBS) quando as opções mudam
@@ -29,8 +29,14 @@ const TIPOS = {
   '.webmanifest': 'application/manifest+json', '.txt': 'text/plain; charset=utf-8'
 };
 
+// as telas que têm opções salvas; as de cena (fila, começando, encerrando, volto já) usam a
+// mesma página, fila.html, que o servidor também entrega com o nome de cada uma
+const TELAS = ['borda', 'fila', 'comecando', 'encerrando', 'voltoja'];
+const APELIDOS = { '/comecando.html': '/fila.html', '/encerrando.html': '/fila.html', '/voltoja.html': '/fila.html' };
+
 // ------------------------------------------------------------- opções salvas
-let config = { versao: 0, salvoEm: null, borda: {}, fila: {}, estado: null };
+let config = { versao: 0, salvoEm: null, estado: null };
+TELAS.forEach((t) => { config[t] = {}; });
 try { config = Object.assign(config, JSON.parse(fs.readFileSync(ARQUIVO, 'utf8'))); } catch (e) { /* ainda não salvou nada */ }
 
 // as opções viram parâmetros de link: só texto, número ou sim/não, com chave curtinha
@@ -109,10 +115,10 @@ async function salvar(req, res) {
   const novo = {
     versao: config.versao + 1,
     salvoEm: new Date().toISOString(),
-    borda: limpaParams(dados.borda),
-    fila: limpaParams(dados.fila),
     estado: estado && JSON.stringify(estado).length <= 64 * 1024 ? estado : null
   };
+  // tela que não veio no pedido fica como estava (um gerador antigo não apaga as telas novas)
+  TELAS.forEach((t) => { novo[t] = dados[t] !== undefined ? limpaParams(dados[t]) : (config[t] || {}); });
   fs.mkdirSync(DADOS, { recursive: true });
   fs.writeFileSync(ARQUIVO + '.tmp', JSON.stringify(novo));
   fs.renameSync(ARQUIVO + '.tmp', ARQUIVO);
@@ -170,7 +176,7 @@ const servidor = http.createServer((req, res) => {
   }
   if (p === '/api/eventos') return eventos(req, res);
   if (req.method !== 'GET' && req.method !== 'HEAD') { res.writeHead(405); return res.end(); }
-  arquivo(req, res, p);
+  arquivo(req, res, APELIDOS[p] || p);
 });
 
 servidor.listen(PORTA, () => console.log('no ar na porta ' + PORTA + (SENHA ? '' : ' (sem SENHA_EDICAO: ninguém salva)')));

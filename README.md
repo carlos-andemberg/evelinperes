@@ -6,10 +6,13 @@ Overlays pro OBS da [evelin_peres](https://www.twitch.tv/evelin_peres), no tema 
 
 ## Link único (atualiza sozinho)
 
-No OBS vão só dois links, colados uma vez:
+No OBS cada tela tem o seu link, colado uma vez só:
 
 - `https://evelinperes.carlosandemberg.com.br/borda.html` (borda da câmera)
-- `https://evelinperes.carlosandemberg.com.br/fila.html` (tela de fila)
+- `https://evelinperes.carlosandemberg.com.br/fila.html` (estou na fila)
+- `https://evelinperes.carlosandemberg.com.br/comecando.html` (a live já vai começar)
+- `https://evelinperes.carlosandemberg.com.br/encerrando.html` (obrigada por assistir)
+- `https://evelinperes.carlosandemberg.com.br/voltoja.html` (volto já)
 
 Sem nada depois do `.html`, a tela usa as opções salvas no gerador. Mexeu no gerador e clicou em **Salvar na live**: as telas abertas no OBS recebem o aviso na hora e se atualizam sozinhas, e o tempo na fila continua contando. Se o servidor cair, a tela usa a última versão que viu.
 
@@ -22,7 +25,8 @@ Links com opções escritas neles (`borda.html?tema=agua...`) continuam funciona
 | Arquivo | O que é | Tamanho no OBS |
 |---|---|---|
 | `borda.html` | Borda de ondas em volta da webcam, com a Nami nadando e o nome flutuando em cima. Fundo transparente | **1920 × 1080** (o tamanho da tela do OBS) |
-| `fila.html` | Tela de "estou na fila": skin da Nami trocando, tempo na fila, recadinhos, habilidades e espaço pra câmera | **1920 × 1080** (ou em pé, 1080 × 1920) |
+| `fila.html` | As telas de cena: estou na fila, a live já vai começar, obrigada por assistir e volto já (o servidor entrega a mesma página como `comecando.html`, `encerrando.html` e `voltoja.html`) | **1920 × 1080** (ou em pé, 1080 × 1920) |
+| `cenas.js` | Os textos e o relógio padrão de cada tela de cena | — |
 | `index.html` | Gerador: escolhe cores, skins, cromas, textos e o lugar da câmera, mostra a prévia e salva na live | — |
 | `servidor.js` | Serve as páginas e guarda as opções da live (`/api/config`), avisando as telas abertas quando mudam (`/api/eventos`) | — |
 | `ondas.js` | O motor: as três camadas de onda (em volta da câmera ou da tela), espuma, bolhas, brilhos, enfeites, o nome com os peixinhos e a Nami desenhada no canvas | — |
@@ -88,6 +92,19 @@ Junte com `&`, ex.: `borda.html?espessura=1.4&nado=embaixo`. O gerador monta iss
 | `modo=tela` | A fonte é a tela inteira e a borda cai em `camx`/`camy` (o padrão, `solta`, é a fonte só da câmera) |
 | `fundo=0` | Força o fundo transparente mesmo fora do OBS |
 
+## As telas de cena
+
+São quatro, todas no mesmo jeitinho (fundo de mar, borda de ondas com a Nami, skin trocando, recadinhos, habilidades e espaço pra câmera), e **cada uma com as próprias opções e o próprio link**:
+
+| Tela | Link | Título | Relógio |
+|---|---|---|---|
+| Estou na fila | `fila.html` | Estou na fila... | conta o tempo na fila |
+| A live já vai começar | `comecando.html` | A live já vai começar... | contagem regressiva (5 minutos, dá pra mudar) e "já já!" no fim |
+| Obrigada por assistir | `encerrando.html` | Obrigada por assistir! | desligado |
+| Volto já | `voltoja.html` | Volto já... | conta o tempo fora |
+
+No gerador, a aba **Telas** tem um botão pra cada uma: o que mexer numa não muda as outras. Dá pra trocar título, recadinhos, o texto do relógio, ligar ou desligar os três pontinhos, e escolher entre relógio que sobe ou contagem regressiva.
+
 ## A tela de fila
 
 Pra cena de quando ela está esperando a partida. Aqui a borda de ondas vai em volta da tela toda, com a Nami nadando, e o fundo é um mar rosinha (raios de luz e bolhas subindo).
@@ -125,6 +142,9 @@ Além das opções da borda:
 | `tempo=0` | Esconde o tempo na fila |
 | `habilidades=0` | Esconde as habilidades |
 | `miniaturas=0` | Esconde as bolinhas das skins |
+| `relogio=desce&minutos=5` | Contagem regressiva de 5 minutos (`relogio=sobe` conta desde que a cena abriu) |
+| `rotulo=começa em` | Texto em cima do relógio |
+| `pontos=0` | Tira os três pontinhos do título |
 | `camera=1` | Liga o espaço pra câmera |
 | `camx=1240&camy=605` | Lugar do espaço da câmera, em pixels da tela do OBS (sem isso ele fica no cantinho da coluna do título) |
 | `camlargura=576&camaltura=324` | Tamanho do espaço da câmera (o gerador tem o formato igual à câmera do jogo, 4:3 e quadradinha) |
