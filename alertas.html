@@ -6,6 +6,8 @@
 <title>evelin_peres · Alertas</title>
 <meta name="description" content="Alertas da live da evelin_peres no tema da Nami: seguir, sub, sub de presente, raid, bits e doação.">
 <meta name="theme-color" content="#ff8fbd">
+<!-- a voz do Google (sons.js) só responde quando a página não conta de onde veio -->
+<meta name="referrer" content="no-referrer">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="icon" href="favicon.ico" sizes="any">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -87,7 +89,8 @@
    *   - do widget da StreamElements, por postMessage: { evelinperes: 'alerta', tipo, nome, qtd, msg, para }
    *   - do botão "Testar no OBS" do gerador (aviso do servidor, evento "alerta")
    *   - do link: ?teste=sub toca um, ?demo toca todos em sequência
-   * O visual (cores, letra, som, textos) vem do que foi salvo no gerador, como as outras telas.
+   * O visual (cores, letra, som, voz, textos) vem do que foi salvo no gerador, como as outras telas.
+   * A voz lê cada alerta ("fulano fez uma raid com 42 pessoas!") e a mensagem, e o alerta espera ela terminar.
    */
   var $ = function (id) { return document.getElementById(id); };
   var emIframe = window.parent !== window;
@@ -103,6 +106,7 @@
       traid: 'Raid!', tbits: 'Bits!', tdoacao: 'Doação!',
       somseguir: SOM_PADRAO.seguir, somsub: SOM_PADRAO.sub, sompresente: SOM_PADRAO.presente,
       somraid: SOM_PADRAO.raid, sombits: SOM_PADRAO.bits, somdoacao: SOM_PADRAO.doacao,
+      voz: true, vozmsg: true, vozvolume: 0.9,
       teste: '', demo: false, fundo: !Ondas.emOBS && !emIframe
     }, q);
 
@@ -115,29 +119,47 @@
     var L = Ondas.LETRAS[op.letra] || Ondas.LETRAS.cherry;
     $('nome').style.fontFamily = L.css.replace(/^\d+ \{px\}px /, '');
     $('nome').style.fontWeight = L.css.split(' ')[0];
-    var DUR = Math.max(4, Math.min(20, op.duracao));
+    // DUR cresce durante um alerta se a voz ainda estiver falando
+    var DUR_BASE = Math.max(4, Math.min(20, op.duracao)), DUR = DUR_BASE;
 
     // ---------------------------------------------------------- tipos de alerta
     function plural(n, um, varios) { return n === 1 ? um : varios; }
     function dinheiro(v) {
       try { return Number(v).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }); } catch (e) { return 'R$ ' + v; }
     }
+    // valor da doação do jeito que se fala: "10 reais e 50 centavos"
+    function reais(v) {
+      var c = Math.round(v * 100), r = Math.floor(c / 100), cent = c % 100, partes = [];
+      if (r) partes.push(r + plural(r, ' real', ' reais'));
+      if (cent) partes.push(cent + plural(cent, ' centavo', ' centavos'));
+      return partes.join(' e ') || '0 reais';
+    }
+    // linha: o que aparece embaixo do nome; fala: o que a voz lê (n = o nome do jeito que se lê)
     var TIPOS = {
       seguir: { titulo: op.tseguir, efeito: 'coracoes',
-        linha: function () { return 'agora faz parte do cardume 💕'; } },
+        linha: function () { return 'agora faz parte do cardume 💕'; },
+        fala: function (n) { return n + ' começou a seguir!'; } },
       sub: { titulo: op.tsub, efeito: 'estrelas',
-        linha: function (d) { return d.qtd > 1 ? 'se inscreveu há ' + d.qtd + ' meses ✨' : 'se inscreveu ✨'; } },
+        linha: function (d) { return d.qtd > 1 ? 'se inscreveu há ' + d.qtd + ' meses ✨' : 'se inscreveu ✨'; },
+        fala: function (n, d) { return d.qtd > 1 ? n + ' se inscreveu há ' + d.qtd + ' meses!' : n + ' se inscreveu!'; } },
       presente: { titulo: op.tpresente, efeito: 'conchas',
         linha: function (d) {
           if (d.qtd > 1) return 'deu ' + d.qtd + ' subs de presente 🎁';
           return d.para ? 'deu um sub de presente pra ' + d.para + ' 🎁' : 'deu um sub de presente 🎁';
+        },
+        fala: function (n, d) {
+          if (d.qtd > 1) return n + ' deu ' + d.qtd + ' subs de presente!';
+          return d.para ? n + ' deu um sub de presente para ' + nomeFalado(d.para) + '!' : n + ' deu um sub de presente!';
         } },
       raid: { titulo: op.traid, efeito: 'cardume',
-        linha: function (d) { return 'chegou com ' + d.qtd + plural(d.qtd, ' pessoa', ' pessoas') + ' 🐟'; } },
+        linha: function (d) { return 'chegou com ' + d.qtd + plural(d.qtd, ' pessoa', ' pessoas') + ' 🐟'; },
+        fala: function (n, d) { return n + ' fez uma raid com ' + (d.qtd === 1 ? 'uma pessoa' : d.qtd + ' pessoas') + '!'; } },
       bits: { titulo: op.tbits, efeito: 'cristais',
-        linha: function (d) { return 'mandou ' + d.qtd + plural(d.qtd, ' bit', ' bits') + ' 💎'; } },
+        linha: function (d) { return 'mandou ' + d.qtd + plural(d.qtd, ' bit', ' bits') + ' 💎'; },
+        fala: function (n, d) { return n + ' mandou ' + (d.qtd === 1 ? 'um bit' : d.qtd + ' bits') + '!'; } },
       doacao: { titulo: op.tdoacao, efeito: 'perolas',
-        linha: function (d) { return 'mandou ' + dinheiro(d.qtd) + ' 💖'; } }
+        linha: function (d) { return 'mandou ' + dinheiro(d.qtd) + ' 💖'; },
+        fala: function (n, d) { return n + ' doou ' + reais(d.qtd) + '!'; } }
     };
 
     // dados que chegam de fora: só texto curtinho e número
@@ -149,7 +171,7 @@
         para: d.para ? String(d.para).slice(0, 32) : '',
         qtd: Math.max(1, Math.round(Number(d.qtd) || 1) || 1),
         valor: Number(d.qtd) || 0,
-        msg: op.mensagens && d.msg ? String(d.msg).replace(/\s+/g, ' ').trim().slice(0, 140) : ''
+        msg: d.msg ? String(d.msg).replace(/\s+/g, ' ').trim().slice(0, 140) : ''
       };
     }
     var letrasProntas = false;
@@ -177,6 +199,28 @@
       Sons.toca(s, op.volume);
     }
 
+    // ---------------------------------------------------------- voz: lê o alerta (e a mensagem) depois do som
+    function nomeFalado(n) { return String(n).replace(/^@/, '').replace(/[_.\-]+/g, ' ').trim() || 'alguém'; }
+    function msgFalada(d) {
+      var m = d.msg.replace(/https?:\/\/\S+|www\.\S+/gi, ' ');
+      if (d.tipo === 'bits') m = m.replace(/\b[a-z]+\d+\b/gi, ' ');  // Cheer100, BibleThump50...
+      return m.replace(/\p{Extended_Pictographic}|️/gu, ' ')
+        .replace(/(.)\1{3,}/g, '$1$1$1')                              // kkkkkkkk vira kkk
+        .replace(/\s+/g, ' ').trim();
+    }
+    var vozTimer = 0;
+    function fala(d) {
+      d.falando = false;
+      if (!op.voz) return;
+      var texto = TIPOS[d.tipo].fala(nomeFalado(d.nome), d);
+      if (op.vozmsg && d.msg) texto += ' ' + msgFalada(d);
+      d.falando = true;
+      clearTimeout(vozTimer);
+      vozTimer = setTimeout(function () {
+        if (atual === d) Sons.fala(texto, op.vozvolume, function () { d.falando = false; });
+      }, 1800);
+    }
+
     // ---------------------------------------------------------- cartão com o nome
     function mostraCartao(d) {
       var T = TIPOS[d.tipo];
@@ -196,7 +240,7 @@
         if (nome.scrollWidth > max) nome.style.fontSize = (parseFloat(getComputedStyle(nome).fontSize) * max / nome.scrollWidth) + 'px';
       });
       $('linha').textContent = T.linha(d);
-      $('msg').textContent = d.msg;
+      $('msg').textContent = op.mensagens ? d.msg : '';
     }
 
     // ---------------------------------------------------------- desenho
@@ -414,11 +458,15 @@
       c.classList.remove('entra', 'sai');
       void c.offsetWidth;
       setTimeout(function () { if (atual === d) c.classList.add('entra'); }, 900);
+      DUR = DUR_BASE;
       toca(d.tipo);
+      fala(d);
     }
     function proximo() {
-      // um .mp3 comprido não passa pro próximo alerta
+      // um .mp3 comprido ou uma fala não passam pro próximo alerta
       Sons.para();
+      Sons.cala();
+      clearTimeout(vozTimer);
       atual = fila.shift() || null;
       if (atual) comeca(atual);
       else $('cartao').classList.remove('entra', 'sai');
@@ -439,7 +487,10 @@
       cb.setTransform(dpr, 0, 0, dpr, 0, 0); cb.clearRect(0, 0, W, H);
       if (!atual && !parts.length) return;
 
-      var t = atual ? (agora - t0) / 1000 : 99, nivel = nivelOnda(t);
+      var t = atual ? (agora - t0) / 1000 : 99;
+      // enquanto a voz fala, o alerta espera (até 40 s a mais)
+      if (atual && atual.falando && t > DUR - 1.6) DUR = Math.min(DUR_BASE + 40, t + 1.6);
+      var nivel = nivelOnda(t);
       if (atual && t > DUR - 1.1 && !cartaoSaiu) { cartaoSaiu = true; $('cartao').classList.remove('entra'); $('cartao').classList.add('sai'); }
       if (atual && t >= DUR) { proximo(); return; }
 

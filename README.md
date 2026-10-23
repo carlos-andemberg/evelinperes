@@ -176,13 +176,15 @@ Cada alerta: uma onda rosa sobe do pé da tela, a Nami pula da água (às vezes 
 
 Os sons ficam em `sons.js` e são feitos na hora, sem arquivo: Bolhinhas, Splash da Nami (o som antigo), Caixinha de música, Harpa, Pozinho mágico, Cristais, Moedinhas, Sininhos, Fanfarra do mar e Onda do mar. No gerador cada tipo escolhe o seu (com **▶ Ouvir**), pode ficar sem som, ou tocar um arquivo próprio pelo link direto de um .mp3, .ogg ou .wav.
 
+Depois do som, uma voz em português lê o alerta e a mensagem: "joãozinho fez uma raid com 42 pessoas!", "conchinha doou 10 reais e 50 centavos!" e por aí vai. Links, emojis e os "Cheer100" dos bits são pulados, risada comprida encurta, e o alerta espera a voz terminar (até 40 s a mais). A voz é a do Google Tradutor (a da StreamElements agora pede login): ela vem em .mp3, por isso toca no OBS, e o `alertas.html` não manda de onde veio (`referrer`), senão o Google recusa. Se o Google não responder, tenta a voz do navegador.
+
 Os alertas vêm do overlay da StreamElements por um **widget customizado** que só repassa os eventos pro `alertas.html` do site. O visual, o som e os textos ficam no site: mudou no gerador (aba **Alertas**) e clicou em **Salvar na live**, os alertas mudam sozinhos (se tiver um alerta tocando, a atualização espera ele acabar). Vários alertas seguidos entram numa fila.
 
 Pra colocar (uma vez só): StreamElements → **Overlays** → o overlay que já está no OBS → **+ → Static / Custom → Custom widget** → **Settings → Open editor** e cole o HTML, o CSS e o JS que o gerador mostra. Deixe o widget com 1920 × 1080 na posição 0, 0 e desligue no AlertBox os tipos que estes alertas fazem.
 
 Pra testar: o **Emulate** da StreamElements, ou os botões do gerador (os da prévia tocam só ali; os de **Testar no OBS** mandam pros alertas abertos e pedem a senha). `alertas.html?demo` toca todos em sequência e `alertas.html?teste=raid` toca um.
 
-Opções (no gerador, ou no link): `tema`, `letra` (do nome), `som=0`, `volume=0.6`, `duracao=7.5`, `mensagens=0`, os títulos `tseguir`, `tsub`, `tpresente`, `traid`, `tbits`, `tdoacao`, e os sons `somseguir`, `somsub`, `sompresente`, `somraid`, `sombits`, `somdoacao` (`bolhas`, `splash`, `caixinha`, `harpa`, `magia`, `cristal`, `moedas`, `sino`, `fanfarra`, `onda`, `nenhum` ou um link https).
+Opções (no gerador, ou no link): `tema`, `letra` (do nome), `som=0`, `volume=0.6`, `duracao=7.5`, `mensagens=0`, os títulos `tseguir`, `tsub`, `tpresente`, `traid`, `tbits`, `tdoacao`, e os sons `somseguir`, `somsub`, `sompresente`, `somraid`, `sombits`, `somdoacao` (`bolhas`, `splash`, `caixinha`, `harpa`, `magia`, `cristal`, `moedas`, `sino`, `fanfarra`, `onda`, `nenhum` ou um link https), e a voz: `voz=0`, `vozmsg=0` (não lê a mensagem), `vozvolume=0.9`.
 
 ## Painéis do Sobre
 

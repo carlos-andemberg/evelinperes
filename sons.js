@@ -4,6 +4,8 @@
  *   Sons.LISTA              [{ id, nome, icone }] na ordem em que aparecem no gerador
  *   Sons.toca(som, volume)  toca um som da lista, ou um link direto de .mp3/.ogg/.wav
  *   Sons.para()             corta o link que estiver tocando
+ *   Sons.fala(texto, volume, fim)  lê o texto em voz alta, em português; fim() quando acabar
+ *   Sons.cala()             para de falar
  *
  * Cada som tem o próprio timbre (bolhas, caixinha de música, harpa, sinos...), não só notas diferentes.
  */
@@ -285,10 +287,93 @@
     } catch (e) { /* sem som, tudo bem */ }
   }
 
+  // ------------------------------------------------------------ voz (lê o alerta em voz alta)
+  // É a voz do Google Tradutor: chega pronta em .mp3 e toca no OBS e na StreamElements. Ela aceita só uns
+  // 200 caracteres por vez (o texto vai em pedaços) e recusa quando a página conta de onde veio, por isso
+  // quem fala tem <meta name="referrer" content="no-referrer">. Se ela não responder, tenta a voz do navegador.
+  var VOZ = 'https://translate.google.com/translate_tts?ie=UTF-8&tl=pt-BR&client=tw-ob&q=';
+  var voz = null;
+
+  // corta nas frases (e, se uma frase for enorme, nas palavras) sem passar de 180 letras
+  function pedacos(texto) {
+    var r = [], atual = '';
+    function poe(p) {
+      if (!p) return;
+      if (atual && (atual + ' ' + p).length > 180) { r.push(atual); atual = ''; }
+      atual = atual ? atual + ' ' + p : p;
+    }
+    texto.split(/(?<=[.!?…])\s+/).forEach(function (frase) {
+      if (frase.length <= 180) poe(frase);
+      else frase.split(' ').forEach(function (w) { poe(w.slice(0, 40)); });
+    });
+    if (atual) r.push(atual);
+    return r;
+  }
+
+  function cala() {
+    if (!voz) return;
+    voz.parou = true;
+    if (voz.audio) { try { voz.audio.pause(); } catch (e) {} }
+    if (voz.navegador && global.speechSynthesis) { try { global.speechSynthesis.cancel(); } catch (e) {} }
+    voz = null;
+  }
+
+  // fim() é chamado quando acaba de falar (ou quando não deu pra falar)
+  function fala(texto, volume, fim) {
+    cala();
+    var vol = Math.max(0, Math.min(1, +volume || 0));
+    var lista = pedacos(String(texto || '').replace(/\s+/g, ' ').trim());
+    var esta = voz = { parou: false };
+    function acabou() {
+      if (voz === esta) voz = null;
+      if (fim) { var f = fim; fim = null; f(); }
+    }
+    if (!vol || !lista.length) return acabou();
+    var i = 0;
+
+    function navegador(resto) {
+      var ss = global.speechSynthesis;
+      var vs = ss && global.SpeechSynthesisUtterance ? ss.getVoices().filter(function (v) { return /^pt[-_]BR/i.test(v.lang); }) : [];
+      if (!vs.length) return acabou();
+      var u = new global.SpeechSynthesisUtterance(resto);
+      u.voice = vs[0];
+      u.lang = 'pt-BR';
+      u.volume = vol;
+      u.onend = u.onerror = acabou;
+      esta.navegador = true;
+      ss.speak(u);
+    }
+    function proximo() {
+      if (esta.parou) return;
+      if (i >= lista.length) return acabou();
+      var a = esta.audio = new Audio(VOZ + encodeURIComponent(lista[i++])), deuErro = false;
+      a.volume = vol;
+      function erro() {
+        if (deuErro || esta.parou) return;
+        deuErro = true;
+        clearTimeout(espera);
+        navegador(lista.slice(i - 1).join(' '));
+      }
+      // não começou em 6 s: a voz do Google não respondeu
+      var espera = setTimeout(erro, 6000);
+      a.onplaying = function () { clearTimeout(espera); };
+      a.onended = function () { clearTimeout(espera); proximo(); };
+      a.onerror = erro;
+      var p = a.play();
+      if (p && p.catch) p.catch(function (e) {
+        // o navegador não deixou tocar som sozinho: não tem o que fazer
+        if (e && e.name === 'NotAllowedError') { clearTimeout(espera); deuErro = true; acabou(); }
+      });
+    }
+    proximo();
+  }
+
   global.Sons = {
     LISTA: LISTA.map(function (x) { return { id: x.id, nome: x.nome, icone: x.icone }; }),
     existe: function (id) { return !!PORID[id]; },
     toca: toca,
-    para: para
+    para: para,
+    fala: fala,
+    cala: cala
   };
 })(window);

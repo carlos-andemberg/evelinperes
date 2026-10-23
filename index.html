@@ -550,6 +550,15 @@
           <div class="sons" id="sonsA"></div>
           <p class="nota">No link, cole o endereço direto do arquivo (.mp3, .ogg ou .wav).</p>
         </div>
+        <div class="campo cheio">
+          <span>Voz</span>
+          <div class="chaves">
+            <label class="chave"><input type="checkbox" id="avoz"> Ler o alerta em voz alta</label>
+            <label class="chave"><input type="checkbox" id="avozmsg"> Ler a mensagem também</label>
+          </div>
+          <p class="nota">Depois do som, a voz lê o alerta (“marinheira rosa fez uma raid com 42 pessoas!”) e a mensagem, e o alerta espera ela terminar. Links e emojis são pulados. Teste com os botões da prévia.</p>
+        </div>
+        <label class="campo"><span>Volume da voz <output id="o-avozvolume"></output></span><input type="range" id="avozvolume" min="0" max="1" step="0.05"></label>
         <label class="campo"><span>Título · seguir</span><input type="text" id="atseguir" maxlength="30"></label>
         <label class="campo"><span>Título · sub</span><input type="text" id="atsub" maxlength="30"></label>
         <label class="campo"><span>Título · sub de presente</span><input type="text" id="atpresente" maxlength="30"></label>
@@ -640,11 +649,13 @@
     atseguir: 'Novo seguidor!', atsub: 'Novo sub!', atpresente: 'Sub de presente!', atraid: 'Raid!', atbits: 'Bits!', atdoacao: 'Doação!',
     // som de cada tipo: um id de sons.js, 'nenhum', um link de .mp3 ou 'link' (escolheu link e ainda não colou)
     asomseguir: 'bolhas', asomsub: 'caixinha', asompresente: 'magia', asomraid: 'fanfarra', asombits: 'cristal', asomdoacao: 'moedas',
+    avoz: true, avozmsg: true, avozvolume: 0.9,
     anometeste: 'marinheira_rosa'
   };
   var ALERTA = { atema: 'tema', aletra: 'letra', asom: 'som', avolume: 'volume', aduracao: 'duracao', amsg: 'mensagens',
     atseguir: 'tseguir', atsub: 'tsub', atpresente: 'tpresente', atraid: 'traid', atbits: 'tbits', atdoacao: 'tdoacao',
-    asomseguir: 'somseguir', asomsub: 'somsub', asompresente: 'sompresente', asomraid: 'somraid', asombits: 'sombits', asomdoacao: 'somdoacao' };
+    asomseguir: 'somseguir', asomsub: 'somsub', asompresente: 'sompresente', asomraid: 'somraid', asombits: 'sombits', asomdoacao: 'somdoacao',
+    avoz: 'voz', avozmsg: 'vozmsg', avozvolume: 'vozvolume' };
   var PERFIS = ['borda', 'borda2', 'borda3', 'borda4'];
   var BORDA_FILA = { ftema: 'tema', fespessura: 'espessura', fvelocidade: 'velocidade', fnami: 'nami', ftamanho: 'tamanho', fnado: 'nado', fpulo: 'pulo', fbolhas: 'bolhas', fbrilhos: 'brilhos', fenfeites: 'enfeites' };
   var CAM_FILA = { fcamx: 'camx', fcamy: 'camy', fcamlargura: 'camlargura', fcamaltura: 'camaltura', fresolucao: 'resolucao' };
@@ -928,6 +939,7 @@
     minutos: function (v) { return v + (v > 1 ? ' minutos' : ' minuto'); },
     aduracao: function (v) { return v.toFixed(1).replace('.', ',') + ' s'; },
     avolume: function (v) { return Math.round(v * 100) + '%'; },
+    avozvolume: function (v) { return Math.round(v * 100) + '%'; },
     nometam: function (v) { return v.toFixed(1) + '×'; },
     peixes: function (v) { return v ? v + (v > 1 ? ' peixinhos' : ' peixinho') : 'nenhum'; }
   };
@@ -937,7 +949,7 @@
     $('o-' + k).textContent = formatos[k](+el.value);
     el.addEventListener('input', function () { estado[k] = +el.value; $('o-' + k).textContent = formatos[k](+el.value); atualizar(); });
   });
-  ['nami', 'bolhas', 'brilhos', 'enfeites', 'aleatorio', 'tempo', 'habilidades', 'miniaturas', 'camera', 'nomeskin', 'pontos', 'fnami', 'fbolhas', 'fbrilhos', 'fenfeites', 'asom', 'amsg'].forEach(function (k) {
+  ['nami', 'bolhas', 'brilhos', 'enfeites', 'aleatorio', 'tempo', 'habilidades', 'miniaturas', 'camera', 'nomeskin', 'pontos', 'fnami', 'fbolhas', 'fbrilhos', 'fenfeites', 'asom', 'amsg', 'avoz', 'avozmsg'].forEach(function (k) {
     var el = $(k);
     el.checked = estado[k];
     el.addEventListener('change', function () { estado[k] = el.checked; atualizar(); });
