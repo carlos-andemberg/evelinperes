@@ -591,6 +591,7 @@
 </main>
 
 <script src="trava.js?v=dev"></script>
+<script src="modal.js?v=dev"></script>
 <script src="ondas.js?v=dev"></script>
 <script src="dados.js?v=dev"></script>
 <script src="cenas.js?v=dev"></script>
@@ -1158,9 +1159,16 @@
 
   $('carregarLive').addEventListener('click', function () {
     if (!live || !live.estado) return;
-    trocandoPelaLive = true;
-    try { localStorage.setItem(CHAVE, JSON.stringify(live.estado)); } catch (e) {}
-    location.reload();
+    Modal.confirmar({
+      icone: '📡', titulo: 'Carregar o que está na live?',
+      texto: 'As mudanças que você fez aqui e ainda não salvou vão ser trocadas pelo que está no OBS agora.',
+      ok: 'Carregar', perigo: true
+    }).then(function (sim) {
+      if (!sim) return;
+      trocandoPelaLive = true;
+      try { localStorage.setItem(CHAVE, JSON.stringify(live.estado)); } catch (e) {}
+      location.reload();
+    });
   });
 
   function pedeSenha(texto) {

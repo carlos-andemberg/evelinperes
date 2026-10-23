@@ -9,7 +9,7 @@ COPY paineis ./publico/paineis
 # e o navegador, o Cloudflare e o OBS buscam o arquivo novo em vez de usar o guardado
 RUN rm -f publico/servidor.js \
  && cd publico \
- && v=$(cat ondas.js dados.js cenas.js trava.js nami.json | md5sum | cut -c1-10) \
+ && v=$(cat ondas.js dados.js cenas.js trava.js modal.js nami.json | md5sum | cut -c1-10) \
  && sed -i "s/?v=dev/?v=$v/g" *.html
 ENV PORTA=80 PASTA=/app/publico DADOS=/dados
 EXPOSE 80

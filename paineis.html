@@ -93,6 +93,7 @@
 <div class="desfazer" id="desfazer" role="status"><span id="desfazerTexto"></span><button class="botao" type="button" id="desfazerBotao">Desfazer</button></div>
 
 <script src="trava.js?v=dev"></script>
+<script src="modal.js?v=dev"></script>
 <script src="ondas.js?v=dev"></script>
 <script>
   // ---------------------------------------------------------------- estado
@@ -324,10 +325,16 @@
       sel.addEventListener('change', function () { p.enfeite = sel.value; guardar(); redesenha(); });
       card.querySelector('[data-baixar]').addEventListener('click', function () { baixar(canvas, p); });
       card.querySelector('[data-tirar]').addEventListener('click', function () {
-        estado.paineis.splice(i, 1);
-        guardar();
-        monta();
-        avisaTirado(p, i);
+        Modal.confirmar({
+          icone: '🗑️', titulo: 'Tirar o painel "' + (p.titulo || 'sem nome') + '"?',
+          texto: 'Ele sai da lista. Se mudar de ideia, dá pra desfazer logo depois.', ok: 'Tirar', perigo: true
+        }).then(function (sim) {
+          if (!sim) return;
+          estado.paineis.splice(i, 1);
+          guardar();
+          monta();
+          avisaTirado(p, i);
+        });
       });
       lista.appendChild(card);
       redesenha();
@@ -335,10 +342,13 @@
   }
 
   function voltarPadrao() {
-    if (estado.paineis.length && !confirm('Voltar pros 4 painéis padrão (Sobre mim, Regras, Doações, Setup)? Os que estão aqui saem.')) return;
-    estado.paineis = copia(PADRAO_PAINEIS);
-    guardar();
-    monta();
+    var volta = function () { estado.paineis = copia(PADRAO_PAINEIS); guardar(); monta(); };
+    if (!estado.paineis.length) return volta();
+    Modal.confirmar({
+      icone: '↺', titulo: 'Voltar os painéis padrão?',
+      texto: 'Os 4 painéis (Sobre mim, Regras, Doações e Setup) voltam do jeito que vieram. Os que estão aqui agora saem.',
+      ok: 'Voltar os padrão', perigo: true
+    }).then(function (sim) { if (sim) volta(); });
   }
 
   function chips(caixa, opcoes, chave) {
