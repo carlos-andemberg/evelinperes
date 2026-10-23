@@ -271,6 +271,15 @@
   .salvar button.link-texto { border: 0; background: none; color: var(--rosa); font: 800 13px 'Nunito', sans-serif; text-decoration: underline; cursor: pointer; padding: 0; }
   main { padding-bottom: 120px; }
 
+  .abas a {
+    font: 700 17px var(--titulo); color: var(--rosa); background: #fff; border: 2px solid var(--rosa3); padding: 10px 22px; border-radius: 999px;
+    box-shadow: 0 4px 14px rgba(255, 92, 158, 0.12); text-decoration: none; transition: transform 0.2s;
+  }
+  .abas a:hover { transform: translateY(-2px); }
+  .codigo { display: grid; grid-template-columns: 1fr auto; gap: 6px 8px; align-items: stretch; margin-top: 12px; }
+  .codigo .rotulo { grid-column: 1 / -1; margin: 0; }
+  .codigo textarea { font: 600 12px/1.45 Consolas, 'Cascadia Mono', monospace; min-height: 0; resize: vertical; white-space: pre; overflow: auto; }
+
   footer { text-align: center; margin-top: 34px; color: var(--suave); font-weight: 700; font-size: 14px; line-height: 1.6; }
   footer a { color: var(--rosa); }
 
@@ -293,12 +302,14 @@
   <header>
     <img src="favicon.svg" alt="">
     <h1>evelin_peres</h1>
-    <p>Overlays da Nami pro OBS: a borda de ondas da câmera com ela nadando e a tela de <i>estou na fila</i> com as skins. Escolha as opções, copie o link e cole numa fonte <b>Navegador</b>.</p>
+    <p>Overlays da Nami pro OBS: a borda de ondas da câmera com ela nadando, as telas de cena (fila, começando, encerrando, volto já), os alertas da StreamElements e os painéis do Sobre. Mexa nas opções e clique em <b>Salvar na live</b>.</p>
   </header>
 
   <nav class="abas" role="tablist">
     <button role="tab" aria-selected="true" data-aba="borda">🌊 Borda da câmera</button>
     <button role="tab" aria-selected="false" data-aba="fila">📺 Telas</button>
+    <button role="tab" aria-selected="false" data-aba="alertas">🔔 Alertas</button>
+    <a href="paineis.html">🖼️ Painéis do Sobre</a>
   </nav>
 
   <!-- ===================================================== BORDA -->
@@ -509,6 +520,63 @@
     </div>
   </section>
 
+  <!-- ===================================================== ALERTAS -->
+  <section class="painel" id="painel-alertas" role="tabpanel">
+    <div class="pilha">
+    <div class="card">
+      <h2>🔔 Alertas</h2>
+      <p>Seguir, sub, sub de presente, raid, bits e doação: uma onda sobe, a Nami pula da água e o nome aparece flutuando, cada tipo com o seu efeito (corações, estrelas, conchas, cardume, cristais e pérolas). Ficam dentro do overlay da StreamElements e seguem o que você salvar aqui.</p>
+      <div class="campos">
+        <div class="campo cheio"><span>Cores</span><div class="temas" id="temasA"></div></div>
+        <div class="campo cheio"><span>Letra do nome</span><div class="letras" id="letrasA"></div></div>
+        <label class="campo"><span>Duração <output id="o-aduracao"></output></span><input type="range" id="aduracao" min="5" max="15" step="0.5"></label>
+        <label class="campo"><span>Volume <output id="o-avolume"></output></span><input type="range" id="avolume" min="0" max="1" step="0.05"></label>
+        <div class="campo cheio">
+          <span>Detalhes</span>
+          <div class="chaves">
+            <label class="chave"><input type="checkbox" id="asom"> Som do alerta</label>
+            <label class="chave"><input type="checkbox" id="amsg"> Mostrar a mensagem</label>
+          </div>
+        </div>
+        <label class="campo"><span>Título · seguir</span><input type="text" id="atseguir" maxlength="30"></label>
+        <label class="campo"><span>Título · sub</span><input type="text" id="atsub" maxlength="30"></label>
+        <label class="campo"><span>Título · sub de presente</span><input type="text" id="atpresente" maxlength="30"></label>
+        <label class="campo"><span>Título · raid</span><input type="text" id="atraid" maxlength="30"></label>
+        <label class="campo"><span>Título · bits</span><input type="text" id="atbits" maxlength="30"></label>
+        <label class="campo"><span>Título · doação</span><input type="text" id="atdoacao" maxlength="30"></label>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>🧪 Testar</h2>
+      <p>Os botões da prévia tocam só aqui. Os de <b>Testar no OBS</b> mandam o alerta pros alertas abertos (no overlay da StreamElements) e pedem a senha do Salvar na live.</p>
+      <label class="campo"><span>Nome de teste</span><input type="text" id="anometeste" maxlength="25"></label>
+      <span class="rotulo" style="margin-top:14px;display:block">Na prévia</span>
+      <div class="formatos" id="testesPrevia" style="justify-content:flex-start"></div>
+      <span class="rotulo" style="display:block">Testar no OBS</span>
+      <div class="formatos" id="testesObs" style="justify-content:flex-start"></div>
+      <p class="aviso" id="avisoTeste"></p>
+    </div>
+    </div>
+    <div class="lado">
+      <div class="previa" id="previa-alertas"><small>prévia · use os botões de teste</small></div>
+      <div class="card">
+        <span class="rotulo">Colocar na StreamElements (uma vez só)</span>
+        <ol class="passos" style="margin-top:8px">
+          <li>Na StreamElements: <b>Overlays</b> → abra o overlay que já está no OBS → <b>+</b> → <b>Static / Custom</b> → <b>Custom widget</b></li>
+          <li>No widget: <b>Settings → Open editor</b>. Cole cada código abaixo na aba de mesmo nome (<b>HTML</b>, <b>CSS</b> e <b>JS</b>) e clique em <b>Done</b></li>
+          <li>Deixe o widget do tamanho do overlay (<b>1920 × 1080</b>, posição <b>0, 0</b>) e salve o overlay</li>
+          <li>Se o overlay já tem o <b>AlertBox</b> da StreamElements, desligue nele os tipos que estes alertas fazem, pra não tocar dois</li>
+          <li>Teste com o <b>Emulate</b> da StreamElements ou com os botões daqui</li>
+        </ol>
+        <div class="codigo"><span class="rotulo">HTML</span><textarea id="codHtml" readonly rows="2" aria-label="Código HTML"></textarea><button class="botao pequeno" data-copiar="codHtml">Copiar</button></div>
+        <div class="codigo"><span class="rotulo">CSS</span><textarea id="codCss" readonly rows="2" aria-label="Código CSS"></textarea><button class="botao pequeno" data-copiar="codCss">Copiar</button></div>
+        <div class="codigo"><span class="rotulo">JS</span><textarea id="codJs" readonly rows="8" aria-label="Código JS"></textarea><button class="botao pequeno" data-copiar="codJs">Copiar</button></div>
+        <p class="nota">Depois disso não precisa mais mexer na StreamElements: mudou aqui e clicou em <b>Salvar na live</b>, os alertas mudam sozinhos.</p>
+      </div>
+    </div>
+  </section>
+
   <div class="salvar" id="barraSalvar">
     <span class="situacao" id="situacao">Conferindo a live…</span>
     <button class="link-texto" id="carregarLive" type="button" hidden>carregar o que está na live</button>
@@ -551,8 +619,14 @@
     cena: 'fila', cenas: null,
     // bordas da câmera: uma por cena do OBS (borda = Borda 1, borda2, borda3, borda4), cada uma
     // com as próprias opções em bordas[nome]; os campos da aba mostram a escolhida, `perfil`
-    apelido: '', perfil: 'borda', bordas: null
+    apelido: '', perfil: 'borda', bordas: null,
+    // alertas (alertas.html): o visual que vai pro overlay da StreamElements
+    atema: 'rosa', aletra: 'cherry', asom: true, avolume: 0.6, aduracao: 7.5, amsg: true,
+    atseguir: 'Novo seguidor!', atsub: 'Novo sub!', atpresente: 'Sub de presente!', atraid: 'Raid!', atbits: 'Bits!', atdoacao: 'Doação!',
+    anometeste: 'marinheira_rosa'
   };
+  var ALERTA = { atema: 'tema', aletra: 'letra', asom: 'som', avolume: 'volume', aduracao: 'duracao', amsg: 'mensagens',
+    atseguir: 'tseguir', atsub: 'tsub', atpresente: 'tpresente', atraid: 'traid', atbits: 'tbits', atdoacao: 'tdoacao' };
   var PERFIS = ['borda', 'borda2', 'borda3', 'borda4'];
   var BORDA_FILA = { ftema: 'tema', fespessura: 'espessura', fvelocidade: 'velocidade', fnami: 'nami', ftamanho: 'tamanho', fnado: 'nado', fpulo: 'pulo', fbolhas: 'bolhas', fbrilhos: 'brilhos', fenfeites: 'enfeites' };
   var CAM_FILA = { fcamx: 'camx', fcamy: 'camy', fcamlargura: 'camlargura', fcamaltura: 'camaltura', fresolucao: 'resolucao' };
@@ -664,6 +738,13 @@
     return base + (q.length ? '?' + q.join('&') : '');
   }
   function linkFila() { return linkCena(estado.cena, estado); }
+  function linkAlertas() {
+    var q = [];
+    Object.keys(ALERTA).forEach(function (k) {
+      if (estado[k] !== PADRAO[k]) q.push(ALERTA[k] + '=' + encodeURIComponent(valor(k, estado[k])));
+    });
+    return new URL('alertas.html', location.href).href + (q.length ? '?' + q.join('&') : '');
+  }
 
   // ---------------------------------------------------------------- prévias
   // fonte = {x, y, w, h, ref}: a prévia mostra a fonte nesse tamanho e lugar, numa tela de exemplo
@@ -672,6 +753,7 @@
     if (!f) {
       f = document.createElement('iframe');
       f.title = 'Prévia';
+      f.allow = 'autoplay';
       caixa.insertBefore(f, caixa.firstChild);
     }
     if (f.dataset.url !== url) { f.dataset.url = url; f.src = url; }
@@ -724,10 +806,10 @@
   }
   if (window.ResizeObserver) {
     var ro = new ResizeObserver(function (es) { es.forEach(function (e) { escala(e.target); }); desenhaTela(); });
-    ro.observe($('previa-borda')); ro.observe($('previa-fila')); ro.observe($('tela'));
+    ro.observe($('previa-borda')); ro.observe($('previa-fila')); ro.observe($('previa-alertas')); ro.observe($('tela'));
   }
 
-  var aba = location.hash === '#fila' ? 'fila' : 'borda';
+  var aba = { '#fila': 'fila', '#alertas': 'alertas' }[location.hash] || 'borda';
   var espera = 0;
   function atualizar(agora) {
     guardar();
@@ -742,6 +824,7 @@
     mostraMedidas();
     textosCena();
     if (typeof textosBorda === 'function') textosBorda();
+    if (typeof marcaLetraAlerta === 'function') marcaLetraAlerta();
     situacaoLive();
     clearTimeout(espera);
     espera = setTimeout(function () {
@@ -752,9 +835,10 @@
         var fb = fonteBorda();
         if (fb.tela) previa($('previa-borda'), sep(lb) + 'fundo=1&auto=0');
         else previa($('previa-borda'), sep(lb) + 'fundo=0&caixa=1&auto=0', fb);
-        limpa('previa-fila');
+        limpa('previa-fila'); limpa('previa-alertas');
       }
-      else { previa($('previa-fila'), sep(lf) + 'auto=0'); limpa('previa-borda'); }
+      else if (aba === 'alertas') { previa($('previa-alertas'), sep(linkAlertas()) + 'auto=0&fundo=1'); limpa('previa-borda'); limpa('previa-fila'); }
+      else { previa($('previa-fila'), sep(lf) + 'auto=0'); limpa('previa-borda'); limpa('previa-alertas'); }
     }, agora ? 0 : 450);
   }
   function limpa(id) { var f = $(id).querySelector('iframe'); if (f) { f.remove(); } }
@@ -785,6 +869,7 @@
     document.querySelectorAll('.abas button').forEach(function (b) { b.setAttribute('aria-selected', b.dataset.aba === qual); });
     $('painel-borda').classList.toggle('ativo', qual === 'borda');
     $('painel-fila').classList.toggle('ativo', qual === 'fila');
+    $('painel-alertas').classList.toggle('ativo', qual === 'alertas');
     atualizar(true);
   }
 
@@ -809,6 +894,7 @@
     r.addEventListener('change', function () { if (r.checked) { estado.modo = r.value; atualizar(); } });
   });
   montaTemas($('temasF'), 'ftema');
+  montaTemas($('temasA'), 'atema');
 
   var formatos = {
     espessura: function (v) { return v.toFixed(1) + '×'; },
@@ -821,6 +907,8 @@
     ftamanho: function (v) { return v.toFixed(1) + '×'; },
     fpulo: function (v) { return v ? v + ' s' : 'sem pulo'; },
     minutos: function (v) { return v + (v > 1 ? ' minutos' : ' minuto'); },
+    aduracao: function (v) { return v.toFixed(1).replace('.', ',') + ' s'; },
+    avolume: function (v) { return Math.round(v * 100) + '%'; },
     nometam: function (v) { return v.toFixed(1) + '×'; },
     peixes: function (v) { return v ? v + (v > 1 ? ' peixinhos' : ' peixinho') : 'nenhum'; }
   };
@@ -830,12 +918,12 @@
     $('o-' + k).textContent = formatos[k](+el.value);
     el.addEventListener('input', function () { estado[k] = +el.value; $('o-' + k).textContent = formatos[k](+el.value); atualizar(); });
   });
-  ['nami', 'bolhas', 'brilhos', 'enfeites', 'aleatorio', 'tempo', 'habilidades', 'miniaturas', 'camera', 'nomeskin', 'pontos', 'fnami', 'fbolhas', 'fbrilhos', 'fenfeites'].forEach(function (k) {
+  ['nami', 'bolhas', 'brilhos', 'enfeites', 'aleatorio', 'tempo', 'habilidades', 'miniaturas', 'camera', 'nomeskin', 'pontos', 'fnami', 'fbolhas', 'fbrilhos', 'fenfeites', 'asom', 'amsg'].forEach(function (k) {
     var el = $(k);
     el.checked = estado[k];
     el.addEventListener('change', function () { estado[k] = el.checked; atualizar(); });
   });
-  ['nado', 'fnado', 'titulo', 'pilula', 'nome', 'relogio', 'rotulo', 'apelido'].forEach(function (k) {
+  ['nado', 'fnado', 'titulo', 'pilula', 'nome', 'relogio', 'rotulo', 'apelido', 'atseguir', 'atsub', 'atpresente', 'atraid', 'atbits', 'atdoacao', 'anometeste'].forEach(function (k) {
     var el = $(k);
     el.value = estado[k];
     el.addEventListener('input', function () { estado[k] = el.value; atualizar(); });
@@ -1030,11 +1118,12 @@
     var o = {};
     PERFIS.forEach(function (b) { o[b] = paramsDe(linkBordaDe(b, estado.bordas[b])); });
     Cenas.ORDEM.forEach(function (c) { o[c] = paramsDe(linkCena(c, estado.cenas[c])); });
+    o.alertas = paramsDe(linkAlertas());
     return o;
   }
   function igual(a, b) {
     var ordena = function (o) { var r = {}; Object.keys(o || {}).sort().forEach(function (k) { r[k] = o[k]; }); return JSON.stringify(r); };
-    return PERFIS.concat(Cenas.ORDEM).every(function (t) { return ordena(a[t]) === ordena(b[t]); });
+    return PERFIS.concat(Cenas.ORDEM, ['alertas']).every(function (t) { return ordena(a[t]) === ordena(b[t]); });
   }
   function mostra(texto, tipo) {
     var el = $('situacao');
@@ -1277,6 +1366,93 @@
     preencheBorda();
     atualizar(true);
   }
+
+  // ---------------------------------------------------------------- alertas
+  Object.keys(Ondas.LETRAS).forEach(function (k) {
+    var L = Ondas.LETRAS[k], b = document.createElement('button');
+    b.type = 'button';
+    b.dataset.letra = k;
+    b.style.font = L.css.replace('{px}', '19');
+    b.textContent = 'Nome';
+    var sm = document.createElement('small');
+    sm.textContent = L.nome;
+    b.appendChild(sm);
+    b.addEventListener('click', function () { estado.aletra = k; atualizar(); });
+    $('letrasA').appendChild(b);
+  });
+  function marcaLetraAlerta() {
+    document.querySelectorAll('#letrasA button').forEach(function (b) {
+      b.classList.toggle('sim', b.dataset.letra === estado.aletra);
+      b.firstChild.nodeValue = estado.anometeste || 'Nome';
+    });
+  }
+
+  var EXEMPLOS = {
+    seguir: { qtd: 1 }, sub: { qtd: 3, msg: 'Amo as lives, Nami main pra sempre!' }, presente: { qtd: 5 },
+    raid: { qtd: 42 }, bits: { qtd: 100, msg: 'Toma uns bits pra Nami!' }, doacao: { qtd: 10, msg: 'Pra ajudar no mês 💕' }
+  };
+  var ROTULOS = { seguir: '💕 Seguir', sub: '✨ Sub', presente: '🎁 Presente', raid: '🐟 Raid', bits: '💎 Bits', doacao: '💖 Doação' };
+  function dadosTeste(t) { return Object.assign({ evelinperes: 'alerta', tipo: t, nome: estado.anometeste || 'marinheira_rosa' }, EXEMPLOS[t]); }
+  Object.keys(ROTULOS).forEach(function (t) {
+    var b = document.createElement('button');
+    b.type = 'button';
+    b.textContent = '▶ ' + ROTULOS[t];
+    b.addEventListener('click', function () {
+      var f = $('previa-alertas').querySelector('iframe');
+      if (f && f.contentWindow) f.contentWindow.postMessage(dadosTeste(t), '*');
+    });
+    $('testesPrevia').appendChild(b);
+
+    var o = document.createElement('button');
+    o.type = 'button';
+    o.textContent = '📺 ' + ROTULOS[t];
+    o.addEventListener('click', function () {
+      var senha = $('senha').value.trim();
+      if (!senha) { try { senha = localStorage.getItem(SENHA) || ''; } catch (e) {} }
+      if (!senha) { $('avisoTeste').textContent = 'Digite a senha lá embaixo, na barrinha do Salvar na live.'; return pedeSenha('Digite a senha pra testar no OBS'); }
+      $('avisoTeste').textContent = 'Mandando…';
+      fetch('/api/alerta', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + senha },
+        body: JSON.stringify(dadosTeste(t))
+      }).then(function (r) { return r.json().then(function (d) { return { r: r, d: d }; }); }).then(function (x) {
+        if (x.r.status === 401) { try { localStorage.removeItem(SENHA); } catch (e) {} $('avisoTeste').textContent = x.d.erro || 'Senha errada.'; return pedeSenha('Senha errada'); }
+        if (!x.r.ok) { $('avisoTeste').textContent = x.d.erro || 'Não deu pra mandar.'; return; }
+        try { localStorage.setItem(SENHA, senha); } catch (e) {}
+        $('avisoTeste').textContent = '✓ Mandado! Telas abertas recebendo avisos agora: ' + x.d.telas + ' (inclui esta prévia e as outras telas do OBS).';
+      }).catch(function () { $('avisoTeste').textContent = 'Sem conexão com o servidor.'; });
+    });
+    $('testesObs').appendChild(o);
+  });
+
+  // o código do widget: só repassa os eventos; visual, som e textos ficam no site
+  (function () {
+    var site = location.origin;
+    $('codHtml').value = '<iframe id="alertas" src="' + site + '/alertas.html" allow="autoplay" frameborder="0"></iframe>';
+    $('codCss').value = 'html, body { margin: 0; overflow: hidden; background: transparent; }\n' +
+      '#alertas { position: fixed; inset: 0; width: 100%; height: 100%; border: 0; background: transparent; }';
+    $('codJs').value = [
+      '// Alertas da evelin_peres: repassa os eventos da StreamElements pra página de alertas do site.',
+      '// O visual, o som e os textos ficam no site (gerador → Salvar na live).',
+      "const quadro = document.getElementById('alertas');",
+      "const manda = (dados) => quadro.contentWindow.postMessage(Object.assign({ evelinperes: 'alerta' }, dados), '" + site + "');",
+      '',
+      "window.addEventListener('onEventReceived', (obj) => {",
+      '  const ouvinte = obj.detail.listener;',
+      '  const e = obj.detail.event || {};',
+      "  if (ouvinte === 'follower-latest') manda({ tipo: 'seguir', nome: e.name });",
+      "  else if (ouvinte === 'subscriber-latest') {",
+      "    if (e.bulkGifted) manda({ tipo: 'presente', nome: e.sender || e.name, qtd: e.amount });",
+      '    else if (e.isCommunityGift) return; // presentes de um pacote: o pacote já foi anunciado',
+      "    else if (e.gifted) manda({ tipo: 'presente', nome: e.sender || 'anônimo', para: e.name, qtd: 1 });",
+      "    else manda({ tipo: 'sub', nome: e.name, qtd: e.amount, msg: e.message });",
+      '  }',
+      "  else if (ouvinte === 'raid-latest') manda({ tipo: 'raid', nome: e.name, qtd: e.amount });",
+      "  else if (ouvinte === 'cheer-latest') manda({ tipo: 'bits', nome: e.name, qtd: e.amount, msg: e.message });",
+      "  else if (ouvinte === 'tip-latest') manda({ tipo: 'doacao', nome: e.name, qtd: e.amount, msg: e.message });",
+      '});'
+    ].join('\n');
+  })();
 
   trocaAba(aba);
 </script>

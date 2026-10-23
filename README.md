@@ -27,6 +27,8 @@ Links com opções escritas neles (`borda.html?tema=agua...`) continuam funciona
 | `borda.html` | Borda de ondas em volta da webcam, com a Nami nadando e o nome flutuando em cima. Fundo transparente | **1920 × 1080** (o tamanho da tela do OBS) |
 | `fila.html` | As telas de cena: estou na fila, a live já vai começar, obrigada por assistir e volto já (o servidor entrega a mesma página como `comecando.html`, `encerrando.html` e `voltoja.html`) | **1920 × 1080** (ou em pé, 1080 × 1920) |
 | `cenas.js` | Os textos e o relógio padrão de cada tela de cena | — |
+| `alertas.html` | Os alertas (seguir, sub, sub de presente, raid, bits, doação), que entram no overlay da StreamElements por um widget | o overlay da StreamElements (1920 × 1080) |
+| `paineis.html`, `paineis/` | O gerador das imagens dos painéis do Sobre da Twitch, e as quatro já prontas | — |
 | `index.html` | Gerador: escolhe cores, skins, cromas, textos e o lugar da câmera, mostra a prévia e salva na live | — |
 | `servidor.js` | Serve as páginas e guarda as opções da live (`/api/config`), avisando as telas abertas quando mudam (`/api/eventos`) | — |
 | `ondas.js` | O motor: as três camadas de onda (em volta da câmera ou da tela), espuma, bolhas, brilhos, enfeites, o nome com os peixinhos e a Nami desenhada no canvas | — |
@@ -154,6 +156,33 @@ Além das opções da borda:
 | `nomeskin=1` | Mostra o nome, a raridade e o croma por cima da arte (o padrão é só a arte) |
 
 Numa fonte em pé (ex.: 1080 × 1920) a tela se arruma sozinha: título em cima, depois tempo, câmera e a arte da skin.
+
+## Alertas (StreamElements)
+
+Cada alerta: uma onda rosa sobe do pé da tela, a Nami pula da água (às vezes girando) por cima do nome, que aparece flutuando, letra por letra, com uma frase embaixo e a mensagem num balãozinho. No fim tudo afunda. Cada tipo tem o seu efeito e o seu sininho (o som é feito na hora, sem arquivo):
+
+| Tipo | Título | Efeito |
+|---|---|---|
+| Seguir | Novo seguidor! | corações subindo |
+| Sub | Novo sub! (com os meses) | estrelinhas em volta do nome |
+| Sub de presente | Sub de presente! | conchas e pérolas caindo |
+| Raid | Raid! (com quantas pessoas) | um cardume de peixinhos atravessando a tela |
+| Bits | Bits! | cristais caindo |
+| Doação | Doação! (em reais) | pérolas e moedinhas pulando da água |
+
+Os alertas vêm do overlay da StreamElements por um **widget customizado** que só repassa os eventos pro `alertas.html` do site. O visual, o som e os textos ficam no site: mudou no gerador (aba **Alertas**) e clicou em **Salvar na live**, os alertas mudam sozinhos (se tiver um alerta tocando, a atualização espera ele acabar). Vários alertas seguidos entram numa fila.
+
+Pra colocar (uma vez só): StreamElements → **Overlays** → o overlay que já está no OBS → **+ → Static / Custom → Custom widget** → **Settings → Open editor** e cole o HTML, o CSS e o JS que o gerador mostra. Deixe o widget com 1920 × 1080 na posição 0, 0 e desligue no AlertBox os tipos que estes alertas fazem.
+
+Pra testar: o **Emulate** da StreamElements, ou os botões do gerador (os da prévia tocam só ali; os de **Testar no OBS** mandam pros alertas abertos e pedem a senha). `alertas.html?demo` toca todos em sequência e `alertas.html?teste=raid` toca um.
+
+Opções (no gerador, ou no link): `tema`, `letra` (do nome), `som=0`, `volume=0.6`, `duracao=7.5`, `mensagens=0`, e os títulos `tseguir`, `tsub`, `tpresente`, `traid`, `tbits`, `tdoacao`.
+
+## Painéis do Sobre
+
+`paineis.html` faz as imagens dos painéis do Sobre da Twitch no mesmo tema: céu de fundo do mar, raios de luz, bolhinhas, ondas embaixo, o título em letras flutuando com contorno branco e um enfeite (a Nami nadando, peixinhos, concha e estrela, ou pérolas). Saem em **640 × 200** (o dobro do que a Twitch mostra), com os cantos arredondados. Dá pra mudar o texto, o enfeite, as cores e a letra, adicionar painéis e baixar. As quatro primeiras (Sobre mim, Regras, Doações, Setup) já estão prontas em `paineis/`.
+
+Na Twitch: **Sobre → Editar painéis → Adicionar uma imagem**. O texto de baixo vai na descrição do painel.
 
 ## Personalizar
 

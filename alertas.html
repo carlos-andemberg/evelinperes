@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>evelin_peres · Alertas</title>
+<meta name="description" content="Alertas da live da evelin_peres no tema da Nami: seguir, sub, sub de presente, raid, bits e doação.">
+<meta name="theme-color" content="#ff8fbd">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="icon" href="favicon.ico" sizes="any">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cherry+Bomb+One&family=Fredoka:wght@600;700&family=Nunito:wght@800&family=Pacifico&family=Sniglet:wght@800&display=swap" rel="stylesheet">
+<style>
+  /* --u = 1% da largura de um palco 16:9 que cabe na tela */
+  :root { --u: min(1vw, 1.7778vh); --acento: #ff5c9e; --acento2: #ffa3cb; --texto: #8a2f5d; --linha: #ff8fbd; }
+  html, body { margin: 0; height: 100%; overflow: hidden; background: transparent; }
+  body.previa {
+    background: linear-gradient(rgba(20, 30, 45, 0.35), rgba(20, 30, 45, 0.55)),
+      url("https://ddragon.leagueoflegends.com/cdn/img/champion/splash/Nami_0.jpg") center / cover no-repeat, #1b2a3a;
+  }
+  canvas { position: fixed; inset: 0; display: block; pointer-events: none; }
+  #mar { z-index: 1; }
+  #bichos { z-index: 3; }
+
+  .cartao {
+    position: fixed; left: 50%; top: 40%; z-index: 2; width: calc(var(--u) * 92); text-align: center;
+    transform: translate(-50%, -50%); opacity: 0; pointer-events: none;
+  }
+  .cartao.entra { animation: entra 0.8s cubic-bezier(0.2, 1.5, 0.4, 1) forwards; }
+  .cartao.sai { animation: sai 0.9s ease-in forwards; }
+  @keyframes entra { from { opacity: 0; transform: translate(-50%, -25%) scale(0.45); } to { opacity: 1; transform: translate(-50%, -50%) scale(1); } }
+  @keyframes sai { from { opacity: 1; transform: translate(-50%, -50%) scale(1); } to { opacity: 0; transform: translate(-50%, 5%) scale(0.8); } }
+
+  .titulo {
+    font: 400 calc(var(--u) * 5)/1.3 Pacifico, cursive; color: var(--acento);
+    --c: calc(var(--u) * 0.32);
+    text-shadow: var(--c) 0 0 #fff, calc(var(--c) * -1) 0 0 #fff, 0 var(--c) 0 #fff, 0 calc(var(--c) * -1) 0 #fff,
+      var(--c) var(--c) 0 #fff, calc(var(--c) * -1) var(--c) 0 #fff, var(--c) calc(var(--c) * -1) 0 #fff, calc(var(--c) * -1) calc(var(--c) * -1) 0 #fff,
+      0 0 calc(var(--u) * 2) rgba(255, 92, 158, 0.55);
+  }
+  .nome { margin-top: calc(var(--u) * -0.4); font-size: calc(var(--u) * 8.2); line-height: 1.15; white-space: nowrap; }
+  .nome span {
+    display: inline-block; color: #fff; white-space: pre;
+    --c: calc(var(--u) * 0.42);
+    text-shadow: var(--c) 0 0 var(--acento), calc(var(--c) * -1) 0 0 var(--acento), 0 var(--c) 0 var(--acento), 0 calc(var(--c) * -1) 0 var(--acento),
+      var(--c) var(--c) 0 var(--acento), calc(var(--c) * -1) var(--c) 0 var(--acento), var(--c) calc(var(--c) * -1) 0 var(--acento), calc(var(--c) * -1) calc(var(--c) * -1) 0 var(--acento),
+      0 calc(var(--u) * 0.8) 0 var(--acento2), 0 0 calc(var(--u) * 2.4) rgba(255, 92, 158, 0.6);
+    animation: boia 2.4s ease-in-out infinite; animation-delay: calc(var(--i) * -0.17s);
+  }
+  @keyframes boia { 0%, 100% { transform: translateY(0) rotate(-3deg); } 50% { transform: translateY(calc(var(--u) * -0.9)) rotate(3deg); } }
+  .linha {
+    display: inline-block; margin-top: calc(var(--u) * 1.4); font: 700 calc(var(--u) * 2.5)/1.3 Fredoka, sans-serif; color: var(--texto);
+    background: #fff; padding: calc(var(--u) * 0.6) calc(var(--u) * 2.2); border-radius: 999px;
+    box-shadow: 0 0 0 calc(var(--u) * 0.3) var(--acento2), 0 calc(var(--u) * 0.6) calc(var(--u) * 1.8) rgba(255, 92, 158, 0.4);
+  }
+  .msg {
+    position: relative; max-width: calc(var(--u) * 58); margin: calc(var(--u) * 2) auto 0; font: 800 calc(var(--u) * 1.9)/1.4 Nunito, sans-serif;
+    color: var(--texto); background: rgba(255, 255, 255, 0.94); border-radius: calc(var(--u) * 1.8); padding: calc(var(--u) * 1) calc(var(--u) * 2);
+    box-shadow: 0 calc(var(--u) * 0.5) calc(var(--u) * 1.6) rgba(255, 92, 158, 0.3); overflow-wrap: anywhere;
+  }
+  .msg::before {
+    content: ''; position: absolute; left: 50%; top: calc(var(--u) * -1); transform: translateX(-50%);
+    border: calc(var(--u) * 1) solid transparent; border-top: 0; border-bottom-color: rgba(255, 255, 255, 0.94);
+  }
+  .msg:empty { display: none; }
+</style>
+</head>
+<body>
+<canvas id="mar"></canvas>
+<div class="cartao" id="cartao">
+  <div class="titulo" id="titulo"></div>
+  <div class="nome" id="nome"></div>
+  <div class="linha" id="linha"></div>
+  <div class="msg" id="msg"></div>
+</div>
+<canvas id="bichos"></canvas>
+
+<script src="ondas.js?v=dev"></script>
+<script>
+  /*
+   * Alertas no tema da Nami. Cada alerta: uma onda sobe, a Nami pula da água, o nome aparece
+   * flutuando e cada tipo tem o seu efeito (corações, estrelas, conchas, cardume, cristais, pérolas).
+   *
+   * De onde vêm os alertas:
+   *   - do widget da StreamElements, por postMessage: { evelinperes: 'alerta', tipo, nome, qtd, msg, para }
+   *   - do botão "Testar no OBS" do gerador (aviso do servidor, evento "alerta")
+   *   - do link: ?teste=sub toca um, ?demo toca todos em sequência
+   * O visual (cores, letra, som, textos) vem do que foi salvo no gerador, como as outras telas.
+   */
+  var $ = function (id) { return document.getElementById(id); };
+  var emIframe = window.parent !== window;
+  var fila = [], atual = null;
+
+  Ondas.automatico('alertas', function (q) {
+    var op = Ondas.parametros({
+      tema: 'rosa', letra: 'cherry', som: true, volume: 0.6, duracao: 7.5, mensagens: true,
+      tseguir: 'Novo seguidor!', tsub: 'Novo sub!', tpresente: 'Sub de presente!',
+      traid: 'Raid!', tbits: 'Bits!', tdoacao: 'Doação!',
+      teste: '', demo: false, fundo: !Ondas.emOBS && !emIframe
+    }, q);
+
+    var tema = Ondas.TEMAS[op.tema] || Ondas.TEMAS.rosa, raiz = document.documentElement.style;
+    raiz.setProperty('--acento', tema.acento);
+    raiz.setProperty('--acento2', tema.acento2);
+    raiz.setProperty('--texto', tema.texto);
+    raiz.setProperty('--linha', tema.linha);
+    if (op.fundo) document.body.classList.add('previa');
+    var L = Ondas.LETRAS[op.letra] || Ondas.LETRAS.cherry;
+    $('nome').style.fontFamily = L.css.replace(/^\d+ \{px\}px /, '');
+    $('nome').style.fontWeight = L.css.split(' ')[0];
+    var DUR = Math.max(4, Math.min(20, op.duracao));
+
+    // ---------------------------------------------------------- tipos de alerta
+    function plural(n, um, varios) { return n === 1 ? um : varios; }
+    function dinheiro(v) {
+      try { return Number(v).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }); } catch (e) { return 'R$ ' + v; }
+    }
+    var TIPOS = {
+      seguir: { titulo: op.tseguir, efeito: 'coracoes', notas: [784, 988, 1175, 1568],
+        linha: function () { return 'agora faz parte do cardume 💕'; } },
+      sub: { titulo: op.tsub, efeito: 'estrelas', notas: [659, 784, 988, 1319, 1568],
+        linha: function (d) { return d.qtd > 1 ? 'se inscreveu há ' + d.qtd + ' meses ✨' : 'se inscreveu ✨'; } },
+      presente: { titulo: op.tpresente, efeito: 'conchas', notas: [523, 659, 784, 1047, 1319, 1568],
+        linha: function (d) {
+          if (d.qtd > 1) return 'deu ' + d.qtd + ' subs de presente 🎁';
+          return d.para ? 'deu um sub de presente pra ' + d.para + ' 🎁' : 'deu um sub de presente 🎁';
+        } },
+      raid: { titulo: op.traid, efeito: 'cardume', notas: [392, 523, 659, 784, 1047, 1319],
+        linha: function (d) { return 'chegou com ' + d.qtd + plural(d.qtd, ' pessoa', ' pessoas') + ' 🐟'; } },
+      bits: { titulo: op.tbits, efeito: 'cristais', notas: [880, 1175, 1397, 1760],
+        linha: function (d) { return 'mandou ' + d.qtd + plural(d.qtd, ' bit', ' bits') + ' 💎'; } },
+      doacao: { titulo: op.tdoacao, efeito: 'perolas', notas: [698, 880, 1047, 1397, 1760],
+        linha: function (d) { return 'mandou ' + dinheiro(d.qtd) + ' 💖'; } }
+    };
+
+    // dados que chegam de fora: só texto curtinho e número
+    function limpa(d) {
+      var t = String(d.tipo || '').toLowerCase();
+      return {
+        tipo: t,
+        nome: String(d.nome || 'alguém').slice(0, 32),
+        para: d.para ? String(d.para).slice(0, 32) : '',
+        qtd: Math.max(1, Math.round(Number(d.qtd) || 1) || 1),
+        valor: Number(d.qtd) || 0,
+        msg: op.mensagens && d.msg ? String(d.msg).replace(/\s+/g, ' ').trim().slice(0, 140) : ''
+      };
+    }
+    var letrasProntas = false;
+    var fontes = [L.css.replace('{px}', '40'), '400 40px Pacifico', '700 40px Fredoka', '800 40px Nunito'];
+    Promise.race([
+      Promise.all(fontes.map(function (f) { return document.fonts ? document.fonts.load(f) : 0; })),
+      new Promise(function (ok) { setTimeout(ok, 2500); })
+    ]).catch(function () {}).then(function () { letrasProntas = true; if (!atual) proximo(); });
+
+    function enfileira(d) {
+      d = limpa(d);
+      if (!TIPOS[d.tipo]) return;
+      if (d.tipo === 'doacao') d.qtd = d.valor;
+      fila.push(d);
+      if (!atual && letrasProntas) proximo();
+    }
+    window.alerta = enfileira;
+
+    // ---------------------------------------------------------- som (feito na hora, sem arquivo)
+    var audio = null;
+    function toca(notas) {
+      if (!op.som) return;
+      try {
+        audio = audio || new (window.AudioContext || window.webkitAudioContext)();
+        if (audio.state === 'suspended') audio.resume();
+        var agora = audio.currentTime, vol = Math.max(0, Math.min(1, op.volume));
+        // splash: chiado que some
+        var n = audio.sampleRate * 0.5, buf = audio.createBuffer(1, n, audio.sampleRate), dados = buf.getChannelData(0);
+        for (var i = 0; i < n; i++) dados[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / n, 3);
+        var ruido = audio.createBufferSource(), filtro = audio.createBiquadFilter(), gr = audio.createGain();
+        ruido.buffer = buf; filtro.type = 'lowpass'; filtro.frequency.value = 1800; gr.gain.value = 0.35 * vol;
+        ruido.connect(filtro); filtro.connect(gr); gr.connect(audio.destination); ruido.start(agora);
+        // bloop da bolha
+        var o = audio.createOscillator(), g = audio.createGain();
+        o.type = 'sine'; o.frequency.setValueAtTime(260, agora + 0.05); o.frequency.exponentialRampToValueAtTime(900, agora + 0.2);
+        g.gain.setValueAtTime(0.0001, agora + 0.05); g.gain.exponentialRampToValueAtTime(0.35 * vol, agora + 0.08); g.gain.exponentialRampToValueAtTime(0.0001, agora + 0.3);
+        o.connect(g); g.connect(audio.destination); o.start(agora + 0.05); o.stop(agora + 0.35);
+        // sininho: arpejo do tipo
+        notas.forEach(function (f, j) {
+          var t = agora + 0.45 + j * 0.11, os = audio.createOscillator(), gs = audio.createGain();
+          os.type = 'triangle'; os.frequency.value = f;
+          gs.gain.setValueAtTime(0.0001, t); gs.gain.exponentialRampToValueAtTime(0.22 * vol, t + 0.02); gs.gain.exponentialRampToValueAtTime(0.0001, t + 0.9);
+          os.connect(gs); gs.connect(audio.destination); os.start(t); os.stop(t + 1);
+        });
+      } catch (e) { /* sem som, tudo bem */ }
+    }
+
+    // ---------------------------------------------------------- cartão com o nome
+    function mostraCartao(d) {
+      var T = TIPOS[d.tipo];
+      $('titulo').textContent = T.titulo;
+      var nome = $('nome');
+      nome.textContent = '';
+      Array.from(d.nome).forEach(function (letra, i) {
+        var s = document.createElement('span');
+        s.textContent = letra;
+        s.style.setProperty('--i', i);
+        nome.appendChild(s);
+      });
+      // nome comprido encolhe pra caber
+      nome.style.fontSize = '';
+      var max = window.innerWidth * 0.9;
+      requestAnimationFrame(function () {
+        if (nome.scrollWidth > max) nome.style.fontSize = (parseFloat(getComputedStyle(nome).fontSize) * max / nome.scrollWidth) + 'px';
+      });
+      $('linha').textContent = T.linha(d);
+      $('msg').textContent = d.msg;
+    }
+
+    // ---------------------------------------------------------- desenho
+    var mar = $('mar'), bichos = $('bichos'), cm = mar.getContext('2d'), cb = bichos.getContext('2d');
+    var W = 0, H = 0, dpr = 1, u = 1, TAU = Math.PI * 2;
+    function medir() {
+      dpr = Math.min(window.devicePixelRatio || 1, 2);
+      W = window.innerWidth; H = window.innerHeight;
+      [mar, bichos].forEach(function (c) {
+        c.width = Math.round(W * dpr); c.height = Math.round(H * dpr);
+        c.style.width = W + 'px'; c.style.height = H + 'px';
+      });
+      u = Math.min(W, H * 16 / 9) / 100;
+    }
+    medir();
+    addEventListener('resize', medir);
+
+    var parts = [], tempo = 0;
+    var fase = 0, olho = 1, piscar = 2;
+
+    function nivelOnda(t) {
+      if (!atual) return 0;
+      var subir = Math.min(1, t / 0.8), descer = Math.max(0, Math.min(1, (t - (DUR - 1)) / 1));
+      var e = (1 - Math.pow(1 - subir, 3)) * (1 - descer * descer);
+      return (H * 0.17 + Math.sin(t * 1.4) * u * 0.6) * e;
+    }
+    function superficie(x, t, nivel) {
+      return H - nivel + 0.8 * u * Math.sin(x / (14 * u) * TAU - t * 2.4) + 0.32 * u * Math.sin(x / (6 * u) * TAU + t * 1.3);
+    }
+    function camada(nivel, A, onda, vel, ph, cor, alpha, t, espuma) {
+      if (nivel < 1) return;
+      var base = H - nivel, passo = Math.max(4, u * 0.6), pts = [];
+      cm.beginPath();
+      cm.moveTo(-10, H + 10);
+      for (var x = -10; x <= W + 10; x += passo) {
+        var y = base + A * Math.sin(x / onda * TAU - t * vel + ph) + A * 0.4 * Math.sin(x / onda * 2.3 * TAU + t * vel * 0.55 + ph * 1.7);
+        pts.push([x, y]);
+        cm.lineTo(x, y);
+      }
+      cm.lineTo(W + 10, H + 10);
+      cm.closePath();
+      cm.globalAlpha = alpha;
+      if (cor === '#ffffff') {
+        var gd = cm.createLinearGradient(0, base - A, 0, H);
+        gd.addColorStop(0, 'rgba(255,255,255,0.96)'); gd.addColorStop(0.35, 'rgba(255,240,246,0.88)'); gd.addColorStop(1, hexA(tema.fundo2, 0.8));
+        cm.fillStyle = gd;
+      } else cm.fillStyle = cor;
+      cm.fill();
+      cm.globalAlpha = 1;
+      cm.beginPath();
+      pts.forEach(function (p, i) { if (i) cm.lineTo(p[0], p[1]); else cm.moveTo(p[0], p[1]); });
+      cm.strokeStyle = 'rgba(255,255,255,0.9)';
+      cm.lineWidth = Math.max(1.5, u * 0.18);
+      cm.stroke();
+      if (espuma) {
+        cm.fillStyle = '#fff';
+        pts.forEach(function (p, i) {
+          var v = Math.sin(p[0] / onda * TAU - t * vel + ph);
+          if (i % 3 === 0 && v > 0.55) { cm.beginPath(); cm.arc(p[0], p[1] + u * 0.2, u * (0.16 + (v - 0.55) * 0.5), 0, TAU); cm.fill(); }
+        });
+      }
+    }
+
+    function hexA(hex, a) {
+      var n = parseInt(hex.slice(1), 16);
+      return 'rgba(' + (n >> 16) + ',' + ((n >> 8) & 255) + ',' + (n & 255) + ',' + a + ')';
+    }
+    function nami(c, x, y, ang, esquerda, k, alpha) {
+      c.save();
+      c.globalAlpha = alpha === undefined ? 1 : alpha;
+      c.translate(x, y);
+      c.rotate(ang);
+      if (esquerda) c.scale(-1, 1);
+      c.scale(k, k);
+      c.shadowColor = 'rgba(255,255,255,0.85)';
+      c.shadowBlur = 6 * dpr;
+      Ondas.desenhaNami(c, fase, olho);
+      c.restore();
+    }
+
+    function coracao(c, s, cor) {
+      c.beginPath();
+      c.moveTo(0, s * 0.35);
+      c.bezierCurveTo(-s * 0.75, -s * 0.15, -s * 0.4, -s * 0.75, 0, -s * 0.3);
+      c.bezierCurveTo(s * 0.4, -s * 0.75, s * 0.75, -s * 0.15, 0, s * 0.35);
+      c.fillStyle = cor; c.fill();
+      c.lineWidth = s * 0.08; c.strokeStyle = '#fff'; c.stroke();
+      c.fillStyle = 'rgba(255,255,255,0.7)';
+      c.beginPath(); c.ellipse(-s * 0.26, -s * 0.3, s * 0.1, s * 0.07, -0.6, 0, TAU); c.fill();
+    }
+    function cristal(c, s, cor1, cor2) {
+      var g = c.createLinearGradient(-s * 0.6, -s, s * 0.6, s);
+      g.addColorStop(0, '#ffffff'); g.addColorStop(0.35, cor1); g.addColorStop(1, cor2);
+      c.beginPath(); c.moveTo(0, -s); c.lineTo(s * 0.62, -s * 0.25); c.lineTo(0, s); c.lineTo(-s * 0.62, -s * 0.25); c.closePath();
+      c.fillStyle = g; c.fill();
+      c.lineWidth = s * 0.07; c.strokeStyle = 'rgba(255,255,255,0.9)'; c.stroke();
+      c.beginPath(); c.moveTo(-s * 0.62, -s * 0.25); c.lineTo(s * 0.62, -s * 0.25); c.moveTo(0, -s); c.lineTo(0, s);
+      c.strokeStyle = 'rgba(255,255,255,0.45)'; c.lineWidth = s * 0.04; c.stroke();
+    }
+    function perola(c, s) {
+      var g = c.createRadialGradient(-s * 0.35, -s * 0.35, s * 0.1, 0, 0, s);
+      g.addColorStop(0, '#ffffff'); g.addColorStop(0.7, '#fbe9f2'); g.addColorStop(1, '#e6c2d6');
+      c.fillStyle = g; c.beginPath(); c.arc(0, 0, s, 0, TAU); c.fill();
+    }
+    function moeda(c, s, giro) {
+      c.scale(Math.max(0.15, Math.abs(Math.cos(giro))), 1);
+      var g = c.createLinearGradient(-s, -s, s, s);
+      g.addColorStop(0, '#fff2b3'); g.addColorStop(0.5, '#ffd25e'); g.addColorStop(1, '#f0a42a');
+      c.fillStyle = g; c.beginPath(); c.arc(0, 0, s, 0, TAU); c.fill();
+      c.lineWidth = s * 0.14; c.strokeStyle = '#fff6d6'; c.beginPath(); c.arc(0, 0, s * 0.68, 0, TAU); c.stroke();
+    }
+
+    function nova(p) { parts.push(p); return p; }
+    function respingo(x, y, n) {
+      for (var i = 0; i < n; i++) {
+        var a = -Math.PI / 2 + (Math.random() - 0.5) * 1.6, v = (8 + Math.random() * 14) * u;
+        nova({ tipo: 'gota', x: x, y: y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, ay: 30 * u, s: (0.25 + Math.random() * 0.4) * u, vida: 0, max: 0.7 + Math.random() * 0.4, cor: i % 3 ? '#fff' : tema.acento2 });
+      }
+    }
+
+    // efeitos de cada tipo, soltos aos pouquinhos enquanto o alerta está na tela
+    var proxEfeito = 0, cardumeSolto = false;
+    function efeitos(t, dt, nivel) {
+      if (!atual || t < 0.9 || t > DUR - 1.3) return;
+      var e = TIPOS[atual.tipo].efeito, P = Ondas.PEIXES;
+      proxEfeito -= dt;
+      if (e === 'cardume' && !cardumeSolto) {
+        cardumeSolto = true;
+        for (var i = 0; i < 30; i++) {
+          var alto = i % 4 === 0;
+          nova({ tipo: 'peixe', x: -(Math.random() * W * 0.7 + 6 * u), y: alto ? H * (0.1 + Math.random() * 0.1) : H * (0.58 + Math.random() * 0.12),
+            vx: W * (0.22 + Math.random() * 0.1), vy: 0, s: (3.2 + Math.random() * 2) * u, cor: P[i % P.length], fase: Math.random() * TAU, vida: 0, max: 7 });
+        }
+      }
+      if (proxEfeito > 0) return;
+      if (e === 'coracoes') {
+        proxEfeito = 0.12;
+        nova({ tipo: 'coracao', x: W * (0.1 + Math.random() * 0.8), y: H - nivel, vx: 0, vy: -(10 + Math.random() * 8) * u, s: (1.6 + Math.random() * 1.8) * u,
+          cor: Math.random() < 0.6 ? tema.acento : tema.acento2, fase: Math.random() * TAU, vida: 0, max: 3 + Math.random() });
+      } else if (e === 'estrelas') {
+        proxEfeito = 0.06;
+        var a = Math.random() * TAU, r = (14 + Math.random() * 10) * u;
+        nova({ tipo: 'brilho', x: W / 2 + Math.cos(a) * r * 2.2, y: H * 0.4 + Math.sin(a) * r, vx: Math.cos(a) * 4 * u, vy: Math.sin(a) * 4 * u, s: (0.9 + Math.random() * 1.4) * u,
+          cor: Math.random() < 0.5 ? '#ffffff' : tema.estrela, vida: 0, max: 0.9 + Math.random() * 0.6 });
+      } else if (e === 'conchas') {
+        proxEfeito = 0.16;
+        nova({ tipo: Math.random() < 0.6 ? 'concha' : 'perola', x: W * (0.05 + Math.random() * 0.9), y: -3 * u, vx: (Math.random() - 0.5) * 3 * u, vy: (8 + Math.random() * 6) * u, ay: 6 * u,
+          rot: Math.random() * TAU, vr: (Math.random() - 0.5) * 3, s: (1.4 + Math.random() * 1.2) * u, vida: 0, max: 4 });
+      } else if (e === 'cristais') {
+        proxEfeito = 0.1;
+        var cores = [[tema.acento2, tema.acento], ['#c9a8ff', '#8f5cff'], ['#a6f0f2', '#3cc4c4']][Math.floor(Math.random() * 3)];
+        nova({ tipo: 'cristal', x: W * (0.05 + Math.random() * 0.9), y: -3 * u, vx: 0, vy: (12 + Math.random() * 8) * u, ay: 10 * u,
+          rot: (Math.random() - 0.5) * 0.6, vr: (Math.random() - 0.5) * 2, s: (1.2 + Math.random() * 1.3) * u, cores: cores, vida: 0, max: 3 });
+      } else if (e === 'perolas') {
+        proxEfeito = 0.09;
+        var x0 = W * (0.15 + Math.random() * 0.7), ang = -Math.PI / 2 + (Math.random() - 0.5) * 0.9, v0 = (28 + Math.random() * 14) * u;
+        nova({ tipo: Math.random() < 0.5 ? 'moeda' : 'perola', x: x0, y: H - nivel, vx: Math.cos(ang) * v0, vy: Math.sin(ang) * v0, ay: 36 * u,
+          rot: Math.random() * TAU, vr: 6 + Math.random() * 6, s: (0.9 + Math.random() * 0.8) * u, vida: 0, max: 2.6 });
+      }
+    }
+
+    function desenhaParts(dt) {
+      for (var i = parts.length - 1; i >= 0; i--) {
+        var p = parts[i];
+        p.vida += dt;
+        if (p.vida > p.max || p.y > H + 10 * u || p.x > W + 12 * u) { parts.splice(i, 1); continue; }
+        p.vy += (p.ay || 0) * dt;
+        p.x += p.vx * dt; p.y += p.vy * dt;
+        if (p.vr) p.rot += p.vr * dt;
+        var a = Math.min(1, p.vida * 4, (p.max - p.vida) * 2.5);
+        cb.save();
+        cb.globalAlpha = Math.max(0, a);
+        if (p.tipo === 'gota') {
+          cb.fillStyle = p.cor; cb.beginPath(); cb.arc(p.x, p.y, p.s, 0, TAU); cb.fill();
+        } else if (p.tipo === 'bolha') {
+          var bx = p.x + Math.sin(p.vida * 4 + p.fase) * u * 0.6;
+          cb.lineWidth = Math.max(1, u * 0.12);
+          cb.fillStyle = 'rgba(255,255,255,0.28)'; cb.strokeStyle = '#fff';
+          cb.beginPath(); cb.arc(bx, p.y, p.s, 0, TAU); cb.fill(); cb.stroke();
+          cb.fillStyle = '#fff'; cb.beginPath(); cb.arc(bx - p.s * 0.35, p.y - p.s * 0.35, p.s * 0.3, 0, TAU); cb.fill();
+        } else if (p.tipo === 'coracao') {
+          cb.translate(p.x + Math.sin(p.vida * 3 + p.fase) * 1.4 * u, p.y);
+          cb.rotate(Math.sin(p.vida * 2 + p.fase) * 0.3);
+          coracao(cb, p.s, p.cor);
+        } else if (p.tipo === 'brilho') {
+          Ondas.brilhinho(cb, p.x, p.y, p.s * Math.sin(Math.PI * p.vida / p.max), p.cor);
+        } else if (p.tipo === 'concha') {
+          cb.translate(p.x, p.y); cb.rotate(p.rot); Ondas.concha(cb, p.s, tema.acento2);
+        } else if (p.tipo === 'perola') {
+          cb.translate(p.x, p.y); perola(cb, p.s * 0.7);
+        } else if (p.tipo === 'cristal') {
+          cb.translate(p.x, p.y); cb.rotate(p.rot); cristal(cb, p.s, p.cores[0], p.cores[1]);
+        } else if (p.tipo === 'moeda') {
+          cb.translate(p.x, p.y); moeda(cb, p.s, p.rot);
+        } else if (p.tipo === 'peixe') {
+          cb.globalAlpha = Math.min(1, (p.max - p.vida) * 2);
+          cb.translate(p.x, p.y + Math.sin(p.vida * 5 + p.fase) * 0.8 * u);
+          cb.shadowColor = 'rgba(255,255,255,0.9)'; cb.shadowBlur = 4 * dpr;
+          Ondas.peixinho(cb, p.s, p.vida * 10 + p.fase, p.cor);
+        }
+        cb.restore();
+      }
+    }
+
+    // ---------------------------------------------------------- linha do tempo de cada alerta
+    var t0 = 0, cartaoSaiu = false, splashes = {};
+    function comeca(d) {
+      t0 = performance.now();
+      cartaoSaiu = false;
+      splashes = {};
+      cardumeSolto = false;
+      proxEfeito = 0;
+      mostraCartao(d);
+      var c = $('cartao');
+      c.classList.remove('entra', 'sai');
+      void c.offsetWidth;
+      setTimeout(function () { if (atual === d) c.classList.add('entra'); }, 900);
+      toca(TIPOS[d.tipo].notas);
+    }
+    function proximo() {
+      atual = fila.shift() || null;
+      if (atual) comeca(atual);
+      else $('cartao').classList.remove('entra', 'sai');
+    }
+
+    var ultimo = 0;
+    function quadro(agora) {
+      requestAnimationFrame(quadro);
+      if (!ultimo) ultimo = agora;
+      var dt = Math.min(0.05, (agora - ultimo) / 1000);
+      ultimo = agora;
+      tempo += dt;
+      fase += dt * 7;
+      piscar -= dt;
+      if (piscar < 0) { var q = -piscar / 0.16; if (q >= 1) { piscar = 2 + Math.random() * 3; olho = 1; } else olho = Math.abs(1 - 2 * q); }
+
+      cm.setTransform(dpr, 0, 0, dpr, 0, 0); cm.clearRect(0, 0, W, H);
+      cb.setTransform(dpr, 0, 0, dpr, 0, 0); cb.clearRect(0, 0, W, H);
+      if (!atual && !parts.length) return;
+
+      var t = atual ? (agora - t0) / 1000 : 99, nivel = nivelOnda(t);
+      if (atual && t > DUR - 1.1 && !cartaoSaiu) { cartaoSaiu = true; $('cartao').classList.remove('entra'); $('cartao').classList.add('sai'); }
+      if (atual && t >= DUR) { proximo(); return; }
+
+      // ondas (a Nami nada entre a do meio e a da frente)
+      camada(nivel + 2.4 * u, 1.4 * u, 26 * u, 1.6, 0, tema.fundo, 0.95, tempo, false);
+      camada(nivel + 1.1 * u, 1.1 * u, 19 * u, 2.0, 1.7, tema.meio, 0.92, tempo, false);
+
+      var k = u * 0.105, X0 = W * 0.08, X1 = W * 0.9, tP0 = 0.5, tP1 = 2.1;
+      var sup = function (x) { return superficie(x, tempo, nivel); };
+      if (atual && t >= tP0 && t < tP1) {
+        // o pulo: sai da água à esquerda, passa por cima do nome e cai à direita, girando no alto
+        var q = (t - tP0) / (tP1 - tP0), x = X0 + (X1 - X0) * q, base = sup(x), alto = Math.max(u * 8, base - H * 0.13);
+        var y = base - Math.sin(Math.PI * q) * alto;
+        var dx = (X1 - X0) / (tP1 - tP0), dy = -Math.PI * Math.cos(Math.PI * q) * alto / (tP1 - tP0);
+        var giro = q > 0.35 && q < 0.65 ? TAU * (q - 0.35) / 0.3 : 0;
+        nami(cb, x, y, Math.atan2(dy, dx) + giro, false, k);
+        if (!splashes.sai) { splashes.sai = true; respingo(X0, sup(X0), 18); }
+      } else if (atual && t >= tP1) {
+        // depois nada na onda, voltando pra esquerda, e mergulha no fim
+        if (!splashes.cai) { splashes.cai = true; respingo(X1, sup(X1), 20); }
+        var xn = X1 - (t - tP1) * W * 0.07, mergulho = Math.max(0, (t - (DUR - 1.2)) / 1.2);
+        nami(cm, xn, sup(xn) + u * 0.8 + mergulho * u * 8, Math.sin(tempo * 2) * 0.05, true, k, 1 - mergulho);
+      }
+
+      camada(nivel, 0.8 * u, 14 * u, 2.4, 3.1, '#ffffff', 0.95, tempo, true);
+
+      // bolhas subindo da água
+      if (atual && nivel > u && Math.random() < dt * 9) {
+        nova({ tipo: 'bolha', x: Math.random() * W, y: H - nivel + u, vx: 0, vy: -(6 + Math.random() * 8) * u, s: (0.4 + Math.random() * 0.9) * u, fase: Math.random() * TAU, vida: 0, max: 1.6 + Math.random() * 1.6 });
+      }
+      efeitos(t, dt, nivel);
+      desenhaParts(dt);
+    }
+    requestAnimationFrame(quadro);
+
+    // ---------------------------------------------------------- de onde chegam os alertas
+    addEventListener('message', function (e) {
+      var d = e.data;
+      if (d && typeof d === 'object' && d.evelinperes === 'alerta') enfileira(d);
+    });
+    // botão "Testar no OBS" do gerador
+    if (window.EventSource && location.protocol.indexOf('http') === 0) {
+      try {
+        var es = new EventSource('/api/eventos');
+        es.addEventListener('alerta', function (e) { try { enfileira(JSON.parse(e.data)); } catch (err) {} });
+      } catch (e) {}
+    }
+
+    var EXEMPLOS = {
+      seguir: { tipo: 'seguir', nome: 'marinheira_rosa' },
+      sub: { tipo: 'sub', nome: 'tidecaller', qtd: 3, msg: 'Amo as lives, Nami main pra sempre!' },
+      presente: { tipo: 'presente', nome: 'peixinho_dourado', qtd: 5 },
+      raid: { tipo: 'raid', nome: 'cardume_fofo', qtd: 42 },
+      bits: { tipo: 'bits', nome: 'bolhinha', qtd: 100, msg: 'Toma uns bits pra Nami!' },
+      doacao: { tipo: 'doacao', nome: 'conchinha', qtd: 10, msg: 'Pra ajudar no mês 💕' }
+    };
+    window.EXEMPLOS_ALERTA = EXEMPLOS;
+    if (op.teste && EXEMPLOS[op.teste]) setTimeout(function () { enfileira(EXEMPLOS[op.teste]); }, 400);
+    if (op.demo) {
+      var ordem = Object.keys(EXEMPLOS), i = 0;
+      var roda = function () { if (!atual && !fila.length) { enfileira(EXEMPLOS[ordem[i % ordem.length]]); i++; } setTimeout(roda, 800); };
+      setTimeout(roda, 400);
+    }
+  }, { podeRecarregar: function () { return !atual && !fila.length; } });
+</script>
+</body>
+</html>

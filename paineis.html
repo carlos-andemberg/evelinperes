@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>evelin_peres · Painéis do Sobre</title>
+<meta name="description" content="Imagens dos painéis do Sobre da Twitch da evelin_peres, no tema da Nami.">
+<meta name="theme-color" content="#ff8fbd">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="icon" href="favicon.ico" sizes="any">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cherry+Bomb+One&family=Fredoka:wght@500;600;700&family=Nunito:wght@600;700;800&family=Pacifico&family=Sniglet:wght@800&display=swap" rel="stylesheet">
+<style>
+  :root { --rosa: #ff5c9e; --rosa2: #ffa3cb; --rosa3: #ffd3e5; --clarinho: #fff4f8; --texto: #6e2449; --suave: #a4607f; --titulo: 'Fredoka', 'Nunito', sans-serif; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; min-height: 100vh; font-family: 'Nunito', 'Segoe UI', sans-serif; color: var(--texto);
+    background: radial-gradient(ellipse at 20% 0%, #fff 0%, transparent 55%), radial-gradient(ellipse at 90% 80%, #c9f1f3 0%, transparent 45%), linear-gradient(#fff8fb, #ffe6f0 60%, #ffd6e7);
+    background-attachment: fixed;
+  }
+  main { max-width: 980px; margin: 0 auto; padding: 48px 20px 80px; }
+  header { text-align: center; margin-bottom: 26px; }
+  header a.voltar { display: inline-block; margin-bottom: 10px; color: var(--rosa); font-weight: 800; text-decoration: none; }
+  h1 {
+    margin: 0; font: 700 clamp(36px, 7vw, 58px)/1 var(--titulo); color: var(--rosa);
+    text-shadow: 3px 0 #fff, -3px 0 #fff, 0 3px #fff, 0 -3px #fff, 2px 2px #fff, -2px 2px #fff, 2px -2px #fff, -2px -2px #fff, 0 7px 0 var(--rosa2);
+  }
+  header p { max-width: 620px; margin: 14px auto 0; color: var(--suave); font-weight: 700; line-height: 1.5; }
+  .card { background: rgba(255, 255, 255, 0.9); border: 2px solid #fff; border-radius: 22px; padding: 20px; box-shadow: 0 0 0 2px var(--rosa3), 0 14px 40px rgba(255, 92, 158, 0.14); margin-bottom: 18px; }
+  .rotulo { font-size: 12px; font-weight: 800; letter-spacing: 0.14em; text-transform: uppercase; color: var(--suave); display: block; margin-bottom: 8px; }
+  .opcoes { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chips button {
+    font: 700 15px var(--titulo); color: var(--rosa); background: #fff; border: 2px solid var(--rosa3); border-radius: 999px; padding: 7px 14px; cursor: pointer;
+  }
+  .chips button.sim { background: var(--rosa); color: #fff; border-color: var(--rosa); }
+  .painel { display: grid; grid-template-columns: minmax(0, 1fr) 260px; gap: 18px; align-items: center; }
+  .painel canvas { width: 100%; max-width: 640px; height: auto; display: block; }
+  .controles { display: flex; flex-direction: column; gap: 10px; }
+  input[type=text], select {
+    width: 100%; font: 700 15px 'Nunito', sans-serif; color: var(--texto); background: var(--clarinho); border: 2px solid var(--rosa3); border-radius: 12px; padding: 9px 12px; outline: none;
+  }
+  input[type=text]:focus, select:focus { border-color: var(--rosa2); background: #fff; }
+  .botoes { display: flex; gap: 8px; }
+  .botao {
+    font: 700 15px var(--titulo); border: 0; border-radius: 12px; padding: 10px 16px; cursor: pointer; color: #fff; background: var(--rosa);
+    box-shadow: 0 4px 0 #e0437f; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; flex: 1;
+  }
+  .botao.claro { background: #fff; color: var(--rosa); box-shadow: 0 0 0 2px var(--rosa3), 0 4px 0 var(--rosa3); }
+  .botao:active { transform: translateY(3px); box-shadow: 0 1px 0 #e0437f; }
+  .acoes { display: flex; gap: 10px; justify-content: center; margin-top: 6px; }
+  .acoes .botao { flex: none; padding: 12px 22px; }
+  .dica { text-align: center; color: var(--suave); font-weight: 700; font-size: 14px; line-height: 1.5; }
+  @media (max-width: 720px) {
+    .painel { grid-template-columns: 1fr; }
+    .opcoes { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <a class="voltar" href="./">← voltar pro gerador</a>
+    <h1>Painéis do Sobre</h1>
+    <p>As imagens que vão em cima de cada painel da Twitch (Sobre mim, Regras...). Saem em <b>640 × 200</b>, o dobro do que a Twitch mostra, pra ficar nítido. Mude o texto, escolha o enfeite e baixe.</p>
+  </header>
+
+  <div class="card opcoes">
+    <div><span class="rotulo">Cores</span><div class="chips" id="temas"></div></div>
+    <div><span class="rotulo">Letra</span><div class="chips" id="letras"></div></div>
+  </div>
+
+  <div id="lista"></div>
+
+  <div class="acoes">
+    <button class="botao claro" id="adicionar" type="button">+ Adicionar painel</button>
+    <button class="botao" id="baixarTodos" type="button">⬇ Baixar todos</button>
+  </div>
+  <p class="dica">Na Twitch: <b>Sobre → Editar painéis → Adicionar uma imagem</b>. O texto de baixo (as regras, o setup) vai na descrição do painel.</p>
+</main>
+
+<script src="ondas.js?v=dev"></script>
+<script>
+  // ---------------------------------------------------------------- estado
+  var CHAVE = 'evelinperes-paineis';
+  var ENFEITES = { nami: 'Nami nadando', peixes: 'Peixinhos', conchas: 'Concha e estrela', perolas: 'Pérolas' };
+  var estado = { tema: 'rosa', letra: 'cherry', paineis: [
+    { titulo: 'Sobre mim', enfeite: 'nami' },
+    { titulo: 'Regras', enfeite: 'peixes' },
+    { titulo: 'Doações', enfeite: 'perolas' },
+    { titulo: 'Setup', enfeite: 'conchas' }
+  ] };
+  try { var salvo = JSON.parse(localStorage.getItem(CHAVE)); if (salvo && salvo.paineis) estado = salvo; } catch (e) {}
+  function guardar() { try { localStorage.setItem(CHAVE, JSON.stringify(estado)); } catch (e) {} }
+
+  var W = 640, H = 200, TAU = Math.PI * 2;
+
+  // números "aleatórios" que não mudam a cada desenho (cada painel tem os seus)
+  function sorteio(semente) {
+    var s = semente * 9301 + 49297;
+    return function () { s = (s * 9301 + 49297) % 233280; return s / 233280; };
+  }
+
+  function hexA(hex, a) {
+    var n = parseInt(hex.slice(1), 16);
+    return 'rgba(' + (n >> 16) + ',' + ((n >> 8) & 255) + ',' + (n & 255) + ',' + a + ')';
+  }
+
+  function cantos(c, x, y, w, h, r) {
+    c.beginPath();
+    c.moveTo(x + r, y);
+    c.arcTo(x + w, y, x + w, y + h, r);
+    c.arcTo(x + w, y + h, x, y + h, r);
+    c.arcTo(x, y + h, x, y, r);
+    c.arcTo(x, y, x + w, y, r);
+    c.closePath();
+  }
+
+  function onda(c, base, A, k, fase, cor, alpha, espuma) {
+    c.beginPath();
+    c.moveTo(0, H + 5);
+    var pts = [];
+    for (var x = -6; x <= W + 6; x += 6) {
+      var y = base + A * Math.sin(k * x + fase) + A * 0.4 * Math.sin(k * 2.3 * x + fase * 1.7);
+      pts.push([x, y]);
+      c.lineTo(x, y);
+    }
+    c.lineTo(W + 6, H + 5);
+    c.closePath();
+    c.globalAlpha = alpha;
+    c.fillStyle = cor;
+    c.fill();
+    c.globalAlpha = 1;
+    c.beginPath();
+    pts.forEach(function (p, i) { if (i) c.lineTo(p[0], p[1]); else c.moveTo(p[0], p[1]); });
+    c.strokeStyle = 'rgba(255,255,255,0.9)';
+    c.lineWidth = 2;
+    c.stroke();
+    if (espuma) {
+      c.fillStyle = '#fff';
+      pts.forEach(function (p, i) {
+        var v = Math.sin(k * p[0] + fase);
+        if (i % 3 === 0 && v > 0.55) { c.beginPath(); c.arc(p[0], p[1] + 2, 1.6 + (v - 0.55) * 4, 0, TAU); c.fill(); }
+      });
+    }
+  }
+
+  function peixe(c, x, y, tam, esquerda, cor, giro) {
+    c.save();
+    c.translate(x, y);
+    if (esquerda) c.scale(-1, 1);
+    c.rotate(giro || 0);
+    c.shadowColor = 'rgba(255,255,255,0.9)';
+    c.shadowBlur = 4;
+    Ondas.peixinho(c, tam, 1.2, cor);
+    c.restore();
+  }
+
+  function bolha(c, x, y, r) {
+    c.fillStyle = 'rgba(255,255,255,0.3)';
+    c.strokeStyle = 'rgba(255,255,255,0.95)';
+    c.lineWidth = 1.6;
+    c.beginPath(); c.arc(x, y, r, 0, TAU); c.fill(); c.stroke();
+    c.fillStyle = '#fff';
+    c.beginPath(); c.arc(x - r * 0.35, y - r * 0.35, r * 0.3, 0, TAU); c.fill();
+  }
+
+  // o título com letras flutuando: contorno branco, sombrinha rosa e degradê
+  function titulo(c, texto, cx, cy, tema, letra, semente) {
+    var L = Ondas.LETRAS[letra] || Ondas.LETRAS.cherry, txt = letra === 'pacifico' ? texto : texto.toUpperCase();
+    var fs = (letra === 'pacifico' ? 62 : 66) * L.esc;
+    c.font = L.css.replace('{px}', fs.toFixed(1));
+    var cursiva = L.cursiva, pedacos = cursiva ? [txt] : Array.from(txt);
+    var largs = pedacos.map(function (p) { return c.measureText(p).width; });
+    var total = largs.reduce(function (a, b) { return a + b; }, 0) + (cursiva ? 0 : (pedacos.length - 1) * fs * 0.02);
+    // encolhe se não couber
+    var max = W * 0.78;
+    if (total > max) {
+      fs *= max / total;
+      c.font = L.css.replace('{px}', fs.toFixed(1));
+      largs = pedacos.map(function (p) { return c.measureText(p).width; });
+      total = largs.reduce(function (a, b) { return a + b; }, 0) + (cursiva ? 0 : (pedacos.length - 1) * fs * 0.02);
+    }
+    var x = cx - total / 2, pos = pedacos.map(function (p, j) {
+      var q = { x: x, w: largs[j], dy: cursiva ? 0 : Math.sin(j * 0.9 + semente) * fs * 0.06, rot: cursiva ? -0.03 : Math.sin(j * 1.3 + semente) * 0.06 };
+      x += largs[j] + (cursiva ? 0 : fs * 0.02);
+      return q;
+    });
+    var grad = c.createLinearGradient(0, cy - fs * 0.5, 0, cy + fs * 0.5);
+    grad.addColorStop(0, tema.linha); grad.addColorStop(1, tema.acento);
+    c.textBaseline = 'middle';
+    c.textAlign = 'left';
+    c.lineJoin = 'round';
+    [0, 1, 2].forEach(function (passada) {
+      pedacos.forEach(function (p, j) {
+        var q = pos[j];
+        c.save();
+        c.translate(q.x + q.w / 2, cy + q.dy);
+        c.rotate(q.rot);
+        if (passada === 0) {
+          c.shadowColor = hexA(tema.acento, 0.55);
+          c.shadowBlur = 14;
+          c.shadowOffsetY = 3;
+          c.lineWidth = fs * 0.26;
+          c.strokeStyle = '#ffffff';
+          c.strokeText(p, -q.w / 2, 0);
+        } else if (passada === 1) {
+          c.fillStyle = tema.acento2;
+          c.fillText(p, -q.w / 2, fs * 0.07);
+        } else {
+          c.fillStyle = grad;
+          c.fillText(p, -q.w / 2, 0);
+        }
+        c.restore();
+      });
+    });
+    return { esquerda: cx - total / 2, direita: cx + total / 2, fs: fs };
+  }
+
+  function desenhaPainel(c, p, i) {
+    var tema = Ondas.TEMAS[estado.tema] || Ondas.TEMAS.rosa, rnd = sorteio(i * 7 + 3), fase = i * 1.9;
+    c.setTransform(1, 0, 0, 1, 0, 0);
+    c.clearRect(0, 0, W, H);
+    c.save();
+    cantos(c, 3, 3, W - 6, H - 6, 26);
+    c.clip();
+
+    // céu do fundo do mar
+    var g = c.createLinearGradient(0, 0, 0, H);
+    g.addColorStop(0, tema.ceu[0]); g.addColorStop(0.55, tema.ceu[1]); g.addColorStop(1, tema.ceu[2]);
+    c.fillStyle = g;
+    c.fillRect(0, 0, W, H);
+    [[0.15, 0.05, '#ffffff', 0.9], [0.88, 0.9, tema.acento2, 0.35], [0.6, 0.2, '#9fe7ee', 0.18]].forEach(function (m) {
+      var rg = c.createRadialGradient(W * m[0], H * m[1], 0, W * m[0], H * m[1], W * 0.45);
+      rg.addColorStop(0, hexA(m[2], m[3])); rg.addColorStop(1, hexA(m[2], 0));
+      c.fillStyle = rg;
+      c.fillRect(0, 0, W, H);
+    });
+    // raios de luz
+    for (var k = 0; k < 5; k++) {
+      var rx = W * (0.08 + k * 0.22) + rnd() * 30, lg = c.createLinearGradient(0, 0, 0, H);
+      lg.addColorStop(0, 'rgba(255,255,255,0.5)'); lg.addColorStop(1, 'rgba(255,255,255,0)');
+      c.fillStyle = lg;
+      c.beginPath(); c.moveTo(rx - 8, 0); c.lineTo(rx + 8, 0); c.lineTo(rx + 40, H); c.lineTo(rx - 10, H); c.closePath(); c.fill();
+    }
+    // bolhinhas
+    for (k = 0; k < 9; k++) bolha(c, 20 + rnd() * (W - 40), 18 + rnd() * (H * 0.55), 2.5 + rnd() * 5);
+
+    // ondas lá embaixo (a Nami nada entre a do meio e a da frente)
+    onda(c, H * 0.76, 7, 0.022, fase, tema.fundo, 0.95, false);
+    onda(c, H * 0.83, 6, 0.031, fase + 1.3, tema.meio, 0.92, false);
+    if (p.enfeite === 'nami') {
+      c.save();
+      c.translate(W * 0.15, H * 0.8);
+      c.rotate(-0.06);
+      c.scale(0.95, 0.95);
+      c.shadowColor = 'rgba(255,255,255,0.9)';
+      c.shadowBlur = 6;
+      Ondas.desenhaNami(c, 1.4 + i, 1);
+      c.restore();
+    }
+    onda(c, H * 0.9, 5, 0.038, fase + 2.6, '#ffffff', 0.95, true);
+
+    // enfeites de cada tipo
+    var P = Ondas.PEIXES;
+    if (p.enfeite === 'nami') {
+      c.save(); c.translate(W * 0.9, H * 0.86); c.rotate(-0.2); Ondas.estrelaDoMar(c, 20, tema.estrela, 'rgba(255,255,255,0.75)'); c.restore();
+      peixe(c, W * 0.86, H * 0.22, 34, true, P[1], 0.1);
+    } else if (p.enfeite === 'peixes') {
+      peixe(c, W * 0.1, H * 0.3, 38, false, P[0], -0.1);
+      peixe(c, W * 0.9, H * 0.24, 34, true, P[1], 0.08);
+      peixe(c, W * 0.84, H * 0.62, 28, true, P[2], -0.05);
+      c.save(); c.translate(W * 0.09, H * 0.85); c.rotate(-0.3); Ondas.concha(c, 18, tema.acento2); c.restore();
+    } else if (p.enfeite === 'conchas') {
+      c.save(); c.translate(W * 0.08, H * 0.84); c.rotate(-0.25); Ondas.estrelaDoMar(c, 21, tema.estrela, 'rgba(255,255,255,0.75)'); c.restore();
+      c.save(); c.translate(W * 0.92, H * 0.85); c.rotate(0.25); Ondas.concha(c, 21, tema.acento2); c.restore();
+      peixe(c, W * 0.9, H * 0.26, 30, true, P[3], 0.1);
+    } else if (p.enfeite === 'perolas') {
+      c.save(); c.translate(W * 0.9, H * 0.84); Ondas.perolas(c, 14); c.restore();
+      c.save(); c.translate(W * 0.08, H * 0.85); c.rotate(-0.3); Ondas.concha(c, 19, tema.acento2); c.restore();
+      peixe(c, W * 0.1, H * 0.28, 32, false, P[0], -0.08);
+    }
+
+    // título e brilhinhos nas pontas
+    var t = titulo(c, p.titulo, W / 2, H * 0.42, tema, estado.letra, i);
+    Ondas.brilhinho(c, t.direita + 14, H * 0.42 - t.fs * 0.42, 9, '#ffffff');
+    Ondas.brilhinho(c, t.esquerda - 12, H * 0.42 + t.fs * 0.3, 7, tema.estrela);
+    c.restore();
+
+    // contorno de figurinha
+    cantos(c, 3, 3, W - 6, H - 6, 26);
+    c.lineWidth = 6;
+    c.strokeStyle = '#ffffff';
+    c.stroke();
+    cantos(c, 1, 1, W - 2, H - 2, 28);
+    c.lineWidth = 2;
+    c.strokeStyle = tema.acento2;
+    c.stroke();
+  }
+
+  // ---------------------------------------------------------------- tela
+  function nomeArquivo(p) {
+    return 'painel-' + (p.titulo || 'painel').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') + '.png';
+  }
+  function baixar(canvas, p) {
+    canvas.toBlob(function (blob) {
+      var a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = nomeArquivo(p);
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+    }, 'image/png');
+  }
+
+  var lista = document.getElementById('lista');
+  function monta() {
+    lista.innerHTML = '';
+    estado.paineis.forEach(function (p, i) {
+      var card = document.createElement('div');
+      card.className = 'card painel';
+      card.innerHTML = '<canvas width="640" height="200"></canvas><div class="controles">' +
+        '<label><span class="rotulo">Texto</span><input type="text" maxlength="18"></label>' +
+        '<label><span class="rotulo">Enfeite</span><select></select></label>' +
+        '<div class="botoes"><button class="botao" type="button" data-baixar>⬇ Baixar</button><button class="botao claro" type="button" data-tirar>Tirar</button></div></div>';
+      var canvas = card.querySelector('canvas'), entrada = card.querySelector('input'), sel = card.querySelector('select');
+      canvas.setAttribute('aria-label', 'Painel ' + p.titulo);
+      entrada.value = p.titulo;
+      Object.keys(ENFEITES).forEach(function (k) {
+        var o = document.createElement('option');
+        o.value = k; o.textContent = ENFEITES[k];
+        sel.appendChild(o);
+      });
+      sel.value = p.enfeite;
+      var redesenha = function () { desenhaPainel(canvas.getContext('2d'), p, i); };
+      entrada.addEventListener('input', function () { p.titulo = entrada.value; guardar(); redesenha(); });
+      sel.addEventListener('change', function () { p.enfeite = sel.value; guardar(); redesenha(); });
+      card.querySelector('[data-baixar]').addEventListener('click', function () { baixar(canvas, p); });
+      card.querySelector('[data-tirar]').addEventListener('click', function () { estado.paineis.splice(i, 1); guardar(); monta(); });
+      lista.appendChild(card);
+      redesenha();
+    });
+  }
+
+  function chips(caixa, opcoes, chave) {
+    caixa.innerHTML = '';
+    Object.keys(opcoes).forEach(function (k) {
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.textContent = opcoes[k].nome;
+      if (chave === 'letra') b.style.font = opcoes[k].css.replace('{px}', '16');
+      b.classList.toggle('sim', estado[chave] === k);
+      b.addEventListener('click', function () { estado[chave] = k; guardar(); chips(caixa, opcoes, chave); monta(); });
+      caixa.appendChild(b);
+    });
+  }
+
+  document.getElementById('adicionar').addEventListener('click', function () {
+    estado.paineis.push({ titulo: 'Comandos', enfeite: Object.keys(ENFEITES)[estado.paineis.length % 4] });
+    guardar();
+    monta();
+  });
+  document.getElementById('baixarTodos').addEventListener('click', function () {
+    lista.querySelectorAll('canvas').forEach(function (canvas, i) {
+      setTimeout(function () { baixar(canvas, estado.paineis[i]); }, i * 400);
+    });
+  });
+
+  // desenha depois que as letras carregarem (canvas não espera a fonte sozinho)
+  var fontes = ['400 40px "Cherry Bomb One"', '400 40px Pacifico', '800 40px Sniglet', '700 40px Fredoka'];
+  Promise.all(fontes.map(function (f) { return document.fonts ? document.fonts.load(f) : Promise.resolve(); }))
+    .catch(function () {}).then(function () {
+      chips(document.getElementById('temas'), Ondas.TEMAS, 'tema');
+      chips(document.getElementById('letras'), Ondas.LETRAS, 'letra');
+      monta();
+      document.body.dataset.pronto = '1';
+    });
+</script>
+</body>
+</html>

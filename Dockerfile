@@ -4,6 +4,7 @@ FROM node:22-alpine
 WORKDIR /app
 COPY servidor.js ./
 COPY *.html *.js *.json *.svg *.ico *.png site.webmanifest ./publico/
+COPY paineis ./publico/paineis
 # troca o "?v=dev" dos scripts por um código do conteúdo: a cada deploy com mudança o link muda,
 # e o navegador, o Cloudflare e o OBS buscam o arquivo novo em vez de usar o guardado
 RUN rm -f publico/servidor.js \

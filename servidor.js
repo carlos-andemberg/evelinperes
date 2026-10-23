@@ -6,6 +6,7 @@
  *   PUT  /api/config    → salva (precisa de "Authorization: Bearer <SENHA_EDICAO>")
  *   GET  /api/conferir  → 200 se a senha confere, 401 se não
  *   GET  /api/eventos   → Server-Sent Events: avisa as telas abertas (no OBS) quando as opções mudam
+ *   POST /api/alerta    → manda um alerta de teste pras telas de alerta abertas (precisa da senha)
  *
  * Variáveis: PORTA (80), PASTA (pasta das páginas), DADOS (pasta do config.json: volume no Coolify),
  * SENHA_EDICAO (sem ela ninguém consegue salvar). Local: `node servidor.js 5550`.
@@ -32,7 +33,7 @@ const TIPOS = {
 // as telas que têm opções salvas; as de cena (fila, começando, encerrando, volto já) usam a
 // mesma página, fila.html, que o servidor também entrega com o nome de cada uma
 // as bordas da câmera (uma por cena do OBS) também usam a mesma página, borda.html
-const TELAS = ['borda', 'borda2', 'borda3', 'borda4', 'fila', 'comecando', 'encerrando', 'voltoja'];
+const TELAS = ['borda', 'borda2', 'borda3', 'borda4', 'fila', 'comecando', 'encerrando', 'voltoja', 'alertas'];
 const APELIDOS = {
   '/borda2.html': '/borda.html', '/borda3.html': '/borda.html', '/borda4.html': '/borda.html',
   '/comecando.html': '/fila.html', '/encerrando.html': '/fila.html', '/voltoja.html': '/fila.html'
@@ -107,6 +108,23 @@ function lerCorpo(req, max) {
   });
 }
 
+// alerta de teste do gerador: só repassa pros alertas abertos (no OBS), não guarda nada
+const TIPOS_ALERTA = ['seguir', 'sub', 'presente', 'raid', 'bits', 'doacao'];
+async function testaAlerta(req, res) {
+  if (bloqueado(req)) return json(res, 429, { erro: 'Muitas tentativas. Espera uns minutinhos.' });
+  if (!senhaConfere(req)) { errou(req); return json(res, 401, { erro: SENHA ? 'Senha errada.' : 'O servidor está sem senha configurada.' }); }
+  let d;
+  try { d = JSON.parse(await lerCorpo(req, 4 * 1024)); } catch (e) { return json(res, 400, { erro: 'Dados inválidos.' }); }
+  if (TIPOS_ALERTA.indexOf(d.tipo) < 0) return json(res, 400, { erro: 'Tipo de alerta desconhecido.' });
+  const alerta = {
+    tipo: d.tipo, nome: String(d.nome || 'teste').slice(0, 32), para: String(d.para || '').slice(0, 32),
+    qtd: Number(d.qtd) || 1, msg: String(d.msg || '').slice(0, 140)
+  };
+  const msg = 'event: alerta\ndata: ' + JSON.stringify(alerta) + '\n\n';
+  ouvintes.forEach((r) => r.write(msg));
+  json(res, 200, { ok: true, telas: ouvintes.size });
+}
+
 async function salvar(req, res) {
   if (bloqueado(req)) return json(res, 429, { erro: 'Muitas tentativas. Espera uns minutinhos.' });
   if (!senhaConfere(req)) {
@@ -179,6 +197,9 @@ const servidor = http.createServer((req, res) => {
     return json(res, 401, { erro: SENHA ? 'Senha errada.' : 'O servidor está sem senha configurada.' });
   }
   if (p === '/api/eventos') return eventos(req, res);
+  if (p === '/api/alerta' && req.method === 'POST') {
+    return testaAlerta(req, res).catch(() => json(res, 500, { erro: 'Não deu pra mandar o teste.' }));
+  }
   if (req.method !== 'GET' && req.method !== 'HEAD') { res.writeHead(405); return res.end(); }
   arquivo(req, res, APELIDOS[p] || p);
 });

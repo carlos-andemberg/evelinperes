@@ -70,9 +70,12 @@
   // Sem opções no link (ou com ?auto), a tela usa o que foi salvo no gerador ("Salvar na live")
   // e recarrega sozinha quando salvam de novo. Com opções no link (ou ?auto=0), vale o link.
   // `fundo` e `caixa` são da prévia e não contam. comecar(q) recebe um URLSearchParams.
-  function automatico(tela, comecar) {
+  // opcoes.podeRecarregar(): se devolver false, a atualização espera (ex.: um alerta tocando)
+  function automatico(tela, comecar, opcoes) {
+    opcoes = opcoes || {};
     var q = new URLSearchParams(global.location.search);
-    var proprias = Array.from(q.keys()).filter(function (k) { return k !== 'fundo' && k !== 'caixa' && k !== 'auto'; });
+    // fundo/caixa (prévia) e teste/demo (alertas) não são opções: o link continua sendo o único
+    var proprias = Array.from(q.keys()).filter(function (k) { return ['fundo', 'caixa', 'auto', 'teste', 'demo'].indexOf(k) < 0; });
     var auto = q.has('auto') ? q.get('auto') !== '0' : proprias.length === 0;
     if (!auto) { comecar(q); return; }
 
@@ -85,6 +88,7 @@
       comecar(p);
     }
     function recarrega() {
+      if (opcoes.podeRecarregar && !opcoes.podeRecarregar()) { setTimeout(recarrega, 1500); return; }
       try { global.sessionStorage.setItem('evelinperes-recarga', '1'); } catch (e) {}
       global.location.reload();
     }
@@ -1204,6 +1208,13 @@
     veioDeRecarga: veioDeRecarga,
     emOBS: emOBS,
     iniciar: iniciar,
-    desenhaNami: desenhaNami
+    desenhaNami: desenhaNami,
+    // enfeites avulsos, pros painéis e alertas
+    peixinho: peixinho,
+    PEIXES: PEIXES,
+    estrelaDoMar: estrelaDoMar,
+    concha: concha,
+    perolas: perolas,
+    brilhinho: brilhinho
   };
 })(window);
