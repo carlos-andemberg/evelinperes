@@ -77,6 +77,7 @@
 <canvas id="bichos"></canvas>
 
 <script src="ondas.js?v=dev"></script>
+<script src="sons.js?v=dev"></script>
 <script>
   /*
    * Alertas no tema da Nami. Cada alerta: uma onda sobe, a Nami pula da água, o nome aparece
@@ -92,11 +93,16 @@
   var emIframe = window.parent !== window;
   var fila = [], atual = null;
 
+  // som de cada tipo (sons.js); o gerador troca por outro da lista ou por um link de .mp3
+  var SOM_PADRAO = { seguir: 'bolhas', sub: 'caixinha', presente: 'magia', raid: 'fanfarra', bits: 'cristal', doacao: 'moedas' };
+
   Ondas.automatico('alertas', function (q) {
     var op = Ondas.parametros({
       tema: 'rosa', letra: 'cherry', som: true, volume: 0.6, duracao: 7.5, mensagens: true,
       tseguir: 'Novo seguidor!', tsub: 'Novo sub!', tpresente: 'Sub de presente!',
       traid: 'Raid!', tbits: 'Bits!', tdoacao: 'Doação!',
+      somseguir: SOM_PADRAO.seguir, somsub: SOM_PADRAO.sub, sompresente: SOM_PADRAO.presente,
+      somraid: SOM_PADRAO.raid, sombits: SOM_PADRAO.bits, somdoacao: SOM_PADRAO.doacao,
       teste: '', demo: false, fundo: !Ondas.emOBS && !emIframe
     }, q);
 
@@ -117,20 +123,20 @@
       try { return Number(v).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }); } catch (e) { return 'R$ ' + v; }
     }
     var TIPOS = {
-      seguir: { titulo: op.tseguir, efeito: 'coracoes', notas: [784, 988, 1175, 1568],
+      seguir: { titulo: op.tseguir, efeito: 'coracoes',
         linha: function () { return 'agora faz parte do cardume 💕'; } },
-      sub: { titulo: op.tsub, efeito: 'estrelas', notas: [659, 784, 988, 1319, 1568],
+      sub: { titulo: op.tsub, efeito: 'estrelas',
         linha: function (d) { return d.qtd > 1 ? 'se inscreveu há ' + d.qtd + ' meses ✨' : 'se inscreveu ✨'; } },
-      presente: { titulo: op.tpresente, efeito: 'conchas', notas: [523, 659, 784, 1047, 1319, 1568],
+      presente: { titulo: op.tpresente, efeito: 'conchas',
         linha: function (d) {
           if (d.qtd > 1) return 'deu ' + d.qtd + ' subs de presente 🎁';
           return d.para ? 'deu um sub de presente pra ' + d.para + ' 🎁' : 'deu um sub de presente 🎁';
         } },
-      raid: { titulo: op.traid, efeito: 'cardume', notas: [392, 523, 659, 784, 1047, 1319],
+      raid: { titulo: op.traid, efeito: 'cardume',
         linha: function (d) { return 'chegou com ' + d.qtd + plural(d.qtd, ' pessoa', ' pessoas') + ' 🐟'; } },
-      bits: { titulo: op.tbits, efeito: 'cristais', notas: [880, 1175, 1397, 1760],
+      bits: { titulo: op.tbits, efeito: 'cristais',
         linha: function (d) { return 'mandou ' + d.qtd + plural(d.qtd, ' bit', ' bits') + ' 💎'; } },
-      doacao: { titulo: op.tdoacao, efeito: 'perolas', notas: [698, 880, 1047, 1397, 1760],
+      doacao: { titulo: op.tdoacao, efeito: 'perolas',
         linha: function (d) { return 'mandou ' + dinheiro(d.qtd) + ' 💖'; } }
     };
 
@@ -162,33 +168,13 @@
     }
     window.alerta = enfileira;
 
-    // ---------------------------------------------------------- som (feito na hora, sem arquivo)
-    var audio = null;
-    function toca(notas) {
+    // ---------------------------------------------------------- som (sons.js: feito na hora, ou um link de .mp3)
+    function toca(tipo) {
       if (!op.som) return;
-      try {
-        audio = audio || new (window.AudioContext || window.webkitAudioContext)();
-        if (audio.state === 'suspended') audio.resume();
-        var agora = audio.currentTime, vol = Math.max(0, Math.min(1, op.volume));
-        // splash: chiado que some
-        var n = audio.sampleRate * 0.5, buf = audio.createBuffer(1, n, audio.sampleRate), dados = buf.getChannelData(0);
-        for (var i = 0; i < n; i++) dados[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / n, 3);
-        var ruido = audio.createBufferSource(), filtro = audio.createBiquadFilter(), gr = audio.createGain();
-        ruido.buffer = buf; filtro.type = 'lowpass'; filtro.frequency.value = 1800; gr.gain.value = 0.35 * vol;
-        ruido.connect(filtro); filtro.connect(gr); gr.connect(audio.destination); ruido.start(agora);
-        // bloop da bolha
-        var o = audio.createOscillator(), g = audio.createGain();
-        o.type = 'sine'; o.frequency.setValueAtTime(260, agora + 0.05); o.frequency.exponentialRampToValueAtTime(900, agora + 0.2);
-        g.gain.setValueAtTime(0.0001, agora + 0.05); g.gain.exponentialRampToValueAtTime(0.35 * vol, agora + 0.08); g.gain.exponentialRampToValueAtTime(0.0001, agora + 0.3);
-        o.connect(g); g.connect(audio.destination); o.start(agora + 0.05); o.stop(agora + 0.35);
-        // sininho: arpejo do tipo
-        notas.forEach(function (f, j) {
-          var t = agora + 0.45 + j * 0.11, os = audio.createOscillator(), gs = audio.createGain();
-          os.type = 'triangle'; os.frequency.value = f;
-          gs.gain.setValueAtTime(0.0001, t); gs.gain.exponentialRampToValueAtTime(0.22 * vol, t + 0.02); gs.gain.exponentialRampToValueAtTime(0.0001, t + 0.9);
-          os.connect(gs); gs.connect(audio.destination); os.start(t); os.stop(t + 1);
-        });
-      } catch (e) { /* sem som, tudo bem */ }
+      var s = op['som' + tipo];
+      if (s === 'nenhum') return;
+      if (!Sons.existe(s) && !/^https?:\/\//i.test(s)) s = SOM_PADRAO[tipo];
+      Sons.toca(s, op.volume);
     }
 
     // ---------------------------------------------------------- cartão com o nome
@@ -428,9 +414,11 @@
       c.classList.remove('entra', 'sai');
       void c.offsetWidth;
       setTimeout(function () { if (atual === d) c.classList.add('entra'); }, 900);
-      toca(TIPOS[d.tipo].notas);
+      toca(d.tipo);
     }
     function proximo() {
+      // um .mp3 comprido não passa pro próximo alerta
+      Sons.para();
       atual = fila.shift() || null;
       if (atual) comeca(atual);
       else $('cartao').classList.remove('entra', 'sai');

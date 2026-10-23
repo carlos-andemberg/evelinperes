@@ -91,11 +91,12 @@
       });
     });
 
+    // já entrou nesta sessão: abre na hora e confere no fundo (só trava de novo se a senha mudou)
     var s = senha();
     if (!s) { trava(); return; }
+    libera();
     confere(s).then(function (st) {
-      if (st === 200 || st === 0) libera();
-      else { esquece(); trava(); }
+      if (st === 401) { esquece(); global.location.reload(); }
     });
   }
 

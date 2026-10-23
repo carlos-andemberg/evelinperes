@@ -190,6 +190,13 @@
     animation: flutua 2.6s ease-in-out infinite;
   }
   @keyframes flutua { 50% { transform: translate(-50%, 35%); } }
+  .sons { display: grid; gap: 8px; }
+  .som { display: grid; grid-template-columns: 96px 1fr 42px; gap: 8px; align-items: center; }
+  .som > b { font-weight: 800; font-size: 14px; }
+  .som .botao { align-self: stretch; justify-content: center; }
+  .som input { grid-column: 2 / -1; font-size: 13px; }
+  .som select { padding-left: 10px; padding-right: 6px; }
+  @media (max-width: 420px) { .som { grid-template-columns: 1fr 42px; } .som > b { grid-column: 1 / -1; } .som input { grid-column: 1 / -1; } }
   .letras { display: flex; flex-wrap: wrap; gap: 8px; }
   .letras button {
     font-size: 19px; line-height: 1.3; color: var(--rosa); background: #fff; border: 2px solid var(--rosa3); border-radius: 14px;
@@ -538,6 +545,11 @@
             <label class="chave"><input type="checkbox" id="amsg"> Mostrar a mensagem</label>
           </div>
         </div>
+        <div class="campo cheio">
+          <span>Som de cada alerta</span>
+          <div class="sons" id="sonsA"></div>
+          <p class="nota">No link, cole o endereço direto do arquivo (.mp3, .ogg ou .wav).</p>
+        </div>
         <label class="campo"><span>Título · seguir</span><input type="text" id="atseguir" maxlength="30"></label>
         <label class="campo"><span>Título · sub</span><input type="text" id="atsub" maxlength="30"></label>
         <label class="campo"><span>Título · sub de presente</span><input type="text" id="atpresente" maxlength="30"></label>
@@ -593,6 +605,7 @@
 <script src="trava.js?v=dev"></script>
 <script src="modal.js?v=dev"></script>
 <script src="ondas.js?v=dev"></script>
+<script src="sons.js?v=dev"></script>
 <script src="dados.js?v=dev"></script>
 <script src="cenas.js?v=dev"></script>
 <script>
@@ -625,10 +638,13 @@
     // alertas (alertas.html): o visual que vai pro overlay da StreamElements
     atema: 'rosa', aletra: 'cherry', asom: true, avolume: 0.6, aduracao: 7.5, amsg: true,
     atseguir: 'Novo seguidor!', atsub: 'Novo sub!', atpresente: 'Sub de presente!', atraid: 'Raid!', atbits: 'Bits!', atdoacao: 'Doação!',
+    // som de cada tipo: um id de sons.js, 'nenhum', um link de .mp3 ou 'link' (escolheu link e ainda não colou)
+    asomseguir: 'bolhas', asomsub: 'caixinha', asompresente: 'magia', asomraid: 'fanfarra', asombits: 'cristal', asomdoacao: 'moedas',
     anometeste: 'marinheira_rosa'
   };
   var ALERTA = { atema: 'tema', aletra: 'letra', asom: 'som', avolume: 'volume', aduracao: 'duracao', amsg: 'mensagens',
-    atseguir: 'tseguir', atsub: 'tsub', atpresente: 'tpresente', atraid: 'traid', atbits: 'tbits', atdoacao: 'tdoacao' };
+    atseguir: 'tseguir', atsub: 'tsub', atpresente: 'tpresente', atraid: 'traid', atbits: 'tbits', atdoacao: 'tdoacao',
+    asomseguir: 'somseguir', asomsub: 'somsub', asompresente: 'sompresente', asomraid: 'somraid', asombits: 'sombits', asomdoacao: 'somdoacao' };
   var PERFIS = ['borda', 'borda2', 'borda3', 'borda4'];
   var BORDA_FILA = { ftema: 'tema', fespessura: 'espessura', fvelocidade: 'velocidade', fnami: 'nami', ftamanho: 'tamanho', fnado: 'nado', fpulo: 'pulo', fbolhas: 'bolhas', fbrilhos: 'brilhos', fenfeites: 'enfeites' };
   var CAM_FILA = { fcamx: 'camx', fcamy: 'camy', fcamlargura: 'camlargura', fcamaltura: 'camaltura', fresolucao: 'resolucao' };
@@ -1202,7 +1218,7 @@
       Trava.guarda(senha);
       $('senha').value = '';
       $('senha').hidden = true;
-      live = { versao: x.d.versao, borda: corpo.borda, fila: corpo.fila, estado: estado };
+      live = Object.assign({ versao: x.d.versao }, corpo);
       situacaoLive();
       mostra('✓ Salvo! O OBS já pegou as mudanças', 'ok');
     }).catch(function () {
@@ -1402,6 +1418,59 @@
     raid: { qtd: 42 }, bits: { qtd: 100, msg: 'Toma uns bits pra Nami!' }, doacao: { qtd: 10, msg: 'Pra ajudar no mês 💕' }
   };
   var ROTULOS = { seguir: '💕 Seguir', sub: '✨ Sub', presente: '🎁 Presente', raid: '🐟 Raid', bits: '💎 Bits', doacao: '💖 Doação' };
+
+  // som de cada tipo: escolhe na lista (ou "link") e ouve na hora
+  var ehLink = function (v) { return /^https?:\/\//i.test(v); };
+  Object.keys(ROTULOS).forEach(function (t) {
+    var k = 'asom' + t, linha = document.createElement('div');
+    linha.className = 'som';
+    var nome = document.createElement('b');
+    nome.textContent = ROTULOS[t];
+    var sel = document.createElement('select');
+    sel.setAttribute('aria-label', 'Som do alerta de ' + ROTULOS[t].replace(/^\S+ /, ''));
+    Sons.LISTA.concat([{ id: 'link', nome: 'Som de um link (.mp3)', icone: '🔗' }, { id: 'nenhum', nome: 'Sem som', icone: '🔇' }]).forEach(function (s) {
+      var o = document.createElement('option');
+      o.value = s.id;
+      o.textContent = s.icone + ' ' + s.nome;
+      sel.appendChild(o);
+    });
+    var ouvir = document.createElement('button');
+    ouvir.type = 'button';
+    ouvir.className = 'botao pequeno claro';
+    ouvir.textContent = '▶';
+    ouvir.title = 'Ouvir';
+    ouvir.setAttribute('aria-label', 'Ouvir o som de ' + ROTULOS[t].replace(/^\S+ /, ''));
+    var link = document.createElement('input');
+    link.type = 'text';
+    link.maxLength = 500;
+    link.placeholder = 'https://…/som.mp3';
+    link.setAttribute('aria-label', 'Link do som de ' + ROTULOS[t].replace(/^\S+ /, ''));
+
+    var v = estado[k];
+    sel.value = Sons.existe(v) || v === 'nenhum' ? v : 'link';
+    link.value = ehLink(v) ? v : '';
+    link.hidden = sel.value !== 'link';
+    sel.addEventListener('change', function () {
+      link.hidden = sel.value !== 'link';
+      if (sel.value === 'link') { estado[k] = ehLink(link.value.trim()) ? link.value.trim() : 'link'; link.focus(); }
+      else { estado[k] = sel.value; Sons.toca(sel.value, estado.avolume || 0.6); }
+      atualizar();
+    });
+    link.addEventListener('input', function () {
+      estado[k] = ehLink(link.value.trim()) ? link.value.trim() : 'link';
+      atualizar();
+    });
+    ouvir.addEventListener('click', function () {
+      var s = estado[k];
+      if (s === 'link') { link.focus(); return; }
+      Sons.toca(s, estado.avolume || 0.6);
+    });
+    linha.appendChild(nome);
+    linha.appendChild(sel);
+    linha.appendChild(ouvir);
+    linha.appendChild(link);
+    $('sonsA').appendChild(linha);
+  });
   function dadosTeste(t) { return Object.assign({ evelinperes: 'alerta', tipo: t, nome: estado.anometeste || 'marinheira_rosa' }, EXEMPLOS[t]); }
   Object.keys(ROTULOS).forEach(function (t) {
     var b = document.createElement('button');

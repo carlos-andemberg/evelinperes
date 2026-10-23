@@ -163,16 +163,18 @@ Numa fonte em pé (ex.: 1080 × 1920) a tela se arruma sozinha: título em cima,
 
 ## Alertas (StreamElements)
 
-Cada alerta: uma onda rosa sobe do pé da tela, a Nami pula da água (às vezes girando) por cima do nome, que aparece flutuando, letra por letra, com uma frase embaixo e a mensagem num balãozinho. No fim tudo afunda. Cada tipo tem o seu efeito e o seu sininho (o som é feito na hora, sem arquivo):
+Cada alerta: uma onda rosa sobe do pé da tela, a Nami pula da água (às vezes girando) por cima do nome, que aparece flutuando, letra por letra, com uma frase embaixo e a mensagem num balãozinho. No fim tudo afunda. Cada tipo tem o seu efeito e o seu som:
 
-| Tipo | Título | Efeito |
-|---|---|---|
-| Seguir | Novo seguidor! | corações subindo |
-| Sub | Novo sub! (com os meses) | estrelinhas em volta do nome |
-| Sub de presente | Sub de presente! | conchas e pérolas caindo |
-| Raid | Raid! (com quantas pessoas) | um cardume de peixinhos atravessando a tela |
-| Bits | Bits! | cristais caindo |
-| Doação | Doação! (em reais) | pérolas e moedinhas pulando da água |
+| Tipo | Título | Efeito | Som padrão |
+|---|---|---|---|
+| Seguir | Novo seguidor! | corações subindo | Bolhinhas |
+| Sub | Novo sub! (com os meses) | estrelinhas em volta do nome | Caixinha de música |
+| Sub de presente | Sub de presente! | conchas e pérolas caindo | Pozinho mágico |
+| Raid | Raid! (com quantas pessoas) | um cardume de peixinhos atravessando a tela | Fanfarra do mar |
+| Bits | Bits! | cristais caindo | Cristais |
+| Doação | Doação! (em reais) | pérolas e moedinhas pulando da água | Moedinhas |
+
+Os sons ficam em `sons.js` e são feitos na hora, sem arquivo: Bolhinhas, Splash da Nami (o som antigo), Caixinha de música, Harpa, Pozinho mágico, Cristais, Moedinhas, Sininhos, Fanfarra do mar e Onda do mar. No gerador cada tipo escolhe o seu (com **▶ Ouvir**), pode ficar sem som, ou tocar um arquivo próprio pelo link direto de um .mp3, .ogg ou .wav.
 
 Os alertas vêm do overlay da StreamElements por um **widget customizado** que só repassa os eventos pro `alertas.html` do site. O visual, o som e os textos ficam no site: mudou no gerador (aba **Alertas**) e clicou em **Salvar na live**, os alertas mudam sozinhos (se tiver um alerta tocando, a atualização espera ele acabar). Vários alertas seguidos entram numa fila.
 
@@ -180,7 +182,7 @@ Pra colocar (uma vez só): StreamElements → **Overlays** → o overlay que já
 
 Pra testar: o **Emulate** da StreamElements, ou os botões do gerador (os da prévia tocam só ali; os de **Testar no OBS** mandam pros alertas abertos e pedem a senha). `alertas.html?demo` toca todos em sequência e `alertas.html?teste=raid` toca um.
 
-Opções (no gerador, ou no link): `tema`, `letra` (do nome), `som=0`, `volume=0.6`, `duracao=7.5`, `mensagens=0`, e os títulos `tseguir`, `tsub`, `tpresente`, `traid`, `tbits`, `tdoacao`.
+Opções (no gerador, ou no link): `tema`, `letra` (do nome), `som=0`, `volume=0.6`, `duracao=7.5`, `mensagens=0`, os títulos `tseguir`, `tsub`, `tpresente`, `traid`, `tbits`, `tdoacao`, e os sons `somseguir`, `somsub`, `sompresente`, `somraid`, `sombits`, `somdoacao` (`bolhas`, `splash`, `caixinha`, `harpa`, `magia`, `cristal`, `moedas`, `sino`, `fanfarra`, `onda`, `nenhum` ou um link https).
 
 ## Painéis do Sobre
 
