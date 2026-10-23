@@ -4,6 +4,10 @@ Overlays pro OBS da [evelin_peres](https://www.twitch.tv/evelin_peres), no tema 
 
 **No ar:** [evelinperes.carlosandemberg.com.br](https://evelinperes.carlosandemberg.com.br). Lá você escolhe as opções, vê a prévia e clica em **Salvar na live**.
 
+## Senha do gerador
+
+O gerador (`index.html`) e os painéis (`paineis.html`) abrem com uma tela de senha: é a mesma senha do **Salvar na live** (a `SENHA_EDICAO` do servidor). Ela fica guardada só até fechar o navegador, a não ser que marque **Lembrar neste computador**. As telas do OBS (borda, fila, alertas...) não pedem senha, porque o OBS e a StreamElements precisam abrir elas.
+
 ## Link único (atualiza sozinho)
 
 No OBS cada tela tem o seu link, colado uma vez só:
@@ -180,7 +184,7 @@ Opções (no gerador, ou no link): `tema`, `letra` (do nome), `som=0`, `volume=0
 
 ## Painéis do Sobre
 
-`paineis.html` faz as imagens dos painéis do Sobre da Twitch no mesmo tema: céu de fundo do mar, raios de luz, bolhinhas, ondas embaixo, o título em letras flutuando com contorno branco e um enfeite (a Nami nadando, peixinhos, concha e estrela, ou pérolas). Saem em **640 × 200** (o dobro do que a Twitch mostra), com os cantos arredondados. Dá pra mudar o texto, o enfeite, as cores e a letra, adicionar painéis e baixar. As quatro primeiras (Sobre mim, Regras, Doações, Setup) já estão prontas em `paineis/`.
+`paineis.html` faz as imagens dos painéis do Sobre da Twitch com a mesma borda de ondas da câmera (estrela-do-mar, concha e pérolas nos cantos) em volta de uma janelinha de mar rosinha, e o título em letras flutuando bem legíveis: miolo rosa forte, contorno branco grosso e uma beiradinha escura por fora. O enfeite pode ser a Nami nadando na onda de cima, peixinhos, pérolas ou bolhas. Saem em **640 × 220** (o dobro do que a Twitch mostra), com fundo transparente fora da borda. Dá pra mudar o texto, o enfeite, as cores e a letra, adicionar painéis e baixar; tirou um sem querer, tem **Desfazer**, e **Voltar os painéis padrão** traz os quatro de volta. As quatro primeiras (Sobre mim, Regras, Doações, Setup) já estão prontas em `paineis/`.
 
 Na Twitch: **Sobre → Editar painéis → Adicionar uma imagem**. O texto de baixo vai na descrição do painel.
 

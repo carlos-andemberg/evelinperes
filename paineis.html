@@ -56,14 +56,24 @@
     .painel { grid-template-columns: 1fr; }
     .opcoes { grid-template-columns: 1fr; }
   }
+  .acoes { flex-wrap: wrap; }
+  .vazio { text-align: center; padding: 26px 20px; }
+  .vazio p { margin: 0 0 14px; color: var(--suave); font-weight: 700; }
+  .desfazer {
+    position: fixed; left: 50%; bottom: 20px; transform: translateX(-50%); z-index: 20; display: none; align-items: center; gap: 12px;
+    background: #fff; border-radius: 999px; padding: 10px 12px 10px 18px; font-weight: 800; color: var(--texto);
+    box-shadow: 0 0 0 2px var(--rosa3), 0 12px 32px rgba(255, 92, 158, 0.28);
+  }
+  .desfazer.ver { display: flex; }
+  .desfazer .botao { flex: none; padding: 8px 14px; border-radius: 999px; }
 </style>
 </head>
-<body>
+<body class="travado">
 <main>
   <header>
     <a class="voltar" href="./">← voltar pro gerador</a>
     <h1>Painéis do Sobre</h1>
-    <p>As imagens que vão em cima de cada painel da Twitch (Sobre mim, Regras...). Saem em <b>640 × 200</b>, o dobro do que a Twitch mostra, pra ficar nítido. Mude o texto, escolha o enfeite e baixe.</p>
+    <p>As imagens que vão em cima de cada painel da Twitch (Sobre mim, Regras...), com a mesma borda de ondas da câmera. Saem em <b>640 × 220</b>, o dobro do que a Twitch mostra, pra ficar nítido. Mude o texto, escolha o enfeite e baixe.</p>
   </header>
 
   <div class="card opcoes">
@@ -75,77 +85,43 @@
 
   <div class="acoes">
     <button class="botao claro" id="adicionar" type="button">+ Adicionar painel</button>
+    <button class="botao claro" id="padrao" type="button">↺ Voltar os painéis padrão</button>
     <button class="botao" id="baixarTodos" type="button">⬇ Baixar todos</button>
   </div>
   <p class="dica">Na Twitch: <b>Sobre → Editar painéis → Adicionar uma imagem</b>. O texto de baixo (as regras, o setup) vai na descrição do painel.</p>
 </main>
+<div class="desfazer" id="desfazer" role="status"><span id="desfazerTexto"></span><button class="botao" type="button" id="desfazerBotao">Desfazer</button></div>
 
+<script src="trava.js?v=dev"></script>
 <script src="ondas.js?v=dev"></script>
 <script>
   // ---------------------------------------------------------------- estado
   var CHAVE = 'evelinperes-paineis';
-  var ENFEITES = { nami: 'Nami nadando', peixes: 'Peixinhos', conchas: 'Concha e estrela', perolas: 'Pérolas' };
-  var estado = { tema: 'rosa', letra: 'cherry', paineis: [
+  var ENFEITES = { nami: 'Nami nadando na onda', peixes: 'Peixinhos', perolas: 'Pérolas e bolhas', bolhas: 'Bolhas' };
+  var PADRAO_PAINEIS = [
     { titulo: 'Sobre mim', enfeite: 'nami' },
     { titulo: 'Regras', enfeite: 'peixes' },
     { titulo: 'Doações', enfeite: 'perolas' },
-    { titulo: 'Setup', enfeite: 'conchas' }
-  ] };
+    { titulo: 'Setup', enfeite: 'bolhas' }
+  ];
+  var copia = function (v) { return JSON.parse(JSON.stringify(v)); };
+  var estado = { tema: 'rosa', letra: 'cherry', paineis: copia(PADRAO_PAINEIS) };
   try { var salvo = JSON.parse(localStorage.getItem(CHAVE)); if (salvo && salvo.paineis) estado = salvo; } catch (e) {}
+  estado.paineis.forEach(function (p) { if (!ENFEITES[p.enfeite]) p.enfeite = 'bolhas'; });
   function guardar() { try { localStorage.setItem(CHAVE, JSON.stringify(estado)); } catch (e) {} }
 
-  var W = 640, H = 200, TAU = Math.PI * 2;
+  var W = 640, H = 220, TAU = Math.PI * 2;
+  // a "janela" de dentro, com a borda de ondas em volta (igual à da câmera)
+  var JX0 = 36, JY0 = 46, JX1 = 604, JY1 = 188, U = 0.8;
 
-  // números "aleatórios" que não mudam a cada desenho (cada painel tem os seus)
   function sorteio(semente) {
     var s = semente * 9301 + 49297;
     return function () { s = (s * 9301 + 49297) % 233280; return s / 233280; };
   }
-
   function hexA(hex, a) {
     var n = parseInt(hex.slice(1), 16);
     return 'rgba(' + (n >> 16) + ',' + ((n >> 8) & 255) + ',' + (n & 255) + ',' + a + ')';
   }
-
-  function cantos(c, x, y, w, h, r) {
-    c.beginPath();
-    c.moveTo(x + r, y);
-    c.arcTo(x + w, y, x + w, y + h, r);
-    c.arcTo(x + w, y + h, x, y + h, r);
-    c.arcTo(x, y + h, x, y, r);
-    c.arcTo(x, y, x + w, y, r);
-    c.closePath();
-  }
-
-  function onda(c, base, A, k, fase, cor, alpha, espuma) {
-    c.beginPath();
-    c.moveTo(0, H + 5);
-    var pts = [];
-    for (var x = -6; x <= W + 6; x += 6) {
-      var y = base + A * Math.sin(k * x + fase) + A * 0.4 * Math.sin(k * 2.3 * x + fase * 1.7);
-      pts.push([x, y]);
-      c.lineTo(x, y);
-    }
-    c.lineTo(W + 6, H + 5);
-    c.closePath();
-    c.globalAlpha = alpha;
-    c.fillStyle = cor;
-    c.fill();
-    c.globalAlpha = 1;
-    c.beginPath();
-    pts.forEach(function (p, i) { if (i) c.lineTo(p[0], p[1]); else c.moveTo(p[0], p[1]); });
-    c.strokeStyle = 'rgba(255,255,255,0.9)';
-    c.lineWidth = 2;
-    c.stroke();
-    if (espuma) {
-      c.fillStyle = '#fff';
-      pts.forEach(function (p, i) {
-        var v = Math.sin(k * p[0] + fase);
-        if (i % 3 === 0 && v > 0.55) { c.beginPath(); c.arc(p[0], p[1] + 2, 1.6 + (v - 0.55) * 4, 0, TAU); c.fill(); }
-      });
-    }
-  }
-
   function peixe(c, x, y, tam, esquerda, cor, giro) {
     c.save();
     c.translate(x, y);
@@ -156,58 +132,61 @@
     Ondas.peixinho(c, tam, 1.2, cor);
     c.restore();
   }
-
   function bolha(c, x, y, r) {
-    c.fillStyle = 'rgba(255,255,255,0.3)';
+    c.fillStyle = 'rgba(255,255,255,0.35)';
     c.strokeStyle = 'rgba(255,255,255,0.95)';
     c.lineWidth = 1.6;
     c.beginPath(); c.arc(x, y, r, 0, TAU); c.fill(); c.stroke();
     c.fillStyle = '#fff';
     c.beginPath(); c.arc(x - r * 0.35, y - r * 0.35, r * 0.3, 0, TAU); c.fill();
   }
+  function perola(c, x, y, r) {
+    var g = c.createRadialGradient(x - r * 0.35, y - r * 0.35, r * 0.1, x, y, r);
+    g.addColorStop(0, '#ffffff'); g.addColorStop(0.7, '#fbe9f2'); g.addColorStop(1, '#e6c2d6');
+    c.fillStyle = g; c.beginPath(); c.arc(x, y, r, 0, TAU); c.fill();
+  }
 
-  // o título com letras flutuando: contorno branco, sombrinha rosa e degradê
-  function titulo(c, texto, cx, cy, tema, letra, semente) {
-    var L = Ondas.LETRAS[letra] || Ondas.LETRAS.cherry, txt = letra === 'pacifico' ? texto : texto.toUpperCase();
-    var fs = (letra === 'pacifico' ? 62 : 66) * L.esc;
-    c.font = L.css.replace('{px}', fs.toFixed(1));
-    var cursiva = L.cursiva, pedacos = cursiva ? [txt] : Array.from(txt);
-    var largs = pedacos.map(function (p) { return c.measureText(p).width; });
-    var total = largs.reduce(function (a, b) { return a + b; }, 0) + (cursiva ? 0 : (pedacos.length - 1) * fs * 0.02);
-    // encolhe se não couber
-    var max = W * 0.78;
-    if (total > max) {
-      fs *= max / total;
+  // título com letras flutuando e bem legível: miolo forte em degradê, contorno branco grosso
+  // e uma beiradinha escura por fora, pra não sumir no fundo rosinha
+  function titulo(c, texto, cx, cy, tema, letra, semente, max) {
+    var L = Ondas.LETRAS[letra] || Ondas.LETRAS.cherry, cursiva = L.cursiva;
+    var txt = cursiva ? texto : texto.toUpperCase();
+    var fs = (cursiva ? 58 : 60) * L.esc;
+    var mede = function () {
       c.font = L.css.replace('{px}', fs.toFixed(1));
-      largs = pedacos.map(function (p) { return c.measureText(p).width; });
-      total = largs.reduce(function (a, b) { return a + b; }, 0) + (cursiva ? 0 : (pedacos.length - 1) * fs * 0.02);
-    }
-    var x = cx - total / 2, pos = pedacos.map(function (p, j) {
-      var q = { x: x, w: largs[j], dy: cursiva ? 0 : Math.sin(j * 0.9 + semente) * fs * 0.06, rot: cursiva ? -0.03 : Math.sin(j * 1.3 + semente) * 0.06 };
-      x += largs[j] + (cursiva ? 0 : fs * 0.02);
+      var pedacos = cursiva ? [txt] : Array.from(txt), largs = pedacos.map(function (p) { return c.measureText(p).width; });
+      var total = largs.reduce(function (a, b) { return a + b; }, 0) + (cursiva ? 0 : (pedacos.length - 1) * fs * 0.03);
+      return { pedacos: pedacos, largs: largs, total: total };
+    };
+    var m = mede();
+    if (m.total > max) { fs *= max / m.total; m = mede(); }
+    var x = cx - m.total / 2, pos = m.pedacos.map(function (p, j) {
+      var q = { x: x, w: m.largs[j], dy: cursiva ? 0 : Math.sin(j * 0.9 + semente) * fs * 0.05, rot: cursiva ? -0.03 : Math.sin(j * 1.3 + semente) * 0.05 };
+      x += m.largs[j] + (cursiva ? 0 : fs * 0.03);
       return q;
     });
-    var grad = c.createLinearGradient(0, cy - fs * 0.5, 0, cy + fs * 0.5);
-    grad.addColorStop(0, tema.linha); grad.addColorStop(1, tema.acento);
+    var grad = c.createLinearGradient(0, cy - fs * 0.45, 0, cy + fs * 0.45);
+    grad.addColorStop(0, tema.acento); grad.addColorStop(1, tema.forte);
     c.textBaseline = 'middle';
     c.textAlign = 'left';
     c.lineJoin = 'round';
-    [0, 1, 2].forEach(function (passada) {
-      pedacos.forEach(function (p, j) {
+    [0, 1, 2, 3].forEach(function (passada) {
+      m.pedacos.forEach(function (p, j) {
         var q = pos[j];
         c.save();
         c.translate(q.x + q.w / 2, cy + q.dy);
         c.rotate(q.rot);
         if (passada === 0) {
-          c.shadowColor = hexA(tema.acento, 0.55);
-          c.shadowBlur = 14;
-          c.shadowOffsetY = 3;
-          c.lineWidth = fs * 0.26;
-          c.strokeStyle = '#ffffff';
+          // beiradinha escura por fora do contorno branco + sombra rosa
+          c.shadowColor = hexA(tema.forte, 0.45); c.shadowBlur = 12; c.shadowOffsetY = 4;
+          c.lineWidth = fs * 0.36; c.strokeStyle = hexA(tema.texto, 0.75);
           c.strokeText(p, -q.w / 2, 0);
         } else if (passada === 1) {
-          c.fillStyle = tema.acento2;
-          c.fillText(p, -q.w / 2, fs * 0.07);
+          c.lineWidth = fs * 0.26; c.strokeStyle = '#ffffff';
+          c.strokeText(p, -q.w / 2, 0);
+        } else if (passada === 2) {
+          c.fillStyle = tema.texto;
+          c.fillText(p, -q.w / 2, fs * 0.06);
         } else {
           c.fillStyle = grad;
           c.fillText(p, -q.w / 2, 0);
@@ -215,88 +194,69 @@
         c.restore();
       });
     });
-    return { esquerda: cx - total / 2, direita: cx + total / 2, fs: fs };
+    return { esquerda: cx - m.total / 2, direita: cx + m.total / 2, fs: fs };
   }
 
   function desenhaPainel(c, p, i) {
-    var tema = Ondas.TEMAS[estado.tema] || Ondas.TEMAS.rosa, rnd = sorteio(i * 7 + 3), fase = i * 1.9;
+    var tema = Ondas.TEMAS[estado.tema] || Ondas.TEMAS.rosa, rnd = sorteio(i * 7 + 3), P = Ondas.PEIXES;
     c.setTransform(1, 0, 0, 1, 0, 0);
     c.clearRect(0, 0, W, H);
-    c.save();
-    cantos(c, 3, 3, W - 6, H - 6, 26);
-    c.clip();
 
-    // céu do fundo do mar
-    var g = c.createLinearGradient(0, 0, 0, H);
+    // dentro da janela: o mar rosinha com raios de luz e bolhinhas
+    c.save();
+    c.beginPath(); Ondas.cantosRedondos(c, JX0, JY0, JX1 - JX0, JY1 - JY0, 22 * U); c.clip();
+    var g = c.createLinearGradient(0, JY0, 0, JY1);
     g.addColorStop(0, tema.ceu[0]); g.addColorStop(0.55, tema.ceu[1]); g.addColorStop(1, tema.ceu[2]);
     c.fillStyle = g;
-    c.fillRect(0, 0, W, H);
-    [[0.15, 0.05, '#ffffff', 0.9], [0.88, 0.9, tema.acento2, 0.35], [0.6, 0.2, '#9fe7ee', 0.18]].forEach(function (m) {
-      var rg = c.createRadialGradient(W * m[0], H * m[1], 0, W * m[0], H * m[1], W * 0.45);
-      rg.addColorStop(0, hexA(m[2], m[3])); rg.addColorStop(1, hexA(m[2], 0));
+    c.fillRect(JX0, JY0, JX1 - JX0, JY1 - JY0);
+    [[0.18, 0.1, '#ffffff', 0.9], [0.85, 0.95, tema.acento2, 0.3], [0.6, 0.3, '#9fe7ee', 0.16]].forEach(function (mm) {
+      var x = JX0 + (JX1 - JX0) * mm[0], y = JY0 + (JY1 - JY0) * mm[1], rg = c.createRadialGradient(x, y, 0, x, y, 260);
+      rg.addColorStop(0, hexA(mm[2], mm[3])); rg.addColorStop(1, hexA(mm[2], 0));
       c.fillStyle = rg;
-      c.fillRect(0, 0, W, H);
+      c.fillRect(JX0, JY0, JX1 - JX0, JY1 - JY0);
     });
-    // raios de luz
     for (var k = 0; k < 5; k++) {
-      var rx = W * (0.08 + k * 0.22) + rnd() * 30, lg = c.createLinearGradient(0, 0, 0, H);
-      lg.addColorStop(0, 'rgba(255,255,255,0.5)'); lg.addColorStop(1, 'rgba(255,255,255,0)');
+      var rx = JX0 + 30 + k * 125 + rnd() * 30, lg = c.createLinearGradient(0, JY0, 0, JY1);
+      lg.addColorStop(0, 'rgba(255,255,255,0.55)'); lg.addColorStop(1, 'rgba(255,255,255,0)');
       c.fillStyle = lg;
-      c.beginPath(); c.moveTo(rx - 8, 0); c.lineTo(rx + 8, 0); c.lineTo(rx + 40, H); c.lineTo(rx - 10, H); c.closePath(); c.fill();
+      c.beginPath(); c.moveTo(rx - 8, JY0); c.lineTo(rx + 8, JY0); c.lineTo(rx + 36, JY1); c.lineTo(rx - 10, JY1); c.closePath(); c.fill();
     }
-    // bolhinhas
-    for (k = 0; k < 9; k++) bolha(c, 20 + rnd() * (W - 40), 18 + rnd() * (H * 0.55), 2.5 + rnd() * 5);
-
-    // ondas lá embaixo (a Nami nada entre a do meio e a da frente)
-    onda(c, H * 0.76, 7, 0.022, fase, tema.fundo, 0.95, false);
-    onda(c, H * 0.83, 6, 0.031, fase + 1.3, tema.meio, 0.92, false);
-    if (p.enfeite === 'nami') {
-      c.save();
-      c.translate(W * 0.15, H * 0.8);
-      c.rotate(-0.06);
-      c.scale(0.95, 0.95);
-      c.shadowColor = 'rgba(255,255,255,0.9)';
-      c.shadowBlur = 6;
-      Ondas.desenhaNami(c, 1.4 + i, 1);
-      c.restore();
-    }
-    onda(c, H * 0.9, 5, 0.038, fase + 2.6, '#ffffff', 0.95, true);
-
-    // enfeites de cada tipo
-    var P = Ondas.PEIXES;
-    if (p.enfeite === 'nami') {
-      c.save(); c.translate(W * 0.9, H * 0.86); c.rotate(-0.2); Ondas.estrelaDoMar(c, 20, tema.estrela, 'rgba(255,255,255,0.75)'); c.restore();
-      peixe(c, W * 0.86, H * 0.22, 34, true, P[1], 0.1);
-    } else if (p.enfeite === 'peixes') {
-      peixe(c, W * 0.1, H * 0.3, 38, false, P[0], -0.1);
-      peixe(c, W * 0.9, H * 0.24, 34, true, P[1], 0.08);
-      peixe(c, W * 0.84, H * 0.62, 28, true, P[2], -0.05);
-      c.save(); c.translate(W * 0.09, H * 0.85); c.rotate(-0.3); Ondas.concha(c, 18, tema.acento2); c.restore();
-    } else if (p.enfeite === 'conchas') {
-      c.save(); c.translate(W * 0.08, H * 0.84); c.rotate(-0.25); Ondas.estrelaDoMar(c, 21, tema.estrela, 'rgba(255,255,255,0.75)'); c.restore();
-      c.save(); c.translate(W * 0.92, H * 0.85); c.rotate(0.25); Ondas.concha(c, 21, tema.acento2); c.restore();
-      peixe(c, W * 0.9, H * 0.26, 30, true, P[3], 0.1);
+    var nb = p.enfeite === 'bolhas' ? 16 : 7;
+    for (k = 0; k < nb; k++) bolha(c, JX0 + 14 + rnd() * (JX1 - JX0 - 28), JY0 + 12 + rnd() * (JY1 - JY0 - 24), 2.5 + rnd() * (p.enfeite === 'bolhas' ? 7 : 4.5));
+    if (p.enfeite === 'peixes') {
+      peixe(c, JX0 + 50, JY0 + 40, 34, false, P[0], -0.1);
+      peixe(c, JX1 - 48, JY0 + 36, 30, true, P[1], 0.08);
+      peixe(c, JX1 - 70, JY1 - 34, 26, true, P[2], -0.05);
     } else if (p.enfeite === 'perolas') {
-      c.save(); c.translate(W * 0.9, H * 0.84); Ondas.perolas(c, 14); c.restore();
-      c.save(); c.translate(W * 0.08, H * 0.85); c.rotate(-0.3); Ondas.concha(c, 19, tema.acento2); c.restore();
-      peixe(c, W * 0.1, H * 0.28, 32, false, P[0], -0.08);
+      perola(c, JX1 - 40, JY1 - 26, 11); perola(c, JX1 - 60, JY1 - 20, 8); perola(c, JX1 - 48, JY1 - 42, 7);
+      perola(c, JX0 + 34, JY0 + 30, 7); perola(c, JX0 + 50, JY0 + 22, 5);
+      peixe(c, JX0 + 48, JY1 - 34, 28, false, P[3], -0.06);
+    } else if (p.enfeite === 'bolhas') {
+      peixe(c, JX1 - 46, JY0 + 38, 28, true, P[1], 0.08);
+    } else if (p.enfeite === 'nami') {
+      peixe(c, JX1 - 46, JY1 - 34, 28, true, P[1], 0.06);
     }
-
-    // título e brilhinhos nas pontas
-    var t = titulo(c, p.titulo, W / 2, H * 0.42, tema, estado.letra, i);
-    Ondas.brilhinho(c, t.direita + 14, H * 0.42 - t.fs * 0.42, 9, '#ffffff');
-    Ondas.brilhinho(c, t.esquerda - 12, H * 0.42 + t.fs * 0.3, 7, tema.estrela);
     c.restore();
 
-    // contorno de figurinha
-    cantos(c, 3, 3, W - 6, H - 6, 26);
-    c.lineWidth = 6;
-    c.strokeStyle = '#ffffff';
-    c.stroke();
-    cantos(c, 1, 1, W - 2, H - 2, 28);
-    c.lineWidth = 2;
-    c.strokeStyle = tema.acento2;
-    c.stroke();
+    // a borda de ondas em volta (a mesma da câmera), com a Nami nadando na onda de cima
+    Ondas.anel(c, JX0, JY0, JX1, JY1, {
+      tema: estado.tema, u: U, tempo: 0.8 + i * 1.7, raio: 22,
+      antesDaFrente: function () {
+        if (p.enfeite !== 'nami') return;
+        c.save();
+        c.translate(JX0 + 132, JY0 - 11);
+        c.scale(0.74, 0.74);
+        c.shadowColor = 'rgba(255,255,255,0.9)';
+        c.shadowBlur = 5;
+        Ondas.desenhaNami(c, 1.4 + i, 1);
+        c.restore();
+      }
+    });
+
+    // o título, por cima de tudo, no meio da janela
+    var t = titulo(c, p.titulo, (JX0 + JX1) / 2, (JY0 + JY1) / 2 + 2, tema, estado.letra, i, (JX1 - JX0) * 0.8);
+    Ondas.brilhinho(c, t.direita + 14, (JY0 + JY1) / 2 - t.fs * 0.4, 9, '#ffffff');
+    Ondas.brilhinho(c, t.esquerda - 12, (JY0 + JY1) / 2 + t.fs * 0.3, 7, tema.estrela);
   }
 
   // ---------------------------------------------------------------- tela
@@ -314,13 +274,39 @@
     }, 'image/png');
   }
 
+  // tirou sem querer? dá pra desfazer
+  var tirado = null, tempoDesfazer = 0;
+  function avisaTirado(p, i) {
+    tirado = { p: p, i: i };
+    document.getElementById('desfazerTexto').textContent = 'Painel "' + (p.titulo || 'sem nome') + '" tirado.';
+    document.getElementById('desfazer').classList.add('ver');
+    clearTimeout(tempoDesfazer);
+    tempoDesfazer = setTimeout(function () { document.getElementById('desfazer').classList.remove('ver'); tirado = null; }, 10000);
+  }
+  document.getElementById('desfazerBotao').addEventListener('click', function () {
+    if (!tirado) return;
+    estado.paineis.splice(Math.min(tirado.i, estado.paineis.length), 0, tirado.p);
+    tirado = null;
+    document.getElementById('desfazer').classList.remove('ver');
+    guardar();
+    monta();
+  });
+
   var lista = document.getElementById('lista');
   function monta() {
     lista.innerHTML = '';
+    if (!estado.paineis.length) {
+      var v = document.createElement('div');
+      v.className = 'card vazio';
+      v.innerHTML = '<p>Nenhum painel por aqui.</p><button class="botao" type="button">↺ Voltar os painéis padrão</button>';
+      v.querySelector('button').addEventListener('click', voltarPadrao);
+      lista.appendChild(v);
+      return;
+    }
     estado.paineis.forEach(function (p, i) {
       var card = document.createElement('div');
       card.className = 'card painel';
-      card.innerHTML = '<canvas width="640" height="200"></canvas><div class="controles">' +
+      card.innerHTML = '<canvas width="640" height="220"></canvas><div class="controles">' +
         '<label><span class="rotulo">Texto</span><input type="text" maxlength="18"></label>' +
         '<label><span class="rotulo">Enfeite</span><select></select></label>' +
         '<div class="botoes"><button class="botao" type="button" data-baixar>⬇ Baixar</button><button class="botao claro" type="button" data-tirar>Tirar</button></div></div>';
@@ -337,10 +323,22 @@
       entrada.addEventListener('input', function () { p.titulo = entrada.value; guardar(); redesenha(); });
       sel.addEventListener('change', function () { p.enfeite = sel.value; guardar(); redesenha(); });
       card.querySelector('[data-baixar]').addEventListener('click', function () { baixar(canvas, p); });
-      card.querySelector('[data-tirar]').addEventListener('click', function () { estado.paineis.splice(i, 1); guardar(); monta(); });
+      card.querySelector('[data-tirar]').addEventListener('click', function () {
+        estado.paineis.splice(i, 1);
+        guardar();
+        monta();
+        avisaTirado(p, i);
+      });
       lista.appendChild(card);
       redesenha();
     });
+  }
+
+  function voltarPadrao() {
+    if (estado.paineis.length && !confirm('Voltar pros 4 painéis padrão (Sobre mim, Regras, Doações, Setup)? Os que estão aqui saem.')) return;
+    estado.paineis = copia(PADRAO_PAINEIS);
+    guardar();
+    monta();
   }
 
   function chips(caixa, opcoes, chave) {
@@ -361,21 +359,24 @@
     guardar();
     monta();
   });
+  document.getElementById('padrao').addEventListener('click', voltarPadrao);
   document.getElementById('baixarTodos').addEventListener('click', function () {
     lista.querySelectorAll('canvas').forEach(function (canvas, i) {
       setTimeout(function () { baixar(canvas, estado.paineis[i]); }, i * 400);
     });
   });
 
-  // desenha depois que as letras carregarem (canvas não espera a fonte sozinho)
-  var fontes = ['400 40px "Cherry Bomb One"', '400 40px Pacifico', '800 40px Sniglet', '700 40px Fredoka'];
-  Promise.all(fontes.map(function (f) { return document.fonts ? document.fonts.load(f) : Promise.resolve(); }))
-    .catch(function () {}).then(function () {
-      chips(document.getElementById('temas'), Ondas.TEMAS, 'tema');
-      chips(document.getElementById('letras'), Ondas.LETRAS, 'letra');
-      monta();
-      document.body.dataset.pronto = '1';
-    });
+  // desenha depois da senha e das letras carregarem (canvas não espera a fonte sozinho)
+  Trava.entrar(function () {
+    var fontes = ['400 40px "Cherry Bomb One"', '400 40px Pacifico', '800 40px Sniglet', '700 40px Fredoka'];
+    Promise.all(fontes.map(function (f) { return document.fonts ? document.fonts.load(f) : Promise.resolve(); }))
+      .catch(function () {}).then(function () {
+        chips(document.getElementById('temas'), Ondas.TEMAS, 'tema');
+        chips(document.getElementById('letras'), Ondas.LETRAS, 'letra');
+        monta();
+        document.body.dataset.pronto = '1';
+      });
+  });
 </script>
 </body>
 </html>

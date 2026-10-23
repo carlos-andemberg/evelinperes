@@ -21,19 +21,19 @@
       nome: 'Rosa e branco',
       fundo: '#ffb0cf', fundo2: '#ffd3e5', meio: '#ffdbe9', frente: '#ffffff', frente2: '#fff0f6',
       linha: '#ff8fbd', brilho: '#ff7fb2', estrela: '#ff7fb0', acento: '#ff5c9e', acento2: '#ffa3cb',
-      texto: '#8a2f5d', ceu: ['#fff9fc', '#ffe9f2', '#ffd3e5']
+      texto: '#8a2f5d', forte: '#d92f76', ceu: ['#fff9fc', '#ffe9f2', '#ffd3e5']
     },
     lilas: {
       nome: 'Lilás e branco',
       fundo: '#d4b3ff', fundo2: '#ead8ff', meio: '#efe3ff', frente: '#ffffff', frente2: '#f8f2ff',
       linha: '#b48cff', brilho: '#a77bff', estrela: '#c79cff', acento: '#9763ff', acento2: '#c9a8ff',
-      texto: '#4b2d7a', ceu: ['#fcfaff', '#f0e7ff', '#e2d2ff']
+      texto: '#4b2d7a', forte: '#6d3fd1', ceu: ['#fcfaff', '#f0e7ff', '#e2d2ff']
     },
     agua: {
       nome: 'Água e rosa',
       fundo: '#93dfe8', fundo2: '#c3f1f3', meio: '#dcf8f8', frente: '#ffffff', frente2: '#f0fdfd',
       linha: '#5ccdd6', brilho: '#4fc6d1', estrela: '#ff8fbd', acento: '#13a9b8', acento2: '#7fe0e6',
-      texto: '#1e5962', ceu: ['#f7feff', '#e2f8fa', '#ccf0f4']
+      texto: '#1e5962', forte: '#0b8593', ceu: ['#f7feff', '#e2f8fa', '#ccf0f4']
     }
   };
 
@@ -592,6 +592,90 @@
     var u = Math.max(0.3, Math.min(camW, camH) / 333);
     var lado = Math.ceil(70 * u), cima = Math.ceil(200 * u);
     return { cima: cima, baixo: lado, esquerda: lado, direita: lado };
+  }
+
+  function cantosRedondos(c, x, y, w, h, r) {
+    r = Math.max(0, Math.min(r, w / 2, h / 2));
+    c.moveTo(x + r, y);
+    c.arcTo(x + w, y, x + w, y + h, r);
+    c.arcTo(x + w, y + h, x, y + h, r);
+    c.arcTo(x, y + h, x, y, r);
+    c.arcTo(x, y, x + w, y, r);
+    c.closePath();
+  }
+
+  // Anel de ondas parado: o mesmo desenho da borda da câmera em volta do retângulo (x0, y0)–(x1, y1),
+  // num instante `tempo`. Usado pelos painéis. o: { tema, u, espessura, tempo, raio,
+  // antesDaFrente(camadas) pra desenhar algo entre a onda do meio e a da frente (a Nami) }
+  function anel(c, x0, y0, x1, y1, o) {
+    o = o || {};
+    var tema = TEMAS[o.tema] || TEMAS.rosa, u = o.u || 1, e = o.espessura || 1, rq = Math.sqrt(e), t = o.tempo || 0;
+    var Rc = (o.raio || 22) * u, passo = Math.max(2, 3 * u), i;
+    var faz = function (d, A, lambda, w, ph) { return camada(caminho(x0 - d, y0 - d, x1 + d, y1 + d, Rc + d, true), A, lambda, w, ph, passo); };
+    var L = [faz(25 * u * e, 6 * u * rq, 125 * u, 1.5, 0), faz(16 * u * e, 4.5 * u * rq, 100 * u, 1.9, 1.7), faz(8 * u * e, 3 * u * rq, 80 * u, 2.4, 3.1)];
+    L.forEach(function (l) {
+      for (var j = 0; j < l.n; j++) {
+        var off = onda(l, l.ss[j], t);
+        l.off[j] = off; l.px[j] = l.bx[j] + l.nx[j] * off; l.py[j] = l.by[j] + l.ny[j] * off;
+      }
+    });
+    var furo = { x: x0 + 3 * u, y: y0 + 3 * u, w: x1 - x0 - 6 * u, h: y1 - y0 - 6 * u, r: Rc - 3 * u };
+    function contorno(l) {
+      c.beginPath();
+      c.moveTo(l.px[0], l.py[0]);
+      for (var j = 1; j < l.n; j++) c.lineTo(l.px[j], l.py[j]);
+      c.closePath();
+    }
+    function preenche(l, estilo, alpha) {
+      c.beginPath();
+      cantosRedondos(c, furo.x, furo.y, furo.w, furo.h, furo.r);
+      c.moveTo(l.px[0], l.py[0]);
+      for (var j = 1; j < l.n; j++) c.lineTo(l.px[j], l.py[j]);
+      c.closePath();
+      c.globalAlpha = alpha;
+      c.fillStyle = estilo;
+      c.fill('evenodd');
+      c.globalAlpha = 1;
+    }
+    function degrade(c1, c2) {
+      var g = c.createLinearGradient(x0, y0, x1, y1);
+      g.addColorStop(0, c1); g.addColorStop(0.5, c2); g.addColorStop(1, c1);
+      return g;
+    }
+    contorno(L[0]);
+    c.strokeStyle = tema.brilho;
+    c.globalAlpha = 0.12; c.lineWidth = 20 * u; c.stroke();
+    c.globalAlpha = 0.28; c.lineWidth = 9 * u; c.stroke();
+    c.globalAlpha = 1;
+    preenche(L[0], degrade(tema.fundo, tema.fundo2), 0.97);
+    contorno(L[0]); c.strokeStyle = 'rgba(255,255,255,0.85)'; c.lineWidth = 1.6 * u; c.stroke();
+    preenche(L[1], tema.meio, 0.8);
+    contorno(L[1]); c.strokeStyle = tema.linha; c.globalAlpha = 0.45; c.lineWidth = 1.4 * u; c.stroke(); c.globalAlpha = 1;
+    if (o.antesDaFrente) o.antesDaFrente(L);
+    preenche(L[2], degrade(tema.frente, tema.frente2), 0.93);
+    contorno(L[2]); c.strokeStyle = '#ffffff'; c.lineWidth = 2.4 * u; c.stroke();
+    c.fillStyle = '#ffffff';
+    for (i = 0; i < L[2].n; i += 3) {
+      if (L[2].off[i] > L[2].A * 0.55) {
+        c.beginPath(); c.arc(L[2].px[i] + L[2].nx[i] * 2 * u, L[2].py[i] + L[2].ny[i] * 2 * u, (1.1 + (L[2].off[i] / L[2].A - 0.55) * 3) * u, 0, TAU); c.fill();
+      }
+    }
+    c.beginPath(); cantosRedondos(c, furo.x, furo.y, furo.w, furo.h, furo.r);
+    c.strokeStyle = '#ffffff'; c.lineWidth = 2.5 * u; c.stroke();
+    c.beginPath(); cantosRedondos(c, furo.x + 1.7 * u, furo.y + 1.7 * u, furo.w - 3.4 * u, furo.h - 3.4 * u, Math.max(0, furo.r - 1.7 * u));
+    c.strokeStyle = tema.acento2; c.lineWidth = 1.2 * u; c.stroke();
+    // enfeites nos cantos, como na borda da câmera
+    var m = L[1].c, rm = m.r, s = 0.7071, tam = 14 * u * Math.min(1.4, Math.max(0.7, e));
+    [[m.x0 + rm - rm * s, m.y0 + rm - rm * s, 'estrela'], [m.x1 - rm + rm * s, m.y0 + rm - rm * s, 'concha'],
+     [m.x0 + rm - rm * s, m.y1 - rm + rm * s, 'perolas'], [m.x1 - rm + rm * s, m.y1 - rm + rm * s, 'perolas']].forEach(function (q, k) {
+      c.save();
+      c.translate(q[0], q[1]);
+      if (q[2] === 'estrela') { c.rotate(-0.25); estrelaDoMar(c, tam, tema.estrela, 'rgba(255,255,255,0.75)'); }
+      else if (q[2] === 'concha') { c.rotate(-0.35); concha(c, tam * 1.1, tema.acento2); }
+      else { c.rotate(k === 2 ? 0.3 : -0.3); perolas(c, tam * 0.75); }
+      c.restore();
+    });
+    return { camadas: L, furo: furo, u: u };
   }
 
   // --------------------------------------------------------------- motor
@@ -1215,6 +1299,8 @@
     estrelaDoMar: estrelaDoMar,
     concha: concha,
     perolas: perolas,
-    brilhinho: brilhinho
+    brilhinho: brilhinho,
+    anel: anel,
+    cantosRedondos: cantosRedondos
   };
 })(window);

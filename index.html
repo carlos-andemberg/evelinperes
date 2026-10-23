@@ -296,7 +296,7 @@
   @media (prefers-reduced-motion: reduce) { #ondas { display: none; } }
 </style>
 </head>
-<body>
+<body class="travado">
 <canvas id="ondas" aria-hidden="true"></canvas>
 <main>
   <header>
@@ -590,6 +590,7 @@
   </footer>
 </main>
 
+<script src="trava.js?v=dev"></script>
 <script src="ondas.js?v=dev"></script>
 <script src="dados.js?v=dev"></script>
 <script src="cenas.js?v=dev"></script>
@@ -828,6 +829,7 @@
     situacaoLive();
     clearTimeout(espera);
     espera = setTimeout(function () {
+      if (!liberado) return;   // nada de prévia antes da senha
       // só a aba aberta fica rodando, pra não pesar
       var sep = function (u) { return u + (u.indexOf('?') > -1 ? '&' : '?'); };
       // auto=0: a prévia mostra o que está aqui, não o que está salvo na live
@@ -1169,7 +1171,7 @@
   }
   function salvarNaLive() {
     var senha = $('senha').value.trim();
-    if (!senha) { try { senha = localStorage.getItem(SENHA) || ''; } catch (e) {} }
+    if (!senha) { senha = Trava.senha(); }
     if (!senha) return pedeSenha('Digite a senha pra salvar');
     var corpo = opcoesAgora();
     corpo.estado = estado;
@@ -1184,12 +1186,12 @@
     }).then(function (x) {
       $('botaoSalvar').disabled = false;
       if (x.r.status === 401) {
-        try { localStorage.removeItem(SENHA); } catch (e) {}
+        Trava.esquece();
         $('senha').value = '';
         return pedeSenha(x.d.erro || 'Senha errada');
       }
       if (!x.r.ok) return mostra(x.d.erro || 'Não deu pra salvar', 'erro');
-      try { localStorage.setItem(SENHA, senha); } catch (e) {}
+      Trava.guarda(senha);
       $('senha').value = '';
       $('senha').hidden = true;
       live = { versao: x.d.versao, borda: corpo.borda, fila: corpo.fila, estado: estado };
@@ -1408,7 +1410,7 @@
     o.textContent = '📺 ' + ROTULOS[t];
     o.addEventListener('click', function () {
       var senha = $('senha').value.trim();
-      if (!senha) { try { senha = localStorage.getItem(SENHA) || ''; } catch (e) {} }
+      if (!senha) { senha = Trava.senha(); }
       if (!senha) { $('avisoTeste').textContent = 'Digite a senha lá embaixo, na barrinha do Salvar na live.'; return pedeSenha('Digite a senha pra testar no OBS'); }
       $('avisoTeste').textContent = 'Mandando…';
       fetch('/api/alerta', {
@@ -1416,9 +1418,9 @@
         headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + senha },
         body: JSON.stringify(dadosTeste(t))
       }).then(function (r) { return r.json().then(function (d) { return { r: r, d: d }; }); }).then(function (x) {
-        if (x.r.status === 401) { try { localStorage.removeItem(SENHA); } catch (e) {} $('avisoTeste').textContent = x.d.erro || 'Senha errada.'; return pedeSenha('Senha errada'); }
+        if (x.r.status === 401) { Trava.esquece(); $('avisoTeste').textContent = x.d.erro || 'Senha errada.'; return pedeSenha('Senha errada'); }
         if (!x.r.ok) { $('avisoTeste').textContent = x.d.erro || 'Não deu pra mandar.'; return; }
-        try { localStorage.setItem(SENHA, senha); } catch (e) {}
+        Trava.guarda(senha);
         $('avisoTeste').textContent = '✓ Mandado! Telas abertas recebendo avisos agora: ' + x.d.telas + ' (inclui esta prévia e as outras telas do OBS).';
       }).catch(function () { $('avisoTeste').textContent = 'Sem conexão com o servidor.'; });
     });
@@ -1454,7 +1456,9 @@
     ].join('\n');
   })();
 
-  trocaAba(aba);
+  // só mostra o gerador (e as prévias) depois da senha
+  var liberado = false;
+  Trava.entrar(function () { liberado = true; trocaAba(aba); });
 </script>
 </body>
 </html>
