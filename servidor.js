@@ -153,7 +153,7 @@ async function salvar(req, res) {
 function eventos(req, res) {
   res.writeHead(200, {
     'Content-Type': 'text/event-stream; charset=utf-8', 'Cache-Control': 'no-cache, no-transform',
-    'Connection': 'keep-alive', 'X-Accel-Buffering': 'no'
+    'Connection': 'keep-alive', 'X-Accel-Buffering': 'no', 'Access-Control-Allow-Origin': '*'
   });
   res.write('retry: 3000\nevent: config\ndata: ' + JSON.stringify({ versao: config.versao }) + '\n\n');
   ouvintes.add(res);
@@ -186,7 +186,9 @@ function arquivo(req, res, caminho) {
 const servidor = http.createServer((req, res) => {
   const url = new URL(req.url, 'http://localhost');
   const p = url.pathname;
-  if (p === '/api/config' && req.method === 'GET') return json(res, 200, config);
+  // as opções e os avisos são públicos: liberados pra quando a tela roda isolada (sandbox), como
+  // os alertas dentro do widget da StreamElements
+  if (p === '/api/config' && req.method === 'GET') { res.setHeader('Access-Control-Allow-Origin', '*'); return json(res, 200, config); }
   if (p === '/api/config' && (req.method === 'PUT' || req.method === 'POST')) {
     return salvar(req, res).catch((e) => { console.error(e); json(res, 500, { erro: 'Não deu pra salvar.' }); });
   }

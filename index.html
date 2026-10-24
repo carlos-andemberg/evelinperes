@@ -585,7 +585,7 @@
         <span class="rotulo">Colocar na StreamElements (uma vez só)</span>
         <ol class="passos" style="margin-top:8px">
           <li>Na StreamElements: <b>Overlays</b> → abra o overlay que já está no OBS → <b>+</b> → <b>Static / Custom</b> → <b>Custom widget</b></li>
-          <li>No widget: <b>Settings → Open editor</b>. Cole cada código abaixo na aba de mesmo nome (<b>HTML</b>, <b>CSS</b> e <b>JS</b>) e clique em <b>Done</b></li>
+          <li>No widget: <b>Settings → Open editor</b>. Apague tudo de cada aba e cole cada código abaixo na de mesmo nome (<b>HTML</b>, <b>CSS</b> e <b>JS</b>); nas abas <b>FIELDS</b> e <b>DATA</b> deixe só <code>{}</code>. Clique em <b>Done</b> e depois em <b>Save</b>. (Não é no AlertBox: lá é o “Enable custom CSS” de cada alerta, outra coisa)</li>
           <li>Deixe o widget do tamanho do overlay (<b>1920 × 1080</b>, posição <b>0, 0</b>) e salve o overlay</li>
           <li>Se o overlay já tem o <b>AlertBox</b> da StreamElements, desligue nele os tipos que estes alertas fazem, pra não tocar dois</li>
           <li>Teste com o <b>Emulate</b> da StreamElements ou com os botões daqui</li>
@@ -1526,7 +1526,8 @@
       '// Alertas da evelin_peres: repassa os eventos da StreamElements pra página de alertas do site.',
       '// O visual, o som e os textos ficam no site (gerador → Salvar na live).',
       "const quadro = document.getElementById('alertas');",
-      "const manda = (dados) => quadro.contentWindow.postMessage(Object.assign({ evelinperes: 'alerta' }, dados), '" + site + "');",
+      "// '*': se a StreamElements isolar o widget, a página do site fica sem endereço e um destino fixo descartaria o aviso",
+      "const manda = (dados) => quadro.contentWindow.postMessage(Object.assign({ evelinperes: 'alerta' }, dados), '*');",
       '',
       "window.addEventListener('onEventReceived', (obj) => {",
       '  const ouvinte = obj.detail.listener;',
