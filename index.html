@@ -1541,12 +1541,15 @@
       '// O site decide o que vira alerta e como fica (gerador → Salvar na live): este código não muda mais.',
       "const quadro = document.getElementById('alertas');",
       "const CHAT = ['message', 'delete-message', 'delete-messages', 'kvstore:update', 'bot:counter'];",
+      "const manda = (listener, evento) => quadro.contentWindow.postMessage({ evelinperes: 'se', listener, event: evento }, '*');",
+      '',
+      '// avisa o site que o widget está ligado (aparece no gerador, em "O que chegou")',
+      "quadro.addEventListener('load', () => manda('widget-ligado', {}));",
       '',
       "window.addEventListener('onEventReceived', (obj) => {",
       '  const d = obj.detail || {};',
       '  if (CHAT.includes(d.listener)) return;',
-      "  const evento = JSON.parse(JSON.stringify(d.event || {}));",
-      "  quadro.contentWindow.postMessage({ evelinperes: 'se', listener: d.listener, event: evento }, '*');",
+      '  manda(d.listener, JSON.parse(JSON.stringify(d.event || {})));',
       '});'
     ].join('\n');
   })();
@@ -1569,6 +1572,8 @@
         var li = document.createElement('li'), b = document.createElement('b'), sm = document.createElement('small');
         var hora = new Date(x.em).toLocaleTimeString('pt-BR');
         if (x.de === 'erro') { li.className = 'erro'; b.textContent = 'Erro'; li.appendChild(b); li.appendChild(document.createTextNode(' · ' + hora + ' · ' + x.oque)); }
+        else if (x.de === 'cloudflare') { b.textContent = 'Aviso do Cloudflare'; li.appendChild(b); li.appendChild(document.createTextNode(' · ' + hora + ' · pode ignorar, não atrapalha os alertas')); x.dados = ''; }
+        else if (x.oque === 'widget-ligado') { b.textContent = '✅ Widget da StreamElements ligado'; li.appendChild(b); li.appendChild(document.createTextNode(' · ' + hora + ' · pronto pra receber os eventos')); }
         else {
           b.textContent = x.oque;
           li.appendChild(b);

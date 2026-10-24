@@ -110,9 +110,14 @@
       }).catch(function () {});
     } catch (e) {}
   }
+  // o que o widget manda antes de a página terminar de carregar as opções fica guardado até ela estar pronta
+  var guardados = [], trataMensagem = null;
+  addEventListener('message', function (e) { if (trataMensagem) trataMensagem(e); else if (guardados.length < 20) guardados.push(e); });
   var errosContados = 0;
   addEventListener('error', function (e) {
-    if (++errosContados <= 5) conta('erro', String(e.message || 'erro').slice(0, 60), '', (e.filename || '').split('/').pop() + ':' + e.lineno);
+    // o Cloudflare põe um script dele no fim da página, que quebra dentro do widget isolado: não atrapalha os alertas
+    var cf = /named property 'document'/.test(e.message || '');
+    if (++errosContados <= 5) conta(cf ? 'cloudflare' : 'erro', String(e.message || 'erro').slice(0, 60), '', (e.filename || '').split('/').pop() + ':' + e.lineno);
   });
 
   // som de cada tipo (sons.js); o gerador troca por outro da lista ou por um link de .mp3
@@ -573,7 +578,7 @@
       if (tipo === 'tip' || tipo === 'donation') return { tipo: 'doacao', nome: nome, qtd: qtd, msg: msg };
       return null;
     }
-    addEventListener('message', function (e) {
+    trataMensagem = function (e) {
       var d = e.data;
       if (!d || typeof d !== 'object') return;
       // os testes da prévia do gerador (mesmo endereço) não entram na lista do que chegou
@@ -582,11 +587,14 @@
         if (deFora) conta(e.origin, 'widget antigo', d.tipo, d);
         enfileira(d);
       } else if (d.evelinperes === 'se') {
+        // o widget avisa quando liga: aparece no gerador como "widget ligado"
+        if (d.listener === 'widget-ligado') { conta(e.origin, 'widget-ligado', 'conectado'); return; }
         var a = daStreamElements(d.listener, d.event);
         if (deFora) conta(e.origin, String(d.listener).slice(0, 40), a ? a.tipo : 'não é alerta', d.event);
         if (a) enfileira(a);
       }
-    });
+    };
+    guardados.splice(0).forEach(trataMensagem);
     // botão "Testar no OBS" do gerador
     if (window.EventSource && location.protocol.indexOf('http') === 0) {
       try {
