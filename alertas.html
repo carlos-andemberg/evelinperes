@@ -595,6 +595,21 @@
       }
     };
     guardados.splice(0).forEach(trataMensagem);
+
+    // pelo AlertBox da StreamElements: o código de cada alerta abre esta página com o alerta no
+    // endereço (#{"tipo":"doacao","nome":...}) e ele toca assim que ela abre
+    try {
+      var doAlertBox = location.hash.length > 1 ? JSON.parse(decodeURIComponent(location.hash.slice(1))) : null;
+      if (doAlertBox && typeof doAlertBox === 'object') {
+        // sem o #, uma recarga (Salvar na live) não toca o mesmo alerta de novo
+        try { history.replaceState(null, '', location.pathname + location.search); } catch (e) {}
+        var ab = { tipo: String(doAlertBox.tipo || ''), nome: doAlertBox.nome, qtd: numero(doAlertBox.qtd), msg: doAlertBox.msg };
+        // sub com quem deu diferente de quem ganhou: é sub de presente
+        if (ab.tipo === 'sub' && doAlertBox.de && doAlertBox.de !== doAlertBox.nome) { ab.tipo = 'presente'; ab.para = doAlertBox.nome; ab.nome = doAlertBox.de; }
+        conta('alertbox', 'alertbox ' + ab.tipo, TIPOS[ab.tipo] ? ab.tipo : 'não é alerta', doAlertBox);
+        enfileira(ab);
+      }
+    } catch (e) { conta('erro', 'alertbox: dados inválidos', '', location.hash.slice(0, 200)); }
     // botão "Testar no OBS" do gerador
     if (window.EventSource && location.protocol.indexOf('http') === 0) {
       try {

@@ -607,6 +607,18 @@
         <div class="codigo"><span class="rotulo">JS</span><textarea id="codJs" readonly rows="8" aria-label="Código JS"></textarea><button class="botao pequeno" data-copiar="codJs">Copiar</button></div>
         <p class="nota">Depois disso não precisa mais mexer na StreamElements: mudou aqui e clicou em <b>Salvar na live</b>, os alertas mudam sozinhos.</p>
       </div>
+      <div class="card">
+        <span class="rotulo">Ou pelo AlertBox da StreamElements</span>
+        <ol class="passos" style="margin-top:8px">
+          <li>No <b>AlertBox</b>, deixe o widget com <b>1920 × 1080</b> na posição <b>0, 0</b></li>
+          <li>Em cada alerta (Follower, Subscriber, Tip, Cheer, Raid): <b>Clear sound</b>, tire imagem e vídeo, desligue o <b>TTS</b> e ponha a duração em <b>15 s</b></li>
+          <li>Ainda em cada alerta: ligue <b>Enable custom CSS → Open editor</b>, apague tudo de cada aba e cole os códigos abaixo (FIELDS: <code>{}</code>). No JS, troque o <code>TIPO</code>: Follower <code>'seguir'</code>, Subscriber <code>'sub'</code>, Tip <code>'doacao'</code>, Cheer <code>'bits'</code>, Raid <code>'raid'</code></li>
+          <li><b>Done</b>, <b>Save</b>, e teste com o <b>Emulate</b>. Se tiver o Custom widget daqui também, apague ele, senão toca dois</li>
+        </ol>
+        <div class="codigo"><span class="rotulo">HTML</span><textarea id="abHtml" readonly rows="3" aria-label="Código HTML do AlertBox"></textarea><button class="botao pequeno" data-copiar="abHtml">Copiar</button></div>
+        <div class="codigo"><span class="rotulo">CSS</span><textarea id="abCss" readonly rows="2" aria-label="Código CSS do AlertBox"></textarea><button class="botao pequeno" data-copiar="abCss">Copiar</button></div>
+        <div class="codigo"><span class="rotulo">JS</span><textarea id="abJs" readonly rows="8" aria-label="Código JS do AlertBox"></textarea><button class="botao pequeno" data-copiar="abJs">Copiar</button></div>
+      </div>
     </div>
   </section>
 
@@ -1551,6 +1563,33 @@
       '  if (CHAT.includes(d.listener)) return;',
       '  manda(d.listener, JSON.parse(JSON.stringify(d.event || {})));',
       '});'
+    ].join('\n');
+  })();
+
+  // pelo AlertBox: cada alerta da StreamElements abre a página de alertas com os dados dele no endereço
+  (function () {
+    var site = location.origin;
+    $('abHtml').value = [
+      '<iframe id="alertas" allow="autoplay" frameborder="0"></iframe>',
+      '<div hidden>',
+      '  <span id="nome">{{name}}</span>',
+      '  <span id="qtd">{{amount}}</span>',
+      '  <span id="msg">{{message}}</span>',
+      '  <span id="de">{{sender}}</span>',
+      '</div>'
+    ].join('\n');
+    $('abCss').value = $('codCss').value;
+    $('abJs').value = [
+      '// Alertas da evelin_peres pelo AlertBox: abre a página de alertas do site, que toca este alerta',
+      "// com o visual, o som e a voz de lá. Em cada alerta muda só o TIPO: Follower 'seguir',",
+      "// Subscriber 'sub', Tip 'doacao', Cheer 'bits', Raid 'raid'",
+      "const TIPO = 'doacao';",
+      'const valor = (id) => {',
+      "  const t = (document.getElementById(id) || {}).textContent || '';",
+      "  return /\\{\\{.*\\}\\}/.test(t) ? '' : t.trim();",
+      '};',
+      "const dados = { tipo: TIPO, nome: valor('nome'), qtd: valor('qtd'), msg: valor('msg'), de: valor('de') };",
+      "document.getElementById('alertas').src = '" + site + "/alertas.html#' + encodeURIComponent(JSON.stringify(dados));"
     ].join('\n');
   })();
 
