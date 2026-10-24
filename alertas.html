@@ -86,7 +86,10 @@
    * flutuando e cada tipo tem o seu efeito (corações, estrelas, conchas, cardume, cristais, pérolas).
    *
    * De onde vêm os alertas:
-   *   - do widget da StreamElements, por postMessage: { evelinperes: 'alerta', tipo, nome, qtd, msg, para }
+   *   - do widget da StreamElements, por postMessage. O widget manda o evento cru
+   *     ({ evelinperes: 'se', listener, event }) e quem decide o que vira alerta é esta página, então
+   *     dá pra corrigir aqui sem mexer na StreamElements. (O widget antigo mandava já pronto:
+   *     { evelinperes: 'alerta', tipo, nome, qtd, msg, para }, que continua valendo.)
    *   - do botão "Testar no OBS" do gerador (aviso do servidor, evento "alerta")
    *   - do link: ?teste=sub toca um, ?demo toca todos em sequência
    * O visual (cores, letra, som, voz, textos) vem do que foi salvo no gerador, como as outras telas.
@@ -95,6 +98,22 @@
   var $ = function (id) { return document.getElementById(id); };
   var emIframe = window.parent !== window;
   var fila = [], atual = null;
+
+  // conta pro servidor o que chegou e os erros: o gerador mostra, pra descobrir por que um alerta não
+  // apareceu. text/plain e no-cors: funciona até dentro do widget isolado da StreamElements
+  function conta(de, oque, virou, dados) {
+    if (location.protocol.indexOf('http') !== 0) return;
+    try {
+      fetch('/api/visto', {
+        method: 'POST', mode: 'no-cors', keepalive: true, headers: { 'Content-Type': 'text/plain' },
+        body: JSON.stringify({ de: de, oque: oque, virou: virou, dados: dados === undefined ? '' : JSON.stringify(dados).slice(0, 1500) })
+      }).catch(function () {});
+    } catch (e) {}
+  }
+  var errosContados = 0;
+  addEventListener('error', function (e) {
+    if (++errosContados <= 5) conta('erro', String(e.message || 'erro').slice(0, 60), '', (e.filename || '').split('/').pop() + ':' + e.lineno);
+  });
 
   // som de cada tipo (sons.js); o gerador troca por outro da lista ou por um link de .mp3
   var SOM_PADRAO = { seguir: 'bolhas', sub: 'caixinha', presente: 'magia', raid: 'fanfarra', bits: 'cristal', doacao: 'moedas' };
@@ -527,9 +546,46 @@
     requestAnimationFrame(quadro);
 
     // ---------------------------------------------------------- de onde chegam os alertas
+    // número que pode vir como texto ("5.00", "R$ 5,00")
+    function numero(v) {
+      if (typeof v === 'string') v = v.replace(/[^\d,.\-]/g, '').replace(/,(\d{1,2})$/, '.$1').replace(/,/g, '');
+      return Number(v) || 0;
+    }
+    // evento cru da StreamElements → alerta (null = não é alerta)
+    function daStreamElements(listener, e) {
+      e = e && typeof e === 'object' ? e : {};
+      // "repetir" do feed de atividades pode vir embrulhado
+      if (listener === 'event:test' && e.listener) { listener = e.listener; e = e.event || {}; }
+      var tipo = String(listener || '').replace(/-latest$/, '');
+      if (tipo === 'event' && e.type) { tipo = e.type; e = e.data || e; }
+      var nome = e.name || e.username || e.displayName || (e.data && (e.data.username || e.data.displayName)) || 'alguém';
+      var qtd = numero(e.amount !== undefined ? e.amount : e.data && e.data.amount);
+      var msg = e.message || (e.data && e.data.message) || '';
+      if (tipo === 'follower' || tipo === 'follow') return { tipo: 'seguir', nome: nome };
+      if (tipo === 'subscriber' || tipo === 'subscription') {
+        if (e.bulkGifted) return { tipo: 'presente', nome: e.sender || nome, qtd: qtd };
+        if (e.isCommunityGift) return null;  // presentes de um pacote: o pacote já foi anunciado
+        if (e.gifted) return { tipo: 'presente', nome: e.sender || 'anônimo', para: nome, qtd: 1 };
+        return { tipo: 'sub', nome: nome, qtd: qtd, msg: msg };
+      }
+      if (tipo === 'raid') return { tipo: 'raid', nome: nome, qtd: qtd };
+      if (tipo === 'cheer') return { tipo: 'bits', nome: nome, qtd: qtd, msg: msg };
+      if (tipo === 'tip' || tipo === 'donation') return { tipo: 'doacao', nome: nome, qtd: qtd, msg: msg };
+      return null;
+    }
     addEventListener('message', function (e) {
       var d = e.data;
-      if (d && typeof d === 'object' && d.evelinperes === 'alerta') enfileira(d);
+      if (!d || typeof d !== 'object') return;
+      // os testes da prévia do gerador (mesmo endereço) não entram na lista do que chegou
+      var deFora = e.origin !== location.origin;
+      if (d.evelinperes === 'alerta') {
+        if (deFora) conta(e.origin, 'widget antigo', d.tipo, d);
+        enfileira(d);
+      } else if (d.evelinperes === 'se') {
+        var a = daStreamElements(d.listener, d.event);
+        if (deFora) conta(e.origin, String(d.listener).slice(0, 40), a ? a.tipo : 'não é alerta', d.event);
+        if (a) enfileira(a);
+      }
     });
     // botão "Testar no OBS" do gerador
     if (window.EventSource && location.protocol.indexOf('http') === 0) {

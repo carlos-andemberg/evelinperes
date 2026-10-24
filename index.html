@@ -190,6 +190,11 @@
     animation: flutua 2.6s ease-in-out infinite;
   }
   @keyframes flutua { 50% { transform: translate(-50%, 35%); } }
+  .vistos { list-style: none; margin: 12px 0 0; padding: 0; display: grid; gap: 6px; font-size: 13.5px; }
+  .vistos li { background: var(--clarinho); border: 2px solid var(--rosa3); border-radius: 12px; padding: 8px 12px; overflow-wrap: anywhere; }
+  .vistos li b { color: var(--rosa); }
+  .vistos li.erro { border-color: #f3a7b4; background: #fff0f2; }
+  .vistos small { display: block; margin-top: 3px; color: var(--suave); font: 600 12px Consolas, 'Cascadia Mono', monospace; }
   .sons { display: grid; gap: 8px; }
   .som { display: grid; grid-template-columns: 96px 1fr 42px; gap: 8px; align-items: center; }
   .som > b { font-weight: 800; font-size: 14px; }
@@ -578,6 +583,13 @@
       <div class="formatos" id="testesObs" style="justify-content:flex-start"></div>
       <p class="aviso" id="avisoTeste"></p>
     </div>
+
+    <div class="card">
+      <h2>📡 O que chegou</h2>
+      <p>Os últimos eventos que a StreamElements mandou pros alertas abertos (no OBS ou no editor dela), e se viraram alerta. Se um alerta não aparece e ele nem chega aqui, o problema está na StreamElements; se chega e não vira alerta, está no site.</p>
+      <button class="botao pequeno claro" type="button" id="verVistos">🔄 Atualizar</button>
+      <ul class="vistos" id="vistos"></ul>
+    </div>
     </div>
     <div class="lado">
       <div class="previa" id="previa-alertas"><small>prévia · use os botões de teste</small></div>
@@ -901,6 +913,7 @@
     $('painel-fila').classList.toggle('ativo', qual === 'fila');
     $('painel-alertas').classList.toggle('ativo', qual === 'alertas');
     atualizar(true);
+    if (qual === 'alertas' && liberado) verVistos();
   }
 
   // ---------------------------------------------------------------- campos
@@ -1522,29 +1535,58 @@
     $('codHtml').value = '<iframe id="alertas" src="' + site + '/alertas.html" allow="autoplay" frameborder="0"></iframe>';
     $('codCss').value = 'html, body { margin: 0; overflow: hidden; background: transparent; }\n' +
       '#alertas { position: fixed; inset: 0; width: 100%; height: 100%; border: 0; background: transparent; }';
+    // manda o evento cru: o site decide o que vira alerta, então este código não precisa mudar mais
     $('codJs').value = [
       '// Alertas da evelin_peres: repassa os eventos da StreamElements pra página de alertas do site.',
-      '// O visual, o som e os textos ficam no site (gerador → Salvar na live).',
+      '// O site decide o que vira alerta e como fica (gerador → Salvar na live): este código não muda mais.',
       "const quadro = document.getElementById('alertas');",
-      "// '*': se a StreamElements isolar o widget, a página do site fica sem endereço e um destino fixo descartaria o aviso",
-      "const manda = (dados) => quadro.contentWindow.postMessage(Object.assign({ evelinperes: 'alerta' }, dados), '*');",
+      "const CHAT = ['message', 'delete-message', 'delete-messages', 'kvstore:update', 'bot:counter'];",
       '',
       "window.addEventListener('onEventReceived', (obj) => {",
-      '  const ouvinte = obj.detail.listener;',
-      '  const e = obj.detail.event || {};',
-      "  if (ouvinte === 'follower-latest') manda({ tipo: 'seguir', nome: e.name });",
-      "  else if (ouvinte === 'subscriber-latest') {",
-      "    if (e.bulkGifted) manda({ tipo: 'presente', nome: e.sender || e.name, qtd: e.amount });",
-      '    else if (e.isCommunityGift) return; // presentes de um pacote: o pacote já foi anunciado',
-      "    else if (e.gifted) manda({ tipo: 'presente', nome: e.sender || 'anônimo', para: e.name, qtd: 1 });",
-      "    else manda({ tipo: 'sub', nome: e.name, qtd: e.amount, msg: e.message });",
-      '  }',
-      "  else if (ouvinte === 'raid-latest') manda({ tipo: 'raid', nome: e.name, qtd: e.amount });",
-      "  else if (ouvinte === 'cheer-latest') manda({ tipo: 'bits', nome: e.name, qtd: e.amount, msg: e.message });",
-      "  else if (ouvinte === 'tip-latest') manda({ tipo: 'doacao', nome: e.name, qtd: e.amount, msg: e.message });",
+      '  const d = obj.detail || {};',
+      '  if (CHAT.includes(d.listener)) return;',
+      "  const evento = JSON.parse(JSON.stringify(d.event || {}));",
+      "  quadro.contentWindow.postMessage({ evelinperes: 'se', listener: d.listener, event: evento }, '*');",
       '});'
     ].join('\n');
   })();
+
+  // o que chegou nos alertas abertos (os alertas contam pro servidor)
+  function verVistos() {
+    var lista = $('vistos'), senha = Trava.senha();
+    if (!senha) return;
+    fetch('/api/visto', { headers: { 'Authorization': 'Bearer ' + senha }, cache: 'no-store' }).then(function (r) {
+      if (!r.ok) throw new Error(r.status);
+      return r.json();
+    }).then(function (v) {
+      lista.textContent = '';
+      if (!v.length) {
+        var nada = document.createElement('li');
+        nada.textContent = 'Nada chegou ainda desde que o site foi atualizado. Teste com o Emulate da StreamElements e clique em Atualizar.';
+        lista.appendChild(nada);
+      }
+      v.forEach(function (x) {
+        var li = document.createElement('li'), b = document.createElement('b'), sm = document.createElement('small');
+        var hora = new Date(x.em).toLocaleTimeString('pt-BR');
+        if (x.de === 'erro') { li.className = 'erro'; b.textContent = 'Erro'; li.appendChild(b); li.appendChild(document.createTextNode(' · ' + hora + ' · ' + x.oque)); }
+        else {
+          b.textContent = x.oque;
+          li.appendChild(b);
+          li.appendChild(document.createTextNode(' · ' + hora + ' · ' + (x.virou === 'não é alerta' ? 'não é alerta' : 'virou ' + x.virou)));
+        }
+        sm.textContent = x.dados;
+        li.appendChild(sm);
+        lista.appendChild(li);
+      });
+    }).catch(function () {
+      lista.textContent = '';
+      var li = document.createElement('li');
+      li.className = 'erro';
+      li.textContent = 'Não deu pra buscar agora.';
+      lista.appendChild(li);
+    });
+  }
+  $('verVistos').addEventListener('click', verVistos);
 
   // só mostra o gerador (e as prévias) depois da senha
   var liberado = false;

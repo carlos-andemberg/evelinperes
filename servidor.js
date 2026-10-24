@@ -7,6 +7,8 @@
  *   GET  /api/conferir  → 200 se a senha confere, 401 se não
  *   GET  /api/eventos   → Server-Sent Events: avisa as telas abertas (no OBS) quando as opções mudam
  *   POST /api/alerta    → manda um alerta de teste pras telas de alerta abertas (precisa da senha)
+ *   POST /api/visto     → a página de alertas conta o que chegou (evento da StreamElements, erro)
+ *   GET  /api/visto     → os últimos 40, do mais novo pro mais velho (precisa da senha)
  *
  * Variáveis: PORTA (80), PASTA (pasta das páginas), DADOS (pasta do config.json: volume no Coolify),
  * SENHA_EDICAO (sem ela ninguém consegue salvar). Local: `node servidor.js 5550`.
@@ -125,6 +127,24 @@ async function testaAlerta(req, res) {
   json(res, 200, { ok: true, telas: ouvintes.size });
 }
 
+// o que chegou nos alertas (eventos da StreamElements e erros), pra conferir no gerador quando um
+// alerta não aparece. Fica só na memória, os últimos 40; quem manda é a página de alertas, que não
+// tem senha, então cada IP manda no máximo 120 a cada 10 minutos
+const vistos = [];
+const enviosVisto = new Map();
+async function guardaVisto(req, res) {
+  const k = ipDe(req), agora = Date.now(), e = enviosVisto.get(k);
+  if (!e || agora - e.t > 10 * 60e3) enviosVisto.set(k, { n: 1, t: agora });
+  else if (++e.n > 120) { res.writeHead(429); return res.end(); }
+  let d;
+  try { d = JSON.parse(await lerCorpo(req, 4 * 1024)); } catch (err) { res.writeHead(400); return res.end(); }
+  if (!d || typeof d !== 'object') { res.writeHead(400); return res.end(); }
+  vistos.push({ em: new Date().toISOString(), de: String(d.de || '').slice(0, 40), oque: String(d.oque || '').slice(0, 60), virou: String(d.virou || '').slice(0, 30), dados: String(d.dados || '').slice(0, 1500) });
+  if (vistos.length > 40) vistos.shift();
+  res.writeHead(204, { 'Access-Control-Allow-Origin': '*' });
+  res.end();
+}
+
 async function salvar(req, res) {
   if (bloqueado(req)) return json(res, 429, { erro: 'Muitas tentativas. Espera uns minutinhos.' });
   if (!senhaConfere(req)) {
@@ -199,6 +219,12 @@ const servidor = http.createServer((req, res) => {
     return json(res, 401, { erro: SENHA ? 'Senha errada.' : 'O servidor está sem senha configurada.' });
   }
   if (p === '/api/eventos') return eventos(req, res);
+  if (p === '/api/visto' && req.method === 'POST') return guardaVisto(req, res).catch(() => { res.writeHead(500); res.end(); });
+  if (p === '/api/visto' && req.method === 'GET') {
+    if (bloqueado(req)) return json(res, 429, { erro: 'Muitas tentativas. Espera uns minutinhos.' });
+    if (!senhaConfere(req)) { errou(req); return json(res, 401, { erro: 'Senha errada.' }); }
+    return json(res, 200, vistos.slice().reverse());
+  }
   if (p === '/api/alerta' && req.method === 'POST') {
     return testaAlerta(req, res).catch(() => json(res, 500, { erro: 'Não deu pra mandar o teste.' }));
   }
