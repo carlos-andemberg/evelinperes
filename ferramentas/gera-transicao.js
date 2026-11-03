@@ -32,13 +32,28 @@ function wav(base64, hz, canais) {
   return Buffer.concat([h, pcm]);
 }
 
-// o som da onda vem do sons.js, tocado sem caixa de som num OfflineAudioContext
+// o som da onda, feito sem caixa de som num OfflineAudioContext: uma passada de água quando ela sobe
+// e outra quando vai embora, com umas bolhas; a primeira já baixou quando a fala começa
 const SOM = `(async () => {
-  const codigo = await (await fetch('sons.js')).text();
   const hz = 48000, ctx = new OfflineAudioContext(2, Math.ceil(hz * Transicao.DUR), hz);
-  const falso = { AudioContext: function () { return ctx; } };
-  new Function('window', codigo)(falso);
-  falso.Sons.toca('onda', 0.5);
+  function passada(ini, pico, fim, ganho, f0, f1, f2) {
+    const tam = Math.ceil(hz * (fim - ini)), buf = ctx.createBuffer(2, tam, hz);
+    for (let c = 0; c < 2; c++) { const d = buf.getChannelData(c); for (let i = 0; i < tam; i++) d[i] = Math.random() * 2 - 1; }
+    const src = ctx.createBufferSource(), fl = ctx.createBiquadFilter(), g = ctx.createGain();
+    src.buffer = buf; fl.type = 'lowpass'; fl.Q.value = 0.8;
+    fl.frequency.setValueAtTime(f0, ini); fl.frequency.exponentialRampToValueAtTime(f1, pico); fl.frequency.exponentialRampToValueAtTime(f2, fim);
+    g.gain.setValueAtTime(0.0001, ini); g.gain.linearRampToValueAtTime(ganho, pico); g.gain.linearRampToValueAtTime(0.0001, fim);
+    src.connect(fl); fl.connect(g); g.connect(ctx.destination); src.start(ini);
+  }
+  function bolha(t, f) {
+    const o = ctx.createOscillator(), g = ctx.createGain();
+    o.frequency.setValueAtTime(f, t); o.frequency.exponentialRampToValueAtTime(f * 2.4, t + 0.07);
+    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.09, t + 0.01); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.11);
+    o.connect(g); g.connect(ctx.destination); o.start(t); o.stop(t + 0.12);
+  }
+  passada(0, 0.5, 1.15, 0.3, 350, 3000, 600);
+  passada(2.4, 2.95, 3.38, 0.22, 450, 2500, 350);
+  [[0.18, 420], [0.31, 560], [0.44, 700], [2.62, 500], [2.78, 640], [2.95, 820]].forEach((b) => bolha(b[0], b[1]));
   const b = await ctx.startRendering(), e = b.getChannelData(0), d = b.getChannelData(1);
   const pcm = new Int16Array(b.length * 2);
   for (let i = 0; i < b.length; i++) {

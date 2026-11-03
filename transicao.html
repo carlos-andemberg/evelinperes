@@ -193,7 +193,7 @@
 
   // "Nade contra a maré": a letra é cursiva, então a frase aparece junta, escrita da esquerda pra direita
   function frase(t) {
-    var p = suave((t - FALA) / 0.75);
+    var p = suave((t - FALA) / 1.05);  // a fala dura 1,2 s: a frase se escreve junto com ela
     if (p <= 0) return;
     c.save();
     c.font = '400 150px Pacifico, cursive';
