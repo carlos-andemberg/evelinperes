@@ -1616,7 +1616,7 @@
         else {
           b.textContent = x.oque;
           li.appendChild(b);
-          li.appendChild(document.createTextNode(' · ' + hora + ' · ' + (x.virou === 'não é alerta' ? 'não é alerta' : 'virou ' + x.virou)));
+          li.appendChild(document.createTextNode(' · ' + hora + ' · ' + (x.virou === 'não é alerta' ? 'não é alerta' : x.virou === 'reserva' ? 'reserva: só toca se o outro não chegar' : 'virou ' + x.virou)));
         }
         sm.textContent = x.dados;
         li.appendChild(sm);

@@ -578,6 +578,40 @@
       if (tipo === 'tip' || tipo === 'donation') return { tipo: 'doacao', nome: nome, qtd: qtd, msg: msg };
       return null;
     }
+    // Um evento de verdade chega duas vezes: primeiro como "event" (o feed de atividades) e, cerca de
+    // um segundo depois, como "*-latest", com o mesmo _id. Vale o *-latest, que é quem separa os
+    // presentes de um pacote; o "event" fica de reserva e só toca se o outro não chegar em 4 s.
+    // O Emulate só manda *-latest, e dois iguais seguidos continuam tocando os dois.
+    var doLatest = {}, doEvent = {}, RECENTE = 30000, RESERVA = 4000;
+    function chavesDoEvento(listener, ev) {
+      var e = ev && typeof ev === 'object' ? ev : {}, dd = e.data && typeof e.data === 'object' ? e.data : {};
+      var tipo = String(listener === 'event' ? e.type : listener).replace(/-latest$/, '');
+      tipo = { follow: 'follower', subscription: 'subscriber', donation: 'tip' }[tipo] || tipo;
+      var nome = String(e.name || dd.username || dd.displayName || '').toLowerCase(), chaves = [];
+      if (e.activityId || e._id) chaves.push('id:' + (e.activityId || e._id));
+      if (nome) chaves.push(tipo + '|' + nome);
+      return chaves;
+    }
+    function viuHaPouco(lista, chaves) {
+      return chaves.some(function (k) { return lista[k] && Date.now() - lista[k] < RECENTE; });
+    }
+    function anota(lista, chaves) { chaves.forEach(function (k) { lista[k] = Date.now(); }); }
+    function umaVezSo(listener, ev, a, origem, deFora) {
+      var chaves = chavesDoEvento(listener, ev);
+      if (listener !== 'event') {
+        var jaTocou = viuHaPouco(doEvent, chaves);
+        anota(doLatest, chaves);
+        if (a && !jaTocou) enfileira(a);
+        return;
+      }
+      if (!a) return;
+      setTimeout(function () {
+        if (viuHaPouco(doLatest, chaves)) return;
+        anota(doEvent, chaves);
+        if (deFora) conta(origem, 'event (reserva)', a.tipo, ev);
+        enfileira(a);
+      }, RESERVA);
+    }
     trataMensagem = function (e) {
       var d = e.data;
       if (!d || typeof d !== 'object') return;
@@ -590,8 +624,8 @@
         // o widget avisa quando liga: aparece no gerador como "widget ligado"
         if (d.listener === 'widget-ligado') { conta(e.origin, 'widget-ligado', 'conectado'); return; }
         var a = daStreamElements(d.listener, d.event);
-        if (deFora) conta(e.origin, String(d.listener).slice(0, 40), a ? a.tipo : 'não é alerta', d.event);
-        if (a) enfileira(a);
+        if (deFora) conta(e.origin, String(d.listener).slice(0, 40), !a ? 'não é alerta' : d.listener === 'event' ? 'reserva' : a.tipo, d.event);
+        umaVezSo(d.listener, d.event, a, e.origin, deFora);
       }
     };
     guardados.splice(0).forEach(trataMensagem);
