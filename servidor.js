@@ -28,7 +28,7 @@ const SENHA = process.env.SENHA_EDICAO || '';
 const TIPOS = {
   '.html': 'text/html; charset=utf-8', '.js': 'application/javascript; charset=utf-8',
   '.json': 'application/json; charset=utf-8', '.css': 'text/css; charset=utf-8',
-  '.svg': 'image/svg+xml', '.png': 'image/png', '.ico': 'image/x-icon',
+  '.svg': 'image/svg+xml', '.png': 'image/png', '.ico': 'image/x-icon', '.webm': 'video/webm',
   '.webmanifest': 'application/manifest+json', '.txt': 'text/plain; charset=utf-8'
 };
 
@@ -197,7 +197,19 @@ function arquivo(req, res, caminho) {
       res.writeHead(304, { ETag: etag, 'Cache-Control': cache });
       return res.end();
     }
-    res.writeHead(200, { 'Content-Type': TIPOS[ext] || 'application/octet-stream', 'Content-Length': st.size, 'Cache-Control': cache, ETag: etag });
+    // vídeo: o <video> pede pedaços do arquivo pra poder voltar e avançar
+    const video = ext === '.webm', pedaco = video && /^bytes=(\d*)-(\d*)$/.exec(req.headers.range || '');
+    if (pedaco && (pedaco[1] || pedaco[2])) {
+      const ini = pedaco[1] ? +pedaco[1] : Math.max(0, st.size - +pedaco[2]);
+      const fim = pedaco[1] && pedaco[2] ? Math.min(+pedaco[2], st.size - 1) : st.size - 1;
+      if (ini > fim) { res.writeHead(416, { 'Content-Range': 'bytes */' + st.size }); return res.end(); }
+      res.writeHead(206, { 'Content-Type': TIPOS[ext], 'Content-Length': fim - ini + 1, 'Content-Range': 'bytes ' + ini + '-' + fim + '/' + st.size, 'Accept-Ranges': 'bytes', 'Cache-Control': cache, ETag: etag });
+      if (req.method === 'HEAD') return res.end();
+      return fs.createReadStream(abs, { start: ini, end: fim }).pipe(res);
+    }
+    const cabecalho = { 'Content-Type': TIPOS[ext] || 'application/octet-stream', 'Content-Length': st.size, 'Cache-Control': cache, ETag: etag };
+    if (video) cabecalho['Accept-Ranges'] = 'bytes';
+    res.writeHead(200, cabecalho);
     if (req.method === 'HEAD') return res.end();
     fs.createReadStream(abs).pipe(res);
   });

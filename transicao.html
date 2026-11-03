@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>evelin_peres · Transição</title>
+<meta name="description" content="Transição de cena da live da evelin_peres: a onda rosa com a Nami Koi passa pela tela.">
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#ff8fbd">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="icon" href="favicon.ico" sizes="any">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">
+<style>
+  html, body { margin: 0; height: 100%; overflow: hidden; background: #1b2a3a; }
+  body.gravando { background: transparent; }
+  canvas { display: block; width: 100%; height: 100%; object-fit: contain; }
+</style>
+</head>
+<body>
+<canvas id="c" width="1920" height="1080"></canvas>
+
+<script src="ondas.js?v=dev"></script>
+<script>
+  /*
+   * Transição de cena: a onda rosa sobe com a Nami Koi (arte oficial da Riot) lá dentro, cobre a
+   * tela inteira, "Nade contra a maré" aparece, e a onda passa pra cima, mostrando a cena nova.
+   *
+   * O OBS usa o vídeo com fundo transparente (transicao-nami.webm, como transição Stinger). Ele sai
+   * desta página, quadro a quadro, por ferramentas/gera-transicao.js. Por isso o desenho depende só
+   * do tempo: desenha(t) não usa relógio nem sorteio de verdade, e cada quadro sai sempre igual.
+   * Aberta direto no navegador, a página só toca em laço pra ver o desenho.
+   */
+  var W = 1920, H = 1080, TAU = Math.PI * 2;
+  var tema = Ondas.TEMAS.rosa;
+  var ARTE = 'https://ddragon.leagueoflegends.com/cdn/img/champion/splash/Nami_1.jpg';
+  var TEXTO = 'Nade contra a maré';
+  // os tempos, em segundos: a tela fica toda coberta de COBRIU até SAI, e o OBS troca a cena em PONTO
+  var DUR = 3.4, COBRIU = 0.8, SAI = 2.6, PONTO = 1.5, FALA = 0.85;
+  var FORA = 300;  // quanto a onda começa e termina fora da tela
+  // o rosto dela na arte (de 0 a 1) e onde ele fica na tela no fim da aproximação
+  var ROSTO = { x: 0.655, y: 0.17 }, ALVO = { x: 1240, y: 250 };
+
+  var c = document.getElementById('c').getContext('2d');
+  c.imageSmoothingQuality = 'high';
+  var arte = new Image();
+  arte.crossOrigin = 'anonymous';
+
+  function limita(v, a, b) { return Math.max(a, Math.min(b, v)); }
+  function suave(x) { x = limita(x, 0, 1); return x * x * (3 - 2 * x); }
+  // sorteio com semente: o mesmo número dá sempre o mesmo resultado
+  function sorte(n) { var s = Math.sin(n * 127.1 + 311.7) * 43758.5453; return s - Math.floor(s); }
+
+  // onde está o fio de cima da água e o de baixo (a onda inteira sobe, de baixo pra cima)
+  function cima(t) {
+    var p = limita(t / COBRIU, 0, 1);
+    return H + FORA - (H + 2 * FORA) * (1 - Math.pow(1 - p, 2));
+  }
+  function baixo(t) {
+    var p = limita((t - SAI) / (DUR - SAI), 0, 1);
+    return H + FORA - (H + 2 * FORA) * p * p;
+  }
+  function fio(x, base, t, A, onda, vel, ph) {
+    return base + A * Math.sin(x / onda * TAU - t * vel + ph) + A * 0.4 * Math.sin(x / onda * 2.3 * TAU + t * vel * 0.55 + ph * 1.7);
+  }
+  // o caminho de uma faixa de água; off = quanto ela passa da arte, pra cima e pra baixo
+  function faixa(off, A, onda, vel, ph, t) {
+    var yc = cima(t) - off, yb = baixo(t) + off, x;
+    c.beginPath();
+    for (x = -20; x <= W + 20; x += 12) c.lineTo(x, fio(x, yc, t, A, onda, vel, ph));
+    for (x = W + 20; x >= -20; x -= 12) c.lineTo(x, fio(x, yb, t, A, onda, vel, ph + 2.1));
+    c.closePath();
+  }
+  function camada(off, A, onda, vel, ph, cor, t) {
+    faixa(off, A, onda, vel, ph, t);
+    c.fillStyle = cor;
+    c.fill();
+    c.strokeStyle = 'rgba(255,255,255,0.9)';
+    c.lineWidth = 4;
+    c.stroke();
+  }
+  // bolinhas de espuma nas cristas do fio de cima e do de baixo
+  function espuma(off, A, onda, vel, ph, t) {
+    c.fillStyle = '#fff';
+    [[cima(t) - off, ph], [baixo(t) + off, ph + 2.1]].forEach(function (b) {
+      if (b[0] < -80 || b[0] > H + 80) return;
+      for (var x = -20; x <= W + 20; x += 34) {
+        var v = Math.sin(x / onda * TAU - t * vel + b[1]);
+        if (v > 0.45) {
+          c.beginPath();
+          c.arc(x, fio(x, b[0], t, A, onda, vel, b[1]), 3 + (v - 0.45) * 15, 0, TAU);
+          c.fill();
+        }
+      }
+    });
+  }
+
+  // a arte, balançando como se estivesse debaixo d'água, aproximando devagar do rosto
+  function desenhaArte(t) {
+    var iw = arte.naturalWidth, ih = arte.naturalHeight;
+    var z = 1.04 + 0.2 * suave(t / DUR), esc = Math.max(W / iw, H / ih) * z, dw = iw * esc, dh = ih * esc;
+    var p = suave(t / DUR);
+    var cx = (W - dw) / 2, cy = (H - dh) / 2;
+    var ox = limita(cx + (ALVO.x - ROSTO.x * dw - cx) * p, W - dw + 12, -12);
+    var oy = limita(cy + (ALVO.y - ROSTO.y * dh - cy) * p, H - dh + 4, -4);
+    for (var y = 0; y < H; y += 4) {
+      var dx = Math.sin(y / 70 + t * 3.2) * 5 + Math.sin(y / 23 - t * 2) * 2;
+      c.drawImage(arte, 0, (y - oy) / esc, iw, 5 / esc, ox + dx, y, dw, 5);
+    }
+    // um véu rosa por cima, pra arte conversar com as ondas
+    c.save();
+    c.globalCompositeOperation = 'soft-light';
+    c.fillStyle = 'rgba(255,143,189,0.45)';
+    c.fillRect(0, 0, W, H);
+    c.restore();
+    var v = c.createRadialGradient(W * 0.6, H * 0.4, H * 0.35, W * 0.5, H * 0.5, W * 0.72);
+    v.addColorStop(0, 'rgba(255,92,158,0)');
+    v.addColorStop(1, 'rgba(255,92,158,0.42)');
+    c.fillStyle = v;
+    c.fillRect(0, 0, W, H);
+  }
+
+  // o rosa clarinho que entra da beirada da onda pra dentro da arte
+  function beirada(t) {
+    var yc = cima(t), yb = baixo(t), g;
+    if (yc > -200) {
+      g = c.createLinearGradient(0, yc - 60, 0, yc + 170);
+      g.addColorStop(0, 'rgba(255,211,229,0.95)');
+      g.addColorStop(1, 'rgba(255,211,229,0)');
+      c.fillStyle = g;
+      c.fillRect(0, yc - 80, W, 260);
+    }
+    if (yb < H + 200) {
+      g = c.createLinearGradient(0, yb + 60, 0, yb - 170);
+      g.addColorStop(0, 'rgba(255,211,229,0.95)');
+      g.addColorStop(1, 'rgba(255,211,229,0)');
+      c.fillStyle = g;
+      c.fillRect(0, yb - 180, W, 260);
+    }
+  }
+
+  function bolhas(t) {
+    for (var i = 0; i < 70; i++) {
+      var r = 5 + sorte(i) * 22, vel = 140 + sorte(i + 100) * 300;
+      var y = H + 80 - ((sorte(i + 200) * (H + 160) + vel * t) % (H + 160));
+      var x = sorte(i + 300) * W + Math.sin(t * 2.4 + i) * 14;
+      c.beginPath();
+      c.arc(x, y, r, 0, TAU);
+      c.fillStyle = 'rgba(255,255,255,0.13)';
+      c.fill();
+      c.strokeStyle = 'rgba(255,255,255,0.75)';
+      c.lineWidth = Math.max(1.5, r * 0.11);
+      c.stroke();
+      c.beginPath();
+      c.arc(x - r * 0.35, y - r * 0.35, r * 0.2, 0, TAU);
+      c.fillStyle = 'rgba(255,255,255,0.9)';
+      c.fill();
+    }
+  }
+
+  // o cardume nadando contra a onda, de cima pra baixo
+  function cardume(t) {
+    for (var i = 0; i < 9; i++) {
+      var q = (t - 0.35 - sorte(i + 400) * 0.5) / 2.3;
+      if (q < 0 || q > 1) continue;
+      var x = -120 + (W + 240) * ((sorte(i + 500) * 0.6) + q * 0.55);
+      var y = 120 + sorte(i + 600) * 460 + q * 240 + Math.sin(t * 5 + i) * 12;
+      c.save();
+      c.translate(x, y);
+      c.shadowColor = 'rgba(255,255,255,0.9)';
+      c.shadowBlur = 8;
+      Ondas.peixinho(c, 20 + sorte(i + 700) * 16, t * 12 + i, Ondas.PEIXES[i % Ondas.PEIXES.length]);
+      c.restore();
+    }
+  }
+
+  // respingos que a crista joga pra cima enquanto a onda sobe
+  function respingos(t) {
+    for (var i = 0; i < 70; i++) {
+      var nasce = sorte(i + 800) * COBRIU, v = t - nasce;
+      if (v < 0 || v > 0.75) continue;
+      var x = sorte(i + 900) * W + (sorte(i + 950) - 0.5) * 200 * v;
+      var y = cima(nasce) - 130 - (360 + sorte(i + 1000) * 620) * v + 900 * v * v;
+      c.globalAlpha = 1 - v / 0.75;
+      c.beginPath();
+      c.arc(x, y, 3 + sorte(i + 1100) * 9, 0, TAU);
+      c.fillStyle = i % 3 ? '#ffffff' : tema.acento2;
+      c.fill();
+    }
+    c.globalAlpha = 1;
+  }
+
+  // "Nade contra a maré": a letra é cursiva, então a frase aparece junta, escrita da esquerda pra direita
+  function frase(t) {
+    var p = suave((t - FALA) / 0.75);
+    if (p <= 0) return;
+    c.save();
+    c.font = '400 150px Pacifico, cursive';
+    c.textAlign = 'center';
+    c.textBaseline = 'middle';
+    c.lineJoin = 'round';
+    var larg = c.measureText(TEXTO).width;
+    c.translate(720, 860 + Math.sin(t * 2.2) * 10);
+    c.rotate(-0.03);
+    c.beginPath();
+    c.rect(-larg / 2 - 60, -220, (larg + 120) * p, 440);
+    c.clip();
+    c.shadowColor = 'rgba(138,47,93,0.55)';
+    c.shadowBlur = 34;
+    c.strokeStyle = tema.acento2;
+    c.lineWidth = 34;
+    c.strokeText(TEXTO, 0, 12);
+    c.shadowColor = 'transparent';
+    c.strokeStyle = tema.forte;
+    c.lineWidth = 26;
+    c.strokeText(TEXTO, 0, 0);
+    c.fillStyle = '#fff';
+    c.fillText(TEXTO, 0, 0);
+    c.restore();
+  }
+
+  function desenha(t) {
+    c.clearRect(0, 0, W, H);
+    if (t <= 0 || t >= DUR) return;
+    camada(135, 44, 620, 2.2, 0.4, tema.fundo, t);
+    camada(88, 40, 500, 2.8, 1.9, tema.meio, t);
+    camada(42, 34, 410, 3.4, 3.2, '#ffffff', t);
+    espuma(42, 34, 410, 3.4, 3.2, t);
+    c.save();
+    faixa(0, 30, 360, 3.9, 4.6, t);
+    c.clip();
+    desenhaArte(t);
+    bolhas(t);
+    cardume(t);
+    frase(t);
+    beirada(t);
+    c.restore();
+    respingos(t);
+  }
+
+  var pronto = Promise.all([
+    new Promise(function (ok, erro) { arte.onload = ok; arte.onerror = erro; arte.src = ARTE; }),
+    document.fonts.load('400 150px Pacifico', TEXTO)
+  ]);
+  window.Transicao = { DUR: DUR, PONTO: PONTO, FALA: FALA, pronto: pronto, desenha: desenha };
+
+  if (/[?&]gravar\b/.test(location.search)) document.body.classList.add('gravando');
+  else pronto.then(function () {
+    (function quadro(agora) {
+      desenha((agora / 1000) % (DUR + 1));
+      requestAnimationFrame(quadro);
+    })(performance.now());
+  });
+</script>
+</body>
+</html>

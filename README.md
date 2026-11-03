@@ -192,6 +192,12 @@ Opções (no gerador, ou no link): `tema`, `letra` (do nome), `som=0`, `volume=0
 
 Na Twitch: **Sobre → Editar painéis → Adicionar uma imagem**. O texto de baixo vai na descrição do painel.
 
+## Transição de cena
+
+`transicao-nami.webm` é um vídeo de 3,4 s com fundo transparente pra transição **Stinger** do OBS: a onda rosa sobe com a Nami Koi (arte oficial da Riot) lá dentro, cobre a tela de 0,6 s a 2,9 s, "Nade contra a maré" aparece, e a onda passa pra cima mostrando a cena nova. No OBS: **Transições de cena → + → Stinger**, escolha o vídeo baixado e ponha o **Ponto de transição** em **1500 ms**. O gerador tem o botão de baixar e o passo a passo, na aba **Transição**.
+
+O vídeo sai do `transicao.html`, quadro a quadro, pelo `ferramentas/gera-transicao.js` (o comentário no começo dele explica como rodar). Pra trocar a skin, a frase ou os tempos, mude a página e gere de novo. Com `VOZ=<arquivo>`, a fala entra junto com o som da onda.
+
 ## Personalizar
 
 As cores ficam em `TEMAS`, no começo de `ondas.js` (e as da Nami em `COR`, logo abaixo). Os textos padrão ficam no `Ondas.parametros({...})` de cada página. Edite, faça o push e o deploy. No OBS, botão direito na fonte → **Atualizar**.

@@ -195,6 +195,7 @@
   .vistos li b { color: var(--rosa); }
   .vistos li.erro { border-color: #f3a7b4; background: #fff0f2; }
   .vistos small { display: block; margin-top: 3px; color: var(--suave); font: 600 12px Consolas, 'Cascadia Mono', monospace; }
+  .previa video { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
   .sons { display: grid; gap: 8px; }
   .som { display: grid; grid-template-columns: 96px 1fr 42px; gap: 8px; align-items: center; }
   .som > b { font-weight: 800; font-size: 14px; }
@@ -321,6 +322,7 @@
     <button role="tab" aria-selected="true" data-aba="borda">🌊 Borda da câmera</button>
     <button role="tab" aria-selected="false" data-aba="fila">📺 Telas</button>
     <button role="tab" aria-selected="false" data-aba="alertas">🔔 Alertas</button>
+    <button role="tab" aria-selected="false" data-aba="transicao">🎬 Transição</button>
     <a href="paineis.html">🖼️ Painéis do Sobre</a>
   </nav>
 
@@ -622,6 +624,32 @@
     </div>
   </section>
 
+  <!-- ===================================================== TRANSIÇÃO -->
+  <section class="painel" id="painel-transicao" role="tabpanel">
+    <div class="pilha">
+    <div class="card">
+      <h2>🎬 Transição de cena</h2>
+      <p>Na troca de cena, a onda rosa sobe com a Nami Koi (arte oficial da Riot), cobre a tela inteira, “Nade contra a maré” aparece e a onda passa, já mostrando a cena nova. É um vídeo de 3,4 segundos com fundo transparente, e não depende deste site depois de baixado.</p>
+      <a class="botao" id="baixarTransicao" href="transicao-nami.webm" download style="padding:11px 18px">⬇️ Baixar o vídeo</a>
+      <span class="rotulo" style="margin-top:18px;display:block">Colocar no OBS (uma vez só)</span>
+      <ol class="passos" style="margin-top:8px">
+        <li>Guarde o vídeo numa pasta fixa: se ele mudar de lugar, o OBS perde o arquivo</li>
+        <li>No quadro <b>Transições de cena</b>, clique no <b>+</b>, escolha <b>Stinger</b> e dê um nome</li>
+        <li>Em <b>Arquivo de vídeo</b>, escolha o vídeo baixado</li>
+        <li>Em <b>Tipo de ponto de transição</b>, deixe <b>Tempo</b> e coloque <b>1500</b> ms no <b>Ponto de transição</b>: é quando a tela está toda coberta e a cena troca por trás</li>
+        <li>Pra ouvir o som da transição no fone também, em <b>Monitoramento de áudio</b> escolha monitorar e enviar pra saída. A live recebe o som de qualquer jeito</li>
+        <li>Deixe essa transição selecionada. Pra usar outra em alguma cena: botão direito na cena → <b>Substituição de transição</b></li>
+      </ol>
+    </div>
+    </div>
+    <div class="lado">
+      <div class="previa" style="background:linear-gradient(135deg, #2c3c52, #101722)">
+        <video id="videoTransicao" src="transicao-nami.webm" loop playsinline controls preload="none" aria-label="Prévia da transição de cena"></video>
+      </div>
+      <p class="nota">Aqui o fundo escuro faz o papel da sua cena. Clique no ▶ pra ver e ouvir.</p>
+    </div>
+  </section>
+
   <div class="salvar" id="barraSalvar">
     <span class="situacao" id="situacao">Conferindo a live…</span>
     <button class="link-texto" id="carregarLive" type="button" hidden>carregar o que está na live</button>
@@ -862,7 +890,7 @@
     ro.observe($('previa-borda')); ro.observe($('previa-fila')); ro.observe($('previa-alertas')); ro.observe($('tela'));
   }
 
-  var aba = { '#fila': 'fila', '#alertas': 'alertas' }[location.hash] || 'borda';
+  var aba = { '#fila': 'fila', '#alertas': 'alertas', '#transicao': 'transicao' }[location.hash] || 'borda';
   var espera = 0;
   function atualizar(agora) {
     guardar();
@@ -892,7 +920,8 @@
         limpa('previa-fila'); limpa('previa-alertas');
       }
       else if (aba === 'alertas') { previa($('previa-alertas'), sep(linkAlertas()) + 'auto=0&fundo=1'); limpa('previa-borda'); limpa('previa-fila'); }
-      else { previa($('previa-fila'), sep(lf) + 'auto=0'); limpa('previa-borda'); limpa('previa-alertas'); }
+      else if (aba === 'fila') { previa($('previa-fila'), sep(lf) + 'auto=0'); limpa('previa-borda'); limpa('previa-alertas'); }
+      else { limpa('previa-borda'); limpa('previa-fila'); limpa('previa-alertas'); }
     }, agora ? 0 : 450);
   }
   function limpa(id) { var f = $(id).querySelector('iframe'); if (f) { f.remove(); } }
@@ -924,6 +953,8 @@
     $('painel-borda').classList.toggle('ativo', qual === 'borda');
     $('painel-fila').classList.toggle('ativo', qual === 'fila');
     $('painel-alertas').classList.toggle('ativo', qual === 'alertas');
+    $('painel-transicao').classList.toggle('ativo', qual === 'transicao');
+    if (qual !== 'transicao') $('videoTransicao').pause();
     atualizar(true);
     if (qual === 'alertas' && liberado) verVistos();
   }
