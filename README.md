@@ -194,9 +194,11 @@ Na Twitch: **Sobre → Editar painéis → Adicionar uma imagem**. O texto de ba
 
 ## Transição de cena
 
-`transicao-nami.webm` é um vídeo de 3,4 s com fundo transparente pra transição **Stinger** do OBS: a onda rosa sobe com a Nami Koi (arte oficial da Riot) lá dentro, cobre a tela de 0,6 s a 2,9 s, a Nami fala "Nade contra a maré" (a voz original do jogo em português) enquanto a frase se escreve na tela, e a onda passa pra cima mostrando a cena nova. No OBS: **Transições de cena → + → Stinger**, escolha o vídeo baixado e ponha o **Ponto de transição** em **1500 ms**. O gerador tem o botão de baixar e o passo a passo, na aba **Transição**.
+`transicao-nami.webm` é um vídeo de 3,4 s com fundo transparente pra transição **Stinger** do OBS: a onda rosa sobe com a Nami Koi (arte oficial da Riot) lá dentro, cobre a tela de 0,6 s a 2,9 s, a Nami fala "Nade contra a maré" (a voz original do jogo em português) enquanto a frase se escreve na tela, e a onda passa pra cima mostrando a cena nova. No OBS: **Transições de cena → + → Stinger**, escolha o vídeo baixado e ponha o **Ponto de transição** em **1500 ms**. O gerador tem os botões de baixar e o passo a passo, na aba **Transição**.
 
-O vídeo sai do `transicao.html`, quadro a quadro, pelo `ferramentas/gera-transicao.js` (o comentário no começo dele explica como rodar). Pra trocar a skin, a frase ou os tempos, mude a página e gere de novo. Com `VOZ=<arquivo>`, a fala entra junto com o som da onda. A fala vem do pacote de voz em português do jogo instalado (`Game/DATA/FINAL/Champions/Nami.pt_BR.wad.client`) e não fica guardada solta neste repositório: só dentro do vídeo. O link do vídeo no gerador carrega o `?v=` do deploy, porque o Cloudflare guarda arquivos `.webm` por horas.
+`transicao-nami-sem-fala.webm` é o mesmo vídeo, sem a frase e sem a fala: só o efeito de som da onda. Os tempos são os mesmos, então o **Ponto de transição** também é **1500 ms**.
+
+O vídeo sai do `transicao.html`, quadro a quadro, pelo `ferramentas/gera-transicao.js` (o comentário no começo dele explica como rodar). Pra trocar a skin, a frase ou os tempos, mude a página e gere de novo. Com `VOZ=<arquivo>`, a fala entra junto com o som da onda; com `SEM_FRASE=1`, a frase não aparece na tela. A fala vem do pacote de voz em português do jogo instalado (`Game/DATA/FINAL/Champions/Nami.pt_BR.wad.client`) e não fica guardada solta neste repositório: só dentro do vídeo. O link do vídeo no gerador carrega o `?v=` do deploy, porque o Cloudflare guarda arquivos `.webm` por horas.
 
 ## Personalizar
 

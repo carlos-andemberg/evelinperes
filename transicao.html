@@ -31,6 +31,7 @@
    * desta página, quadro a quadro, por ferramentas/gera-transicao.js. Por isso o desenho depende só
    * do tempo: desenha(t) não usa relógio nem sorteio de verdade, e cada quadro sai sempre igual.
    * Aberta direto no navegador, a página só toca em laço pra ver o desenho.
+   * Com ?semfrase, a frase não aparece: é a versão só com a onda (transicao-nami-sem-fala.webm).
    */
   var W = 1920, H = 1080, TAU = Math.PI * 2;
   var tema = Ondas.TEMAS.rosa;
@@ -39,6 +40,7 @@
   // os tempos, em segundos: a tela fica toda coberta de COBRIU até SAI, e o OBS troca a cena em PONTO
   var DUR = 3.4, COBRIU = 0.8, SAI = 2.6, PONTO = 1.5, FALA = 0.85;
   var FORA = 300;  // quanto a onda começa e termina fora da tela
+  var SEM_FRASE = /[?&]semfrase\b/.test(location.search);
   // o rosto dela na arte (de 0 a 1) e onde ele fica na tela no fim da aproximação
   var ROSTO = { x: 0.655, y: 0.17 }, ALVO = { x: 1240, y: 250 };
 
@@ -233,7 +235,7 @@
     desenhaArte(t);
     bolhas(t);
     cardume(t);
-    frase(t);
+    if (!SEM_FRASE) frase(t);
     beirada(t);
     c.restore();
     respingos(t);

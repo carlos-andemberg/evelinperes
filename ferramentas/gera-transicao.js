@@ -4,6 +4,7 @@
 //   NAVEGADOR=<chrome ou edge> FFMPEG=<ffmpeg com libvpx-vp9> node ferramentas/gera-transicao.js [saida.webm]
 //
 //   VOZ=<áudio da fala>   junta a fala da Nami, começando no segundo Transicao.FALA
+//   SEM_FRASE=1           sem a frase escrita na tela (sem VOZ, o som é só o da onda)
 //   FOTOS=0.4,1.5,2.9     em vez do vídeo, salva esses instantes em PNG ao lado da saída
 //   SITE=<endereço>       de onde abrir a página (padrão: http://localhost:5560)
 //
@@ -94,7 +95,7 @@ const SOM = `(async () => {
   };
 
   await cmd('Runtime.enable');
-  await cmd('Page.navigate', { url: SITE + '/transicao.html?gravar' });
+  await cmd('Page.navigate', { url: SITE + '/transicao.html?gravar' + (process.env.SEM_FRASE ? '&semfrase' : '') });
   await dorme(1500);
   await avalia('Transicao.pronto.then(() => true)');
   const quadro = (t) => avalia(`Transicao.desenha(${t}); document.getElementById('c').toDataURL('image/png').split(',')[1]`);
