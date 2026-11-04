@@ -6,10 +6,12 @@ COPY servidor.js ./
 COPY *.html *.js *.json *.svg *.ico *.png *.webm site.webmanifest ./publico/
 COPY paineis ./publico/paineis
 # troca o "?v=dev" dos scripts por um código do conteúdo: a cada deploy com mudança o link muda,
-# e o navegador, o Cloudflare e o OBS buscam o arquivo novo em vez de usar o guardado
+# e o navegador, o Cloudflare e o OBS buscam o arquivo novo em vez de usar o guardado.
+# O número do "echo" só serve pra trocar o código à mão: se o Cloudflare travar num link (erro 504 só naquele ?v=,
+# com o site bem e sem resolver limpando o cache), é só mudar o número e publicar.
 RUN rm -f publico/servidor.js \
  && cd publico \
- && v=$(cat ondas.js dados.js cenas.js trava.js modal.js sons.js nami.json transicao-nami.webm transicao-nami-sem-fala.webm | md5sum | cut -c1-10) \
+ && v=$( (echo 2; cat ondas.js dados.js cenas.js trava.js modal.js sons.js nami.json transicao-nami.webm transicao-nami-sem-fala.webm) | md5sum | cut -c1-10) \
  && sed -i "s/?v=dev/?v=$v/g" *.html
 ENV PORTA=80 PASTA=/app/publico DADOS=/dados
 EXPOSE 80
